@@ -5,6 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle } from 'lucide-react';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get('order');
@@ -27,7 +30,7 @@ function OrderSuccessContent() {
         )}
 
         <p className="text-sm text-muted mb-8">
-          We'll send you an update when your order is on its way.
+          We will send you an update when your order is on its way.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -43,13 +46,17 @@ function OrderSuccessContent() {
   );
 }
 
+function LoadingState() {
+  return (
+    <div className="container-custom py-16 text-center">
+      <p className="text-muted">Loading...</p>
+    </div>
+  );
+}
+
 export default function OrderSuccessPage() {
   return (
-    <Suspense fallback={
-      <div className="container-custom py-16 text-center">
-        <p className="text-muted">Loading...</p>
-      </div>
-    }>
+    <Suspense fallback={<LoadingState />}>
       <OrderSuccessContent />
     </Suspense>
   );
