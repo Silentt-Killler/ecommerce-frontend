@@ -1,146 +1,195 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import Image from 'next/image';
+import api from '@/lib/api';
 import ProductCard from '@/components/product/ProductCard';
 
-async function getFeaturedProducts() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products?limit=8`, {
-      cache: 'no-store'
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.products || [];
-  } catch {
-    return [];
-  }
-}
+export default function HomePage() {
+  const [settings, setSettings] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-async function getCategories() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-      cache: 'no-store'
-    });
-    if (!res.ok) return [];
-    return await res.json();
-  } catch {
-    return [];
-  }
-}
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch settings
+        const settingsRes = await api.get('/settings');
+        setSettings(settingsRes.data);
 
-export default async function HomePage() {
-  const [products, categories] = await Promise.all([
-    getFeaturedProducts(),
-    getCategories()
-  ]);
+        // Fetch categories
+        const catRes = await api.get('/categories');
+        setCategories(catRes.data || []);
+
+        // Fetch featured products
+        const prodRes = await api.get('/products?limit=8');
+        setFeaturedProducts(prodRes.data.products || []);
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const heroSlide = settings?.hero_slides?.[0];
 
   return (
-    <>
+    <div>
       {/* Hero Section */}
-      <section className="bg-primary-100 py-16 md:py-24">
+      <section className="relative h-[80vh] md:h-[90vh] bg-primary-200">
+        {heroSlide?.image_url ? (
+          <Image
+            src={heroSlide.image_url}
+            alt="Hero"
+            fill
+            className="object-cover"
+            priority
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-muted">Upload hero image from Admin Panel</p>
+          </div>
+        )}
+        
+        {/* Hero Buttons */}
+        <div className="absolute bottom-16 md:bottom-24 left-1/2 transform -translate-x-1/2 flex gap-4">
+          <Link 
+            href="/shop?category=womenswear"
+            className="px-8 py-3 bg-white text-focus text-sm tracking-[0.2em] hover:bg-focus hover:text-white transition-colors"
+          >
+            FOR HER
+          </Link>
+          <Link 
+            href="/shop?category=menswear"
+            className="px-8 py-3 bg-white text-focus text-sm tracking-[0.2em] hover:bg-focus hover:text-white transition-colors"
+          >
+            FOR HIM
+          </Link>
+        </div>
+      </section>
+
+      {/* Categories Section */}
+      <section className="py-16 md:py-24">
         <div className="container-custom">
-          <div className="max-w-2xl">
-            <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-focus mb-6">
-              Discover Premium Quality
-            </h1>
-            <p className="text-muted text-lg mb-8">
-              Curated collection of finest products. 
-              Experience luxury in every detail.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link href="/shop" className="btn-primary inline-flex items-center gap-2">
-                Shop Now <ArrowRight size={18} />
+          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light">
+            SHOP BY CATEGORY
+          </h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {categories.slice(0, 4).map((category) => (
+              <Link 
+                key={category._id} 
+                href={`/shop?category=${category.slug}`}
+                className="group"
+              >
+                <div className="relative aspect-[3/4] bg-primary-100 overflow-hidden">
+                  {category.image ? (
+                    <Image
+                      src={category.image}
+                      alt={category.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
+                      <span className="text-muted text-sm">No Image</span>
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-center mt-4 text-sm tracking-[0.15em] font-light">
+                  {category.name}
+                </h3>
               </Link>
-              <Link href="/categories" className="btn-secondary">
-                Browse Categories
-              </Link>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Categories */}
-      {categories.length > 0 && (
-        <section className="py-16">
-          <div className="container-custom">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="font-heading text-2xl md:text-3xl">Categories</h2>
-              <Link href="/categories" className="text-gold hover:underline flex items-center gap-1">
-                View All <ArrowRight size={16} />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {categories.slice(0, 4).map((category) => (
-                <Link 
-                  key={category._id} 
-                  href={`/shop?category=${category.slug}`}
-                  className="group relative aspect-square bg-primary-200 overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-focus/40 group-hover:bg-focus/60 transition-colors" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <h3 className="text-white font-heading text-xl md:text-2xl text-center px-4">
-                      {category.name}
-                    </h3>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Featured Products */}
-      <section className="py-16 bg-white">
+      {/* Featured Products Section */}
+      <section className="py-16 md:py-24 bg-primary-50">
         <div className="container-custom">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="font-heading text-2xl md:text-3xl">Featured Products</h2>
-            <Link href="/shop" className="text-gold hover:underline flex items-center gap-1">
-              View All <ArrowRight size={16} />
+          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light">
+            NEW ARRIVALS
+          </h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link 
+              href="/shop"
+              className="inline-block px-10 py-4 border border-focus text-sm tracking-[0.2em] hover:bg-focus hover:text-white transition-colors"
+            >
+              VIEW ALL
             </Link>
           </div>
-          
-          {products.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-              {products.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-muted">
-              <p>No products available yet.</p>
-              <p className="text-sm mt-2">Check back soon!</p>
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-16 border-t border-primary-200">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <div>
-              <div className="w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-gold text-xl">🚚</span>
-              </div>
-              <h3 className="font-medium mb-2">Free Shipping</h3>
-              <p className="text-muted text-sm">On orders over ৳1000</p>
-            </div>
-            <div>
-              <div className="w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-gold text-xl">↩️</span>
-              </div>
-              <h3 className="font-medium mb-2">Easy Returns</h3>
-              <p className="text-muted text-sm">7 days return policy</p>
-            </div>
-            <div>
-              <div className="w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-gold text-xl">💳</span>
-              </div>
-              <h3 className="font-medium mb-2">Secure Payment</h3>
-              <p className="text-muted text-sm">100% secure checkout</p>
+      {/* Split Banner Section */}
+      <section className="grid md:grid-cols-2">
+        <Link 
+          href="/shop?category=menswear"
+          className="relative h-[50vh] md:h-[70vh] bg-primary-200 group overflow-hidden"
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <h3 className="text-3xl md:text-4xl tracking-[0.2em] font-light mb-4">MENSWEAR</h3>
+              <span className="text-sm tracking-[0.15em] border-b border-focus pb-1 group-hover:border-gold transition-colors">
+                EXPLORE
+              </span>
             </div>
           </div>
+        </Link>
+        
+        <Link 
+          href="/shop?category=womenswear"
+          className="relative h-[50vh] md:h-[70vh] bg-primary-300 group overflow-hidden"
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <h3 className="text-3xl md:text-4xl tracking-[0.2em] font-light mb-4">WOMENSWEAR</h3>
+              <span className="text-sm tracking-[0.15em] border-b border-focus pb-1 group-hover:border-gold transition-colors">
+                EXPLORE
+              </span>
+            </div>
+          </div>
+        </Link>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-16 md:py-24 bg-focus text-white">
+        <div className="container-custom max-w-2xl text-center">
+          <h2 className="text-2xl md:text-3xl tracking-[0.15em] mb-4 font-light">
+            STAY UPDATED
+          </h2>
+          <p className="text-primary-400 mb-8 text-sm">
+            Subscribe to receive updates on new arrivals and special offers
+          </p>
+          
+          <form className="flex flex-col sm:flex-row gap-4">
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="flex-1 px-4 py-3 bg-transparent border border-primary-600 text-white placeholder:text-primary-500 focus:border-white outline-none text-sm"
+            />
+            <button
+              type="submit"
+              className="px-8 py-3 bg-white text-focus text-sm tracking-[0.15em] hover:bg-gold hover:text-white transition-colors"
+            >
+              SUBSCRIBE
+            </button>
+          </form>
         </div>
       </section>
-    </>
+    </div>
   );
 }
