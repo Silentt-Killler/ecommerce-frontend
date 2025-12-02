@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { Plus, Edit, Trash2, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Edit, Trash2, X, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -10,9 +10,10 @@ export default function AdminCategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [uploadingImage, setUploadingImage] = useState(null);
-  const fileInputRef = useRef(null);
-  
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [imageUrl, setImageUrl] = useState('');
+
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -52,7 +53,7 @@ export default function AdminCategoriesPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       if (editingCategory) {
         await api.put(`/categories/${editingCategory._id}`, formData);
@@ -61,7 +62,7 @@ export default function AdminCategoriesPage() {
         await api.post('/categories', formData);
         toast.success('Category created');
       }
-      
+
       setShowModal(false);
       setEditingCategory(null);
       setFormData({ name: '', slug: '', description: '' });
@@ -83,7 +84,7 @@ export default function AdminCategoriesPage() {
 
   const handleDelete = async (categoryId) => {
     if (!confirm('Are you sure you want to delete this category?')) return;
-    
+
     try {
       await api.delete(`/categories/${categoryId}`);
       toast.success('Category deleted');
@@ -93,51 +94,41 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleImageUpload = async (categoryId, file) => {
-    setUploadingImage(categoryId);
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    
+  const openImageModal = (category) => {
+    setSelectedCategory(category);
+    setImageUrl(category.image || '');
+    setShowImageModal(true);
+  };
+
+  const handleSaveImage = async () => {
+    if (!selectedCategory) return;
+
     try {
-      await api.post(`/categories/${categoryId}/image`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      await api.put(`/categories/${selectedCategory._id}`, {
+        image: imageUrl || null
       });
-      toast.success('Image uploaded');
+      toast.success('Image updated');
+      setShowImageModal(false);
+      setSelectedCategory(null);
+      setImageUrl('');
       fetchCategories();
     } catch (error) {
-      toast.error('Failed to upload image');
-    } finally {
-      setUploadingImage(null);
+      toast.error('Failed to update image');
     }
   };
 
-  const handleDeleteImage = async (categoryId) => {
-    if (!confirm('Delete this image?')) return;
-    
+  const handleRemoveImage = async (categoryId) => {
+    if (!confirm('Remove this image?')) return;
+
     try {
-      await api.delete(`/categories/${categoryId}/image`);
-      toast.success('Image deleted');
+      await api.put(`/categories/${categoryId}`, {
+        image: null
+      });
+      toast.success('Image removed');
       fetchCategories();
     } catch (error) {
-      toast.error('Failed to delete image');
+      toast.error('Failed to remove image');
     }
-  };
-
-  const openFilePicker = (categoryId) => {
-    fileInputRef.current.dataset.categoryId = categoryId;
-    fileInputRef.current.click();
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    const categoryId = e.target.dataset.categoryId;
-    
-    if (file && categoryId) {
-      handleImageUpload(categoryId, file);
-    }
-    
-    e.target.value = '';
   };
 
   if (loading) {
@@ -150,15 +141,6 @@ export default function AdminCategoriesPage() {
 
   return (
     <div>
-      {/* Hidden file input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        className="hidden"
-      />
-
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-light tracking-wide">Categories</h1>
@@ -189,7 +171,7 @@ export default function AdminCategoriesPage() {
                     className="w-full h-full object-cover"
                   />
                   <button
-                    onClick={() => handleDeleteImage(category._id)}
+                    onClick={() => handleRemoveImage(category._id)}
                     className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors"
                   >
                     <X size={16} />
@@ -201,18 +183,14 @@ export default function AdminCategoriesPage() {
                   <p className="text-sm mt-2">No Image</p>
                 </div>
               )}
-              
-              {/* Upload Button */}
+
+              {/* Add/Change Image Button */}
               <button
-                onClick={() => openFilePicker(category._id)}
-                disabled={uploadingImage === category._id}
-                className="absolute bottom-2 right-2 w-10 h-10 bg-focus text-white rounded-full flex items-center justify-center hover:bg-gold transition-colors disabled:opacity-50"
+                onClick={() => openImageModal(category)}
+                className="absolute bottom-2 right-2 w-10 h-10 bg-focus text-white rounded-full flex items-center justify-center hover:bg-gold transition-colors"
+                title="Add/Change Image URL"
               >
-                {uploadingImage === category._id ? (
-                  <span className="animate-spin">⏳</span>
-                ) : (
-                  <Upload size={18} />
-                )}
+                <LinkIcon size={18} />
               </button>
             </div>
 
@@ -223,7 +201,7 @@ export default function AdminCategoriesPage() {
               {category.description && (
                 <p className="text-sm text-muted line-clamp-2">{category.description}</p>
               )}
-              
+
               {/* Actions */}
               <div className="flex gap-2 mt-4 pt-4 border-t border-primary-100">
                 <button
@@ -252,7 +230,7 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Add/Edit Category Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white w-full max-w-md mx-4 p-6">
@@ -314,6 +292,71 @@ export default function AdminCategoriesPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Image URL Modal */}
+      {showImageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white w-full max-w-lg mx-4 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-light">
+                {selectedCategory?.image ? 'Change Image' : 'Add Image'}
+              </h2>
+              <button onClick={() => setShowImageModal(false)} className="text-muted hover:text-focus">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm mb-2">Image URL</label>
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="https://res.cloudinary.com/..."
+                  className="input-field"
+                />
+                <p className="text-xs text-muted mt-2">
+                  Cloudinary তে image upload করে URL paste করো
+                </p>
+              </div>
+
+              {/* Preview */}
+              {imageUrl && (
+                <div className="mt-4">
+                  <label className="block text-sm mb-2">Preview</label>
+                  <div className="aspect-square bg-primary-100 overflow-hidden max-w-[200px]">
+                    <img
+                      src={imageUrl}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowImageModal(false)}
+                  className="flex-1 py-3 border border-primary-300 text-sm hover:border-focus transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveImage}
+                  className="flex-1 py-3 bg-focus text-white text-sm hover:bg-gold transition-colors"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
