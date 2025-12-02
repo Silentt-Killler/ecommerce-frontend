@@ -51,7 +51,7 @@ export default function HomePage() {
             priority
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
             <p className="text-muted">Upload hero image from Admin Panel</p>
           </div>
         )}
@@ -73,21 +73,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories Section */}
+      {/* Categories Section - Gucci Style */}
       <section className="py-16 md:py-24">
         <div className="container-custom">
-          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light">
-            SHOP BY CATEGORY
+          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light uppercase">
+            Shop by Category
           </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {categories.slice(0, 4).map((category) => (
               <Link 
                 key={category._id} 
                 href={`/shop?category=${category.slug}`}
-                className="group"
+                className="group text-center"
               >
-                <div className="relative aspect-[3/4] bg-primary-100 overflow-hidden">
+                <div className="relative aspect-square bg-primary-100 overflow-hidden mb-4">
                   {category.image ? (
                     <Image
                       src={category.image}
@@ -101,7 +101,7 @@ export default function HomePage() {
                     </div>
                   )}
                 </div>
-                <h3 className="text-center mt-4 text-sm tracking-[0.15em] font-light">
+                <h3 className="text-sm tracking-[0.15em] font-light uppercase">
                   {category.name}
                 </h3>
               </Link>
@@ -113,8 +113,8 @@ export default function HomePage() {
       {/* Featured Products Section */}
       <section className="py-16 md:py-24 bg-primary-50">
         <div className="container-custom">
-          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light">
-            NEW ARRIVALS
+          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light uppercase">
+            New Arrivals
           </h2>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
@@ -126,9 +126,9 @@ export default function HomePage() {
           <div className="text-center mt-12">
             <Link 
               href="/shop"
-              className="inline-block px-10 py-4 border border-focus text-sm tracking-[0.2em] hover:bg-focus hover:text-white transition-colors"
+              className="inline-block px-10 py-4 border border-focus text-sm tracking-[0.2em] hover:bg-focus hover:text-white transition-colors uppercase"
             >
-              VIEW ALL
+              View All
             </Link>
           </div>
         </div>
@@ -142,9 +142,9 @@ export default function HomePage() {
         >
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <h3 className="text-3xl md:text-4xl tracking-[0.2em] font-light mb-4">MENSWEAR</h3>
-              <span className="text-sm tracking-[0.15em] border-b border-focus pb-1 group-hover:border-gold transition-colors">
-                EXPLORE
+              <h3 className="text-3xl md:text-4xl tracking-[0.2em] font-light mb-4 uppercase">Menswear</h3>
+              <span className="text-sm tracking-[0.15em] border-b border-focus pb-1 group-hover:border-gold transition-colors uppercase">
+                Explore
               </span>
             </div>
           </div>
@@ -156,9 +156,9 @@ export default function HomePage() {
         >
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <h3 className="text-3xl md:text-4xl tracking-[0.2em] font-light mb-4">WOMENSWEAR</h3>
-              <span className="text-sm tracking-[0.15em] border-b border-focus pb-1 group-hover:border-gold transition-colors">
-                EXPLORE
+              <h3 className="text-3xl md:text-4xl tracking-[0.2em] font-light mb-4 uppercase">Womenswear</h3>
+              <span className="text-sm tracking-[0.15em] border-b border-focus pb-1 group-hover:border-gold transition-colors uppercase">
+                Explore
               </span>
             </div>
           </div>
@@ -168,8 +168,8 @@ export default function HomePage() {
       {/* Newsletter Section */}
       <section className="py-16 md:py-24 bg-focus text-white">
         <div className="container-custom max-w-2xl text-center">
-          <h2 className="text-2xl md:text-3xl tracking-[0.15em] mb-4 font-light">
-            STAY UPDATED
+          <h2 className="text-2xl md:text-3xl tracking-[0.15em] mb-4 font-light uppercase">
+            Stay Updated
           </h2>
           <p className="text-primary-400 mb-8 text-sm">
             Subscribe to receive updates on new arrivals and special offers
@@ -183,9 +183,9 @@ export default function HomePage() {
             />
             <button
               type="submit"
-              className="px-8 py-3 bg-white text-focus text-sm tracking-[0.15em] hover:bg-gold hover:text-white transition-colors"
+              className="px-8 py-3 bg-white text-focus text-sm tracking-[0.15em] hover:bg-gold hover:text-white transition-colors uppercase"
             >
-              SUBSCRIBE
+              Subscribe
             </button>
           </form>
         </div>
