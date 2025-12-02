@@ -73,21 +73,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Categories Section - Gucci Style */}
+      {/* Categories Section - Large Gucci Style */}
       <section className="py-16 md:py-24">
         <div className="container-custom">
           <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light uppercase">
             Shop by Category
           </h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {categories.slice(0, 4).map((category) => (
               <Link 
                 key={category._id} 
                 href={`/shop?category=${category.slug}`}
                 className="group text-center"
               >
-                <div className="relative aspect-square bg-primary-100 overflow-hidden mb-4">
+                <div className="relative aspect-[3/4] bg-primary-100 overflow-hidden mb-4">
                   {category.image ? (
                     <Image
                       src={category.image}
@@ -101,7 +101,7 @@ export default function HomePage() {
                     </div>
                   )}
                 </div>
-                <h3 className="text-sm tracking-[0.15em] font-light uppercase">
+                <h3 className="text-sm md:text-base tracking-[0.15em] font-light">
                   {category.name}
                 </h3>
               </Link>
