@@ -180,7 +180,7 @@ export default function AdminCategoriesPage() {
         {categories.map((category) => (
           <div key={category._id} className="bg-white border border-primary-200 overflow-hidden">
             {/* Image Section */}
-            <div className="relative aspect-square bg-primary-100">
+            <div className="relative aspect-square bg-primary-100 overflow-hidden">
               {category.image ? (
                 <>
                   <img
