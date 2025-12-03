@@ -9,7 +9,9 @@ import ProductCard from '@/components/product/ProductCard';
 export default function HomePage() {
   const [settings, setSettings] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [watchProducts, setWatchProducts] = useState([]);
+  const [menswearProducts, setMenswearProducts] = useState([]);
+  const [womenswearProducts, setWomenswearProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,9 +25,30 @@ export default function HomePage() {
         const catRes = await api.get('/categories');
         setCategories(catRes.data || []);
 
-        // Fetch featured products
-        const prodRes = await api.get('/products?limit=8');
-        setFeaturedProducts(prodRes.data.products || []);
+        // Fetch Watch products
+        try {
+          const watchRes = await api.get('/products?category=watch&limit=4');
+          setWatchProducts(watchRes.data.products || []);
+        } catch (e) {
+          setWatchProducts([]);
+        }
+
+        // Fetch Menswear products
+        try {
+          const menswearRes = await api.get('/products?category=menswear&limit=4');
+          setMenswearProducts(menswearRes.data.products || []);
+        } catch (e) {
+          setMenswearProducts([]);
+        }
+
+        // Fetch Womenswear products
+        try {
+          const womenswearRes = await api.get('/products?category=womenswear&limit=4');
+          setWomenswearProducts(womenswearRes.data.products || []);
+        } catch (e) {
+          setWomenswearProducts([]);
+        }
+
       } catch (error) {
         console.error('Failed to fetch data:', error);
       } finally {
@@ -37,6 +60,36 @@ export default function HomePage() {
   }, []);
 
   const heroSlide = settings?.hero_slides?.[0];
+
+  // Featured Products Section Component
+  const FeaturedSection = ({ title, products, categorySlug }) => {
+    if (!products || products.length === 0) return null;
+
+    return (
+      <section className="py-16 md:py-24">
+        <div className="container-custom">
+          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light uppercase">
+            {title}
+          </h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {products.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link 
+              href={`/shop?category=${categorySlug}`}
+              className="inline-block px-10 py-4 border border-focus text-sm tracking-[0.2em] hover:bg-focus hover:text-white transition-colors uppercase"
+            >
+              View All
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  };
 
   return (
     <div>
@@ -110,60 +163,28 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Products Section */}
-      <section className="py-16 md:py-24 bg-primary-50">
-        <div className="container-custom">
-          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light uppercase">
-            New Arrivals
-          </h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
+      {/* Featured Watch Products */}
+      <FeaturedSection 
+        title="Watch Collection" 
+        products={watchProducts} 
+        categorySlug="watch" 
+      />
 
-          <div className="text-center mt-12">
-            <Link 
-              href="/shop"
-              className="inline-block px-10 py-4 border border-focus text-sm tracking-[0.2em] hover:bg-focus hover:text-white transition-colors uppercase"
-            >
-              View All
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* Featured Menswear Products */}
+      <div className="bg-primary-50">
+        <FeaturedSection 
+          title="Menswear" 
+          products={menswearProducts} 
+          categorySlug="menswear" 
+        />
+      </div>
 
-      {/* Split Banner Section */}
-      <section className="grid md:grid-cols-2">
-        <Link 
-          href="/shop?category=menswear"
-          className="relative h-[50vh] md:h-[70vh] bg-primary-200 group overflow-hidden"
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-3xl md:text-4xl tracking-[0.2em] font-light mb-4 uppercase">Menswear</h3>
-              <span className="text-sm tracking-[0.15em] border-b border-focus pb-1 group-hover:border-gold transition-colors uppercase">
-                Explore
-              </span>
-            </div>
-          </div>
-        </Link>
-        
-        <Link 
-          href="/shop?category=womenswear"
-          className="relative h-[50vh] md:h-[70vh] bg-primary-300 group overflow-hidden"
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-3xl md:text-4xl tracking-[0.2em] font-light mb-4 uppercase">Womenswear</h3>
-              <span className="text-sm tracking-[0.15em] border-b border-focus pb-1 group-hover:border-gold transition-colors uppercase">
-                Explore
-              </span>
-            </div>
-          </div>
-        </Link>
-      </section>
+      {/* Featured Womenswear Products */}
+      <FeaturedSection 
+        title="Womenswear" 
+        products={womenswearProducts} 
+        categorySlug="womenswear" 
+      />
 
       {/* Newsletter Section */}
       <section className="py-16 md:py-24 bg-focus text-white">
