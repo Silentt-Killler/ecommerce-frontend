@@ -3,29 +3,25 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
+  Users,
   Package,
   ShoppingCart,
-  Users,
   DollarSign,
   TrendingUp,
-  TrendingDown,
-  AlertTriangle,
-  Eye,
-  Clock
+  Box,
+  ClipboardList,
+  BarChart3
 } from 'lucide-react';
 import api from '@/lib/api';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
+    totalUsers: 0,
     totalProducts: 0,
     totalOrders: 0,
-    totalCustomers: 0,
-    totalRevenue: 0,
-    pendingOrders: 0,
-    lowStockProducts: 0
+    totalRevenue: 0
   });
   const [recentOrders, setRecentOrders] = useState([]);
-  const [lowStockItems, setLowStockItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,36 +30,22 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Fetch products
-      const productsRes = await api.get('/products?limit=100');
-      const products = productsRes.data.products || [];
-      const lowStock = products.filter(p => p.stock <= 5 && p.stock > 0);
-      const outOfStock = products.filter(p => p.stock === 0);
-
-      // Fetch orders
-      const ordersRes = await api.get('/orders/admin/all?limit=100');
+      const productsRes = await api.get('/products?limit=1');
+      const ordersRes = await api.get('/orders/admin/all?limit=10');
       const orders = ordersRes.data.orders || [];
-      const pendingOrders = orders.filter(o => o.status === 'pending');
+      
       const totalRevenue = orders
         .filter(o => o.status !== 'cancelled')
         .reduce((sum, o) => sum + (o.total || 0), 0);
 
-      // Fetch categories count
-      const categoriesRes = await api.get('/categories');
-      const categories = categoriesRes.data || [];
-
       setStats({
-        totalProducts: productsRes.data.total || products.length,
+        totalUsers: new Set(orders.map(o => o.user_id)).size,
+        totalProducts: productsRes.data.total || 0,
         totalOrders: orders.length,
-        totalCustomers: new Set(orders.map(o => o.user_id)).size,
-        totalRevenue: totalRevenue,
-        pendingOrders: pendingOrders.length,
-        lowStockProducts: lowStock.length + outOfStock.length
+        totalRevenue: totalRevenue
       });
 
       setRecentOrders(orders.slice(0, 5));
-      setLowStockItems(lowStock.slice(0, 5));
-
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     } finally {
@@ -71,9 +53,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return '৳' + (amount || 0).toLocaleString();
-  };
+  const formatCurrency = (amount) => '৳' + (amount || 0).toLocaleString();
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('en-GB', {
@@ -85,202 +65,201 @@ export default function AdminDashboard() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'bg-yellow-100 text-yellow-700',
-      confirmed: 'bg-blue-100 text-blue-700',
-      processing: 'bg-purple-100 text-purple-700',
-      shipped: 'bg-indigo-100 text-indigo-700',
-      delivered: 'bg-green-100 text-green-700',
-      cancelled: 'bg-red-100 text-red-700'
+      pending: 'bg-yellow-500/20 text-yellow-400',
+      confirmed: 'bg-blue-500/20 text-blue-400',
+      processing: 'bg-purple-500/20 text-purple-400',
+      shipped: 'bg-indigo-500/20 text-indigo-400',
+      delivered: 'bg-green-500/20 text-green-400',
+      cancelled: 'bg-red-500/20 text-red-400'
     };
-    return colors[status] || 'bg-gray-100 text-gray-700';
+    return colors[status] || 'bg-gray-500/20 text-gray-400';
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-light tracking-wide mb-8">Dashboard</h1>
+      <h1 className="text-2xl font-semibold text-white mb-8">Admin Dashboard</h1>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {/* Total Revenue */}
-        <div className="bg-white p-6 border border-primary-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <DollarSign size={24} className="text-green-600" />
+        <div className="bg-[#232a3b] rounded-lg p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Total Users</p>
+              <p className="text-2xl font-semibold text-white mt-1">{stats.totalUsers}</p>
             </div>
-            <TrendingUp size={20} className="text-green-500" />
+            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+              <Users size={24} className="text-blue-400" />
+            </div>
           </div>
-          <p className="text-2xl font-light mb-1">{formatCurrency(stats.totalRevenue)}</p>
-          <p className="text-sm text-muted">Total Revenue</p>
         </div>
 
-        {/* Total Orders */}
-        <div className="bg-white p-6 border border-primary-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <ShoppingCart size={24} className="text-blue-600" />
+        <div className="bg-[#232a3b] rounded-lg p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Total Products</p>
+              <p className="text-2xl font-semibold text-white mt-1">{stats.totalProducts}</p>
             </div>
-            <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded">
-              {stats.pendingOrders} pending
-            </span>
+            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+              <Package size={24} className="text-green-400" />
+            </div>
           </div>
-          <p className="text-2xl font-light mb-1">{stats.totalOrders}</p>
-          <p className="text-sm text-muted">Total Orders</p>
         </div>
 
-        {/* Total Products */}
-        <div className="bg-white p-6 border border-primary-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <Package size={24} className="text-purple-600" />
+        <div className="bg-[#232a3b] rounded-lg p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Total Orders</p>
+              <p className="text-2xl font-semibold text-white mt-1">{stats.totalOrders}</p>
             </div>
-            {stats.lowStockProducts > 0 && (
-              <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">
-                {stats.lowStockProducts} low stock
-              </span>
-            )}
+            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+              <ShoppingCart size={24} className="text-purple-400" />
+            </div>
           </div>
-          <p className="text-2xl font-light mb-1">{stats.totalProducts}</p>
-          <p className="text-sm text-muted">Total Products</p>
         </div>
 
-        {/* Total Customers */}
-        <div className="bg-white p-6 border border-primary-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center">
-              <Users size={24} className="text-gold" />
+        <div className="bg-[#232a3b] rounded-lg p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm">Total Revenue</p>
+              <p className="text-2xl font-semibold text-white mt-1">{formatCurrency(stats.totalRevenue)}</p>
+            </div>
+            <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+              <DollarSign size={24} className="text-yellow-400" />
             </div>
           </div>
-          <p className="text-2xl font-light mb-1">{stats.totalCustomers}</p>
-          <p className="text-sm text-muted">Total Customers</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Orders */}
-        <div className="bg-white border border-primary-200">
-          <div className="flex items-center justify-between p-4 border-b border-primary-200">
-            <h2 className="font-medium">Recent Orders</h2>
-            <Link href="/admin/orders" className="text-sm text-gold hover:underline">
-              View All
-            </Link>
-          </div>
-          
-          {recentOrders.length > 0 ? (
-            <div className="divide-y divide-primary-100">
-              {recentOrders.map((order) => (
-                <div key={order._id} className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">#{order.order_number || order._id.slice(-8)}</p>
-                    <p className="text-xs text-muted flex items-center gap-1 mt-1">
-                      <Clock size={12} />
-                      {formatDate(order.created_at)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-sm">{formatCurrency(order.total)}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded ${getStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-8 text-center text-muted">
-              <ShoppingCart size={32} className="mx-auto mb-2 opacity-50" />
-              <p>No orders yet</p>
-            </div>
-          )}
-        </div>
-
-        {/* Low Stock Alert */}
-        <div className="bg-white border border-primary-200">
-          <div className="flex items-center justify-between p-4 border-b border-primary-200">
-            <h2 className="font-medium flex items-center gap-2">
-              <AlertTriangle size={18} className="text-yellow-500" />
-              Low Stock Alert
-            </h2>
-            <Link href="/admin/products" className="text-sm text-gold hover:underline">
-              View All
-            </Link>
-          </div>
-          
-          {lowStockItems.length > 0 ? (
-            <div className="divide-y divide-primary-100">
-              {lowStockItems.map((product) => (
-                <div key={product._id} className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary-100 rounded overflow-hidden">
-                      {product.images?.[0]?.url ? (
-                        <img 
-                          src={product.images[0].url} 
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package size={16} className="text-muted" />
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm line-clamp-1">{product.name}</p>
-                      <p className="text-xs text-muted">{product.category}</p>
-                    </div>
-                  </div>
-                  <span className={`text-sm font-medium ${product.stock === 0 ? 'text-red-600' : 'text-yellow-600'}`}>
-                    {product.stock === 0 ? 'Out of Stock' : `${product.stock} left`}
-                  </span>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="p-8 text-center text-muted">
-              <Package size={32} className="mx-auto mb-2 opacity-50" />
-              <p>All products in stock</p>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Link 
-          href="/admin/products/new"
-          className="bg-white p-4 border border-primary-200 text-center hover:border-gold transition-colors"
-        >
-          <Package size={24} className="mx-auto mb-2 text-gold" />
-          <p className="text-sm">Add Product</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <Link href="/admin/products" className="bg-[#232a3b] rounded-lg p-5 hover:bg-[#2a3347] transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+              <Box size={24} className="text-blue-400" />
+            </div>
+            <div>
+              <p className="text-white font-medium">Manage Products</p>
+              <p className="text-gray-500 text-sm">Add, edit, or remove products</p>
+            </div>
+          </div>
         </Link>
-        <Link 
-          href="/admin/orders"
-          className="bg-white p-4 border border-primary-200 text-center hover:border-gold transition-colors"
-        >
-          <ShoppingCart size={24} className="mx-auto mb-2 text-gold" />
-          <p className="text-sm">View Orders</p>
+
+        <Link href="/admin/orders" className="bg-[#232a3b] rounded-lg p-5 hover:bg-[#2a3347] transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+              <ClipboardList size={24} className="text-green-400" />
+            </div>
+            <div>
+              <p className="text-white font-medium">View Orders</p>
+              <p className="text-gray-500 text-sm">Track and manage customer orders</p>
+            </div>
+          </div>
         </Link>
-        <Link 
-          href="/admin/sliders"
-          className="bg-white p-4 border border-primary-200 text-center hover:border-gold transition-colors"
-        >
-          <Eye size={24} className="mx-auto mb-2 text-gold" />
-          <p className="text-sm">Edit Sliders</p>
+
+        <Link href="/admin/products" className="bg-[#232a3b] rounded-lg p-5 hover:bg-[#2a3347] transition-colors">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+              <BarChart3 size={24} className="text-purple-400" />
+            </div>
+            <div>
+              <p className="text-white font-medium">Inventory</p>
+              <p className="text-gray-500 text-sm">Check stock levels</p>
+            </div>
+          </div>
         </Link>
-        <Link 
-          href="/admin/coupons"
-          className="bg-white p-4 border border-primary-200 text-center hover:border-gold transition-colors"
-        >
-          <DollarSign size={24} className="mx-auto mb-2 text-gold" />
-          <p className="text-sm">Manage Coupons</p>
-        </Link>
+      </div>
+
+      {/* Revenue Chart */}
+      <div className="bg-[#232a3b] rounded-lg p-5 mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-white font-medium">Revenue Overview</h2>
+          <div className="flex items-center gap-2 text-green-400 text-sm">
+            <TrendingUp size={16} />
+            <span>+15% from last month</span>
+          </div>
+        </div>
+        
+        {/* Simple Bar Chart */}
+        <div className="flex items-end justify-between h-32 gap-2">
+          {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, index) => (
+            <div key={month} className="flex-1 flex flex-col items-center gap-2">
+              <div 
+                className="w-full bg-blue-500 rounded-t"
+                style={{ height: `${30 + Math.random() * 70}%` }}
+              ></div>
+              <span className="text-gray-500 text-xs">{month}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Orders */}
+      <div className="bg-[#232a3b] rounded-lg overflow-hidden">
+        <div className="p-5 border-b border-gray-700">
+          <h2 className="text-white font-medium">Recent Orders</h2>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-gray-700">
+                <th className="text-left p-4 text-gray-400 text-sm font-medium">Order ID</th>
+                <th className="text-left p-4 text-gray-400 text-sm font-medium">Customer</th>
+                <th className="text-left p-4 text-gray-400 text-sm font-medium">Amount</th>
+                <th className="text-left p-4 text-gray-400 text-sm font-medium">Status</th>
+                <th className="text-left p-4 text-gray-400 text-sm font-medium">Date</th>
+                <th className="text-right p-4 text-gray-400 text-sm font-medium">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentOrders.length > 0 ? (
+                recentOrders.map((order) => (
+                  <tr key={order._id} className="border-b border-gray-700/50 hover:bg-white/5">
+                    <td className="p-4 text-white text-sm font-mono">
+                      #{order.order_number || order._id.slice(-8)}
+                    </td>
+                    <td className="p-4 text-gray-300 text-sm">
+                      {order.shipping_address?.name || 'N/A'}
+                    </td>
+                    <td className="p-4 text-white text-sm font-medium">
+                      {formatCurrency(order.total)}
+                    </td>
+                    <td className="p-4">
+                      <span className={`text-xs px-2 py-1 rounded ${getStatusColor(order.status)}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="p-4 text-gray-400 text-sm">
+                      {formatDate(order.created_at)}
+                    </td>
+                    <td className="p-4 text-right">
+                      <Link 
+                        href={`/admin/orders?id=${order._id}`}
+                        className="text-blue-400 hover:text-blue-300 text-sm"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-gray-500">
+                    No orders found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

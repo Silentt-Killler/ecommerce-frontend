@@ -1,20 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Monitor, Smartphone, Link as LinkIcon, X, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Monitor, Smartphone, X, GripVertical } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
 export default function AdminSlidersPage() {
+  const [activeTab, setActiveTab] = useState('desktop');
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingSlide, setEditingSlide] = useState(null);
+  const [editingIndex, setEditingIndex] = useState(null);
   const [formData, setFormData] = useState({
-    desktop_image: '',
-    mobile_image: '',
+    image_url: '',
     link: '',
-    is_active: true
+    type: 'desktop'
   });
 
   useEffect(() => {
@@ -32,54 +32,51 @@ export default function AdminSlidersPage() {
     }
   };
 
+  const getSlides = (type) => {
+    const slides = settings?.hero_slides || [];
+    return slides.filter(s => (s.type || 'desktop') === type);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     try {
-      const slides = settings?.hero_slides || [];
-      
-      if (editingSlide !== null) {
-        // Update existing slide
-        slides[editingSlide] = {
-          ...slides[editingSlide],
-          ...formData
-        };
+      const slides = [...(settings?.hero_slides || [])];
+      const newSlide = {
+        ...formData,
+        is_active: true
+      };
+
+      if (editingIndex !== null) {
+        const allSlides = settings?.hero_slides || [];
+        const typeSlides = allSlides.filter(s => (s.type || 'desktop') === activeTab);
+        const actualIndex = allSlides.indexOf(typeSlides[editingIndex]);
+        slides[actualIndex] = { ...slides[actualIndex], ...newSlide };
       } else {
-        // Add new slide
-        slides.push(formData);
+        slides.push(newSlide);
       }
 
       await api.put('/settings', { hero_slides: slides });
-      toast.success(editingSlide !== null ? 'Slider updated' : 'Slider added');
+      toast.success(editingIndex !== null ? 'Slider updated' : 'Slider added');
       setShowModal(false);
-      setEditingSlide(null);
-      setFormData({ desktop_image: '', mobile_image: '', link: '', is_active: true });
+      setEditingIndex(null);
+      setFormData({ image_url: '', link: '', type: activeTab });
       fetchSettings();
     } catch (error) {
       toast.error('Failed to save slider');
     }
   };
 
-  const handleEdit = (index) => {
-    const slide = settings.hero_slides[index];
-    setFormData({
-      desktop_image: slide.desktop_image || slide.image_url || '',
-      mobile_image: slide.mobile_image || '',
-      link: slide.link || '',
-      is_active: slide.is_active !== false
-    });
-    setEditingSlide(index);
-    setShowModal(true);
-  };
-
   const handleDelete = async (index) => {
     if (!confirm('Delete this slider?')) return;
 
     try {
-      const slides = [...(settings?.hero_slides || [])];
-      slides.splice(index, 1);
+      const allSlides = [...(settings?.hero_slides || [])];
+      const typeSlides = allSlides.filter(s => (s.type || 'desktop') === activeTab);
+      const actualIndex = allSlides.indexOf(typeSlides[index]);
+      allSlides.splice(actualIndex, 1);
       
-      await api.put('/settings', { hero_slides: slides });
+      await api.put('/settings', { hero_slides: allSlides });
       toast.success('Slider deleted');
       fetchSettings();
     } catch (error) {
@@ -87,284 +84,224 @@ export default function AdminSlidersPage() {
     }
   };
 
-  const toggleActive = async (index) => {
-    try {
-      const slides = [...(settings?.hero_slides || [])];
-      slides[index].is_active = !slides[index].is_active;
-      
-      await api.put('/settings', { hero_slides: slides });
-      toast.success('Status updated');
-      fetchSettings();
-    } catch (error) {
-      toast.error('Failed to update status');
-    }
+  const openAddModal = () => {
+    setEditingIndex(null);
+    setFormData({ image_url: '', link: '', type: activeTab });
+    setShowModal(true);
+  };
+
+  const openEditModal = (index) => {
+    const slides = getSlides(activeTab);
+    setEditingIndex(index);
+    setFormData({
+      image_url: slides[index].image_url || slides[index].desktop_image || '',
+      link: slides[index].link || '',
+      type: activeTab
+    });
+    setShowModal(true);
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  const slides = settings?.hero_slides || [];
+  const currentSlides = getSlides(activeTab);
 
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-light tracking-wide">Home Sliders</h1>
-          <p className="text-sm text-muted mt-1">Manage hero section sliders</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <h1 className="text-2xl font-semibold text-white">Home Slider Management</h1>
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setActiveTab('desktop'); openAddModal(); }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+          >
+            <Monitor size={16} />
+            Add Desktop Slider
+          </button>
+          <button
+            onClick={() => { setActiveTab('mobile'); openAddModal(); }}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+          >
+            <Smartphone size={16} />
+            Add Mobile Slider
+          </button>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
         <button
-          onClick={() => {
-            setEditingSlide(null);
-            setFormData({ desktop_image: '', mobile_image: '', link: '', is_active: true });
-            setShowModal(true);
-          }}
-          className="flex items-center gap-2 px-4 py-2 bg-focus text-white text-sm hover:bg-gold transition-colors"
+          onClick={() => setActiveTab('desktop')}
+          className={`flex items-center gap-2 px-4 py-2 rounded text-sm transition-colors ${
+            activeTab === 'desktop'
+              ? 'bg-blue-600 text-white'
+              : 'bg-[#232a3b] text-gray-400 hover:text-white'
+          }`}
         >
-          <Plus size={18} />
-          Add Slider
+          <Monitor size={16} />
+          Desktop Sliders
+        </button>
+        <button
+          onClick={() => setActiveTab('mobile')}
+          className={`flex items-center gap-2 px-4 py-2 rounded text-sm transition-colors ${
+            activeTab === 'mobile'
+              ? 'bg-blue-600 text-white'
+              : 'bg-[#232a3b] text-gray-400 hover:text-white'
+          }`}
+        >
+          <Smartphone size={16} />
+          Mobile Sliders
         </button>
       </div>
 
       {/* Size Info */}
-      <div className="bg-blue-50 border border-blue-200 p-4 mb-6 text-sm">
-        <p className="font-medium text-blue-800 mb-2">Recommended Image Sizes:</p>
-        <div className="flex gap-8 text-blue-700">
-          <div className="flex items-center gap-2">
-            <Monitor size={18} />
-            <span>Desktop: <strong>1920 x 800 px</strong></span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Smartphone size={18} />
-            <span>Mobile: <strong>768 x 1000 px</strong></span>
-          </div>
-        </div>
+      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
+        <p className="text-blue-400 text-sm">
+          {activeTab === 'desktop' 
+            ? 'Recommended size: 1920 x 800 pixels'
+            : 'Recommended size: 768 x 1000 pixels'
+          }
+        </p>
       </div>
 
       {/* Sliders List */}
-      {slides.length > 0 ? (
+      {currentSlides.length > 0 ? (
         <div className="space-y-4">
-          {slides.map((slide, index) => (
+          {currentSlides.map((slide, index) => (
             <div 
               key={index}
-              className={`bg-white border ${slide.is_active ? 'border-primary-200' : 'border-red-200 bg-red-50/30'} p-4`}
+              className="bg-[#232a3b] rounded-lg p-4 flex items-center gap-4"
             >
-              <div className="flex items-start gap-4">
-                {/* Drag Handle */}
-                <div className="pt-2 text-muted cursor-move">
-                  <GripVertical size={20} />
-                </div>
-
-                {/* Images Preview */}
-                <div className="flex gap-4 flex-1">
-                  {/* Desktop Preview */}
-                  <div className="flex-1">
-                    <p className="text-xs text-muted mb-2 flex items-center gap-1">
-                      <Monitor size={14} />
-                      Desktop
-                    </p>
-                    <div className="aspect-[1920/800] bg-primary-100 rounded overflow-hidden">
-                      {(slide.desktop_image || slide.image_url) ? (
-                        <img 
-                          src={slide.desktop_image || slide.image_url}
-                          alt="Desktop"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted text-sm">
-                          No Image
-                        </div>
-                      )}
-                    </div>
+              <div className="text-gray-600 cursor-move">
+                <GripVertical size={20} />
+              </div>
+              
+              <div className={`${activeTab === 'desktop' ? 'w-48 h-20' : 'w-20 h-28'} bg-gray-700 rounded overflow-hidden flex-shrink-0`}>
+                {slide.image_url || slide.desktop_image ? (
+                  <img 
+                    src={slide.image_url || slide.desktop_image}
+                    alt="Slider"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs">
+                    No Image
                   </div>
-
-                  {/* Mobile Preview */}
-                  <div className="w-32">
-                    <p className="text-xs text-muted mb-2 flex items-center gap-1">
-                      <Smartphone size={14} />
-                      Mobile
-                    </p>
-                    <div className="aspect-[768/1000] bg-primary-100 rounded overflow-hidden">
-                      {slide.mobile_image ? (
-                        <img 
-                          src={slide.mobile_image}
-                          alt="Mobile"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted text-xs">
-                          No Image
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => toggleActive(index)}
-                    className={`px-3 py-1 text-xs border rounded ${
-                      slide.is_active 
-                        ? 'border-green-500 text-green-600' 
-                        : 'border-red-500 text-red-600'
-                    }`}
-                  >
-                    {slide.is_active ? 'Active' : 'Inactive'}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(index)}
-                    className="px-3 py-1 text-xs border border-primary-300 hover:border-focus"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(index)}
-                    className="px-3 py-1 text-xs border border-red-300 text-red-600 hover:bg-red-50"
-                  >
-                    Delete
-                  </button>
-                </div>
+                )}
               </div>
 
-              {/* Link */}
-              {slide.link && (
-                <div className="mt-3 pt-3 border-t border-primary-100">
-                  <p className="text-xs text-muted flex items-center gap-1">
-                    <LinkIcon size={12} />
-                    {slide.link}
-                  </p>
-                </div>
-              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm truncate">
+                  {slide.image_url || slide.desktop_image || 'No image URL'}
+                </p>
+                {slide.link && (
+                  <p className="text-gray-500 text-xs mt-1">Link: {slide.link}</p>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => openEditModal(index)}
+                  className="px-3 py-1.5 text-sm text-gray-400 hover:text-white border border-gray-600 rounded hover:border-gray-500 transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(index)}
+                  className="p-1.5 text-gray-400 hover:text-red-400 transition-colors"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-white border border-primary-200 p-12 text-center">
-          <Monitor size={48} className="mx-auto mb-4 text-muted opacity-50" />
-          <p className="text-muted mb-4">No sliders yet</p>
+        <div className="bg-[#232a3b] rounded-lg p-12 text-center">
+          <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            {activeTab === 'desktop' ? <Monitor size={32} className="text-gray-500" /> : <Smartphone size={32} className="text-gray-500" />}
+          </div>
+          <p className="text-gray-400 mb-4">
+            No {activeTab} sliders found. Add your first slider!
+          </p>
           <button
-            onClick={() => setShowModal(true)}
-            className="px-6 py-2 bg-focus text-white text-sm hover:bg-gold transition-colors"
+            onClick={openAddModal}
+            className="px-6 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
           >
-            Add First Slider
+            Add Slider
           </button>
         </div>
       )}
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-xl font-light">
-                {editingSlide !== null ? 'Edit Slider' : 'Add Slider'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="bg-[#232a3b] w-full max-w-lg rounded-lg">
+            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+              <h2 className="text-lg font-medium text-white">
+                {editingIndex !== null ? 'Edit' : 'Add'} {activeTab === 'desktop' ? 'Desktop' : 'Mobile'} Slider
               </h2>
-              <button onClick={() => setShowModal(false)} className="text-muted hover:text-focus">
+              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
                 <X size={24} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Desktop Image */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm mb-2 flex items-center gap-2">
-                  <Monitor size={16} />
-                  Desktop Image URL
-                  <span className="text-muted">(1920 x 800 px)</span>
+                <label className="block text-sm text-gray-400 mb-2">
+                  Image URL ({activeTab === 'desktop' ? '1920 x 800' : '768 x 1000'})
                 </label>
                 <input
                   type="url"
-                  value={formData.desktop_image}
-                  onChange={(e) => setFormData({ ...formData, desktop_image: e.target.value })}
+                  value={formData.image_url}
+                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                   placeholder="https://res.cloudinary.com/..."
-                  className="input-field"
+                  className="w-full px-4 py-3 bg-[#1a1f2e] border border-gray-700 rounded text-white placeholder-gray-500 focus:border-blue-500 outline-none"
                   required
                 />
-                {formData.desktop_image && (
-                  <div className="mt-2 aspect-[1920/800] bg-primary-100 rounded overflow-hidden max-h-40">
-                    <img 
-                      src={formData.desktop_image}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
-                  </div>
-                )}
               </div>
 
-              {/* Mobile Image */}
-              <div>
-                <label className="block text-sm mb-2 flex items-center gap-2">
-                  <Smartphone size={16} />
-                  Mobile Image URL
-                  <span className="text-muted">(768 x 1000 px)</span>
-                </label>
-                <input
-                  type="url"
-                  value={formData.mobile_image}
-                  onChange={(e) => setFormData({ ...formData, mobile_image: e.target.value })}
-                  placeholder="https://res.cloudinary.com/..."
-                  className="input-field"
-                />
-                {formData.mobile_image && (
-                  <div className="mt-2 aspect-[768/1000] bg-primary-100 rounded overflow-hidden max-h-40 w-24">
-                    <img 
-                      src={formData.mobile_image}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
-                  </div>
-                )}
-              </div>
+              {formData.image_url && (
+                <div className={`${activeTab === 'desktop' ? 'aspect-[1920/800]' : 'aspect-[768/1000] max-w-[200px]'} bg-gray-700 rounded overflow-hidden`}>
+                  <img 
+                    src={formData.image_url}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
+                </div>
+              )}
 
-              {/* Link */}
               <div>
-                <label className="block text-sm mb-2 flex items-center gap-2">
-                  <LinkIcon size={16} />
-                  Link (Optional)
-                </label>
+                <label className="block text-sm text-gray-400 mb-2">Link (Optional)</label>
                 <input
                   type="text"
                   value={formData.link}
                   onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                   placeholder="/shop or https://..."
-                  className="input-field"
+                  className="w-full px-4 py-3 bg-[#1a1f2e] border border-gray-700 rounded text-white placeholder-gray-500 focus:border-blue-500 outline-none"
                 />
               </div>
 
-              {/* Active Toggle */}
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="w-4 h-4"
-                />
-                <label htmlFor="is_active" className="text-sm">Active (Show on homepage)</label>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-3 border border-primary-300 text-sm hover:border-focus transition-colors"
+                  className="flex-1 py-3 text-sm text-gray-400 border border-gray-600 rounded hover:border-gray-500 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-focus text-white text-sm hover:bg-gold transition-colors"
+                  className="flex-1 py-3 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors"
                 >
-                  {editingSlide !== null ? 'Update' : 'Add Slider'}
+                  {editingIndex !== null ? 'Update' : 'Add'} Slider
                 </button>
               </div>
             </form>
