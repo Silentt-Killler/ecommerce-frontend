@@ -10,12 +10,7 @@ export default function AdminBrandsPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: '',
-    logo: ''
-  });
+  const [formData, setFormData] = useState({ name: '', slug: '', description: '', logo: '' });
 
   useEffect(() => {
     fetchBrands();
@@ -26,32 +21,21 @@ export default function AdminBrandsPage() {
       const res = await api.get('/brands');
       setBrands(res.data || []);
     } catch (error) {
-      // Brands endpoint might not exist yet
       setBrands([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const generateSlug = (name) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '');
-  };
+  const generateSlug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
   const handleNameChange = (e) => {
     const name = e.target.value;
-    setFormData({
-      ...formData,
-      name,
-      slug: editingBrand ? formData.slug : generateSlug(name)
-    });
+    setFormData({ ...formData, name, slug: editingBrand ? formData.slug : generateSlug(name) });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     try {
       if (editingBrand) {
         await api.put(`/brands/${editingBrand._id}`, formData);
@@ -60,7 +44,6 @@ export default function AdminBrandsPage() {
         await api.post('/brands', formData);
         toast.success('Brand created');
       }
-      
       setShowModal(false);
       setEditingBrand(null);
       setFormData({ name: '', slug: '', description: '', logo: '' });
@@ -83,7 +66,6 @@ export default function AdminBrandsPage() {
 
   const handleDelete = async (brandId) => {
     if (!confirm('Delete this brand?')) return;
-    
     try {
       await api.delete(`/brands/${brandId}`);
       toast.success('Brand deleted');
@@ -93,10 +75,16 @@ export default function AdminBrandsPage() {
     }
   };
 
+  const openAddModal = () => {
+    setEditingBrand(null);
+    setFormData({ name: '', slug: '', description: '', logo: '' });
+    setShowModal(true);
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 400 }}>
+        <div style={{ width: 40, height: 40, border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
   }
@@ -104,169 +92,273 @@ export default function AdminBrandsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
         <div>
-          <h1 className="text-2xl font-light tracking-wide">Brands</h1>
-          <p className="text-sm text-muted mt-1">Manage product brands</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Brands</h1>
+          <p style={{ fontSize: 14, color: '#6b7280' }}>Manage product brands</p>
         </div>
         <button
-          onClick={() => {
-            setEditingBrand(null);
-            setFormData({ name: '', slug: '', description: '', logo: '' });
-            setShowModal(true);
+          onClick={openAddModal}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 20px',
+            backgroundColor: '#3b82f6',
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: 600,
+            borderRadius: 10,
+            border: 'none',
+            cursor: 'pointer'
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-focus text-white text-sm hover:bg-gold transition-colors"
         >
-          <Plus size={18} />
+          <Plus size={20} />
           Add Brand
         </button>
       </div>
 
       {/* Brands Grid */}
       {brands.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
           {brands.map((brand) => (
-            <div key={brand._id} className="bg-white border border-primary-200 p-4">
-              <div className="flex items-start gap-3">
-                {/* Logo */}
-                <div className="w-12 h-12 bg-primary-100 rounded flex items-center justify-center flex-shrink-0">
+            <div key={brand._id} style={{ backgroundColor: '#1f2937', borderRadius: 16, padding: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 16 }}>
+                <div style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: 14,
+                  backgroundColor: '#374151',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  overflow: 'hidden',
+                  flexShrink: 0
+                }}>
                   {brand.logo ? (
-                    <img 
-                      src={brand.logo}
-                      alt={brand.name}
-                      className="w-full h-full object-contain rounded"
-                    />
+                    <img src={brand.logo} alt={brand.name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8 }} />
                   ) : (
-                    <Tag size={20} className="text-muted" />
+                    <Tag size={28} style={{ color: '#6b7280' }} />
                   )}
                 </div>
-                
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium">{brand.name}</h3>
-                  <p className="text-xs text-muted">/{brand.slug}</p>
-                  {brand.product_count > 0 && (
-                    <p className="text-xs text-muted mt-1 flex items-center gap-1">
-                      <Package size={12} />
-                      {brand.product_count} products
-                    </p>
-                  )}
+                <div style={{ flex: 1 }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 4 }}>{brand.name}</h3>
+                  <p style={{ fontSize: 13, color: '#6b7280' }}>/{brand.slug}</p>
                 </div>
               </div>
+              
+              {brand.description && (
+                <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 20, lineHeight: 1.6 }}>
+                  {brand.description.length > 100 ? brand.description.slice(0, 100) + '...' : brand.description}
+                </p>
+              )}
 
-              {/* Actions */}
-              <div className="flex gap-2 mt-4 pt-3 border-t border-primary-100">
+              <div style={{ display: 'flex', gap: 10 }}>
                 <button
                   onClick={() => handleEdit(brand)}
-                  className="flex-1 flex items-center justify-center gap-1 py-2 text-xs border border-primary-300 hover:border-focus transition-colors"
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    padding: 12,
+                    backgroundColor: '#374151',
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 500,
+                    borderRadius: 10,
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
                 >
-                  <Edit size={12} />
+                  <Edit size={16} />
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(brand._id)}
-                  className="flex-1 flex items-center justify-center gap-1 py-2 text-xs border border-primary-300 hover:border-red-500 hover:text-red-500 transition-colors"
+                  style={{
+                    padding: '12px 16px',
+                    backgroundColor: '#374151',
+                    color: '#ef4444',
+                    borderRadius: 10,
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex'
+                  }}
                 >
-                  <Trash2 size={12} />
-                  Delete
+                  <Trash2 size={18} />
                 </button>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-white border border-primary-200 p-12 text-center">
-          <Tag size={48} className="mx-auto mb-4 text-muted opacity-50" />
-          <p className="text-muted mb-4">No brands yet</p>
+        <div style={{ backgroundColor: '#1f2937', borderRadius: 16, padding: 80, textAlign: 'center' }}>
+          <Tag size={64} style={{ color: '#374151', margin: '0 auto 16px' }} />
+          <p style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 8 }}>No brands yet</p>
+          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>Add your first brand to organize products</p>
           <button
-            onClick={() => setShowModal(true)}
-            className="px-6 py-2 bg-focus text-white text-sm hover:bg-gold transition-colors"
+            onClick={openAddModal}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#3b82f6',
+              color: '#fff',
+              fontSize: 14,
+              fontWeight: 600,
+              borderRadius: 10,
+              border: 'none',
+              cursor: 'pointer'
+            }}
           >
-            Add First Brand
+            Add Brand
           </button>
         </div>
       )}
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-xl font-light">
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: 'rgba(0,0,0,0.8)' }}>
+          <div style={{ width: '100%', maxWidth: 500, backgroundColor: '#1f2937', borderRadius: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 24, borderBottom: '1px solid #374151' }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>
                 {editingBrand ? 'Edit Brand' : 'Add Brand'}
               </h2>
-              <button onClick={() => setShowModal(false)} className="text-muted hover:text-focus">
-                <X size={24} />
+              <button onClick={() => setShowModal(false)} style={{ padding: 8, backgroundColor: '#374151', borderRadius: 8, border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex' }}>
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm mb-2">Brand Name</label>
+            <form onSubmit={handleSubmit} style={{ padding: 24 }}>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#fff', marginBottom: 8 }}>
+                  Brand Name *
+                </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={handleNameChange}
-                  className="input-field"
+                  placeholder="e.g. Rolex"
                   required
+                  style={{
+                    width: '100%',
+                    padding: 14,
+                    backgroundColor: '#111827',
+                    border: '1px solid #374151',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontSize: 14,
+                    outline: 'none'
+                  }}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm mb-2">Slug</label>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#fff', marginBottom: 8 }}>
+                  Slug *
+                </label>
                 <input
                   type="text"
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  className="input-field"
+                  placeholder="rolex"
                   required
+                  style={{
+                    width: '100%',
+                    padding: 14,
+                    backgroundColor: '#111827',
+                    border: '1px solid #374151',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontSize: 14,
+                    outline: 'none'
+                  }}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm mb-2">Description (Optional)</label>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#fff', marginBottom: 8 }}>
+                  Description (Optional)
+                </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="input-field"
-                  rows={2}
+                  placeholder="Brief description of this brand..."
+                  rows={3}
+                  style={{
+                    width: '100%',
+                    padding: 14,
+                    backgroundColor: '#111827',
+                    border: '1px solid #374151',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontSize: 14,
+                    outline: 'none',
+                    resize: 'none'
+                  }}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm mb-2">Logo URL (Optional)</label>
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#fff', marginBottom: 8 }}>
+                  Logo URL (Optional)
+                </label>
                 <input
                   type="url"
                   value={formData.logo}
                   onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                  placeholder="https://..."
-                  className="input-field"
+                  placeholder="https://res.cloudinary.com/..."
+                  style={{
+                    width: '100%',
+                    padding: 14,
+                    backgroundColor: '#111827',
+                    border: '1px solid #374151',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontSize: 14,
+                    outline: 'none'
+                  }}
                 />
                 {formData.logo && (
-                  <div className="mt-2 w-16 h-16 bg-primary-100 rounded overflow-hidden">
-                    <img 
-                      src={formData.logo}
-                      alt="Preview"
-                      className="w-full h-full object-contain"
-                      onError={(e) => e.target.style.display = 'none'}
-                    />
+                  <div style={{ marginTop: 12, width: 80, height: 80, backgroundColor: '#374151', borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <img src={formData.logo} alt="Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                   </div>
                 )}
               </div>
 
-              <div className="flex gap-4 pt-4">
+              <div style={{ display: 'flex', gap: 12 }}>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-3 border border-primary-300 text-sm hover:border-focus transition-colors"
+                  style={{
+                    flex: 1,
+                    padding: 14,
+                    backgroundColor: '#374151',
+                    color: '#9ca3af',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    borderRadius: 10,
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-focus text-white text-sm hover:bg-gold transition-colors"
+                  style={{
+                    flex: 1,
+                    padding: 14,
+                    backgroundColor: '#3b82f6',
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    borderRadius: 10,
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
                 >
-                  {editingBrand ? 'Update' : 'Create'}
+                  {editingBrand ? 'Update' : 'Create'} Brand
                 </button>
               </div>
             </form>

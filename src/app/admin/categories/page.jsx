@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, X, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, X, FolderOpen, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -10,15 +10,7 @@ export default function AdminCategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [showImageModal, setShowImageModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [imageUrl, setImageUrl] = useState('');
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: ''
-  });
+  const [formData, setFormData] = useState({ name: '', slug: '', description: '', image: '' });
 
   useEffect(() => {
     fetchCategories();
@@ -29,28 +21,21 @@ export default function AdminCategoriesPage() {
       const res = await api.get('/categories');
       setCategories(res.data || []);
     } catch (error) {
-      toast.error('Failed to fetch categories');
+      console.error('Failed to fetch categories:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const generateSlug = (name) => {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-  };
+  const generateSlug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
   const handleNameChange = (e) => {
     const name = e.target.value;
-    setFormData({
-      ...formData,
-      name,
-      slug: editingCategory ? formData.slug : generateSlug(name)
-    });
+    setFormData({ ...formData, name, slug: editingCategory ? formData.slug : generateSlug(name) });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     try {
       if (editingCategory) {
         await api.put(`/categories/${editingCategory._id}`, formData);
@@ -59,10 +44,9 @@ export default function AdminCategoriesPage() {
         await api.post('/categories', formData);
         toast.success('Category created');
       }
-      
       setShowModal(false);
       setEditingCategory(null);
-      setFormData({ name: '', slug: '', description: '' });
+      setFormData({ name: '', slug: '', description: '', image: '' });
       fetchCategories();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to save category');
@@ -74,14 +58,14 @@ export default function AdminCategoriesPage() {
     setFormData({
       name: category.name,
       slug: category.slug,
-      description: category.description || ''
+      description: category.description || '',
+      image: category.image || ''
     });
     setShowModal(true);
   };
 
   const handleDelete = async (categoryId) => {
     if (!confirm('Delete this category?')) return;
-    
     try {
       await api.delete(`/categories/${categoryId}`);
       toast.success('Category deleted');
@@ -91,29 +75,16 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const openImageModal = (category) => {
-    setSelectedCategory(category);
-    setImageUrl(category.image || '');
-    setShowImageModal(true);
-  };
-
-  const handleSaveImage = async () => {
-    if (!selectedCategory) return;
-    
-    try {
-      await api.put(`/categories/${selectedCategory._id}`, { image: imageUrl || null });
-      toast.success('Image updated');
-      setShowImageModal(false);
-      fetchCategories();
-    } catch (error) {
-      toast.error('Failed to update image');
-    }
+  const openAddModal = () => {
+    setEditingCategory(null);
+    setFormData({ name: '', slug: '', description: '', image: '' });
+    setShowModal(true);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 400 }}>
+        <div style={{ width: 40, height: 40, border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
       </div>
     );
   }
@@ -121,177 +92,274 @@ export default function AdminCategoriesPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-semibold text-white">Categories</h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Categories</h1>
+          <p style={{ fontSize: 14, color: '#6b7280' }}>Manage product categories</p>
+        </div>
         <button
-          onClick={() => {
-            setEditingCategory(null);
-            setFormData({ name: '', slug: '', description: '' });
-            setShowModal(true);
+          onClick={openAddModal}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 20px',
+            backgroundColor: '#3b82f6',
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: 600,
+            borderRadius: 10,
+            border: 'none',
+            cursor: 'pointer'
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
         >
-          <Plus size={18} />
+          <Plus size={20} />
           Add Category
         </button>
       </div>
 
       {/* Categories Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {categories.map((category) => (
-          <div key={category._id} className="bg-[#232a3b] rounded-lg overflow-hidden">
-            {/* Image */}
-            <div className="relative aspect-square bg-gray-700">
-              {category.image ? (
-                <img src={category.image} alt={category.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
-                  <ImageIcon size={32} />
-                  <p className="text-xs mt-1">No Image</p>
-                </div>
-              )}
-              <button
-                onClick={() => openImageModal(category)}
-                className="absolute bottom-2 right-2 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700"
-              >
-                <LinkIcon size={14} />
-              </button>
-            </div>
+      {categories.length > 0 ? (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+          {categories.map((category) => (
+            <div key={category._id} style={{ backgroundColor: '#1f2937', borderRadius: 16, overflow: 'hidden' }}>
+              {/* Image */}
+              <div style={{ 
+                height: 160, 
+                backgroundColor: '#374151',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {category.image ? (
+                  <img src={category.image} alt={category.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <FolderOpen size={48} style={{ color: '#6b7280' }} />
+                )}
+              </div>
 
-            {/* Info */}
-            <div className="p-4">
-              <h3 className="text-white font-medium">{category.name}</h3>
-              <p className="text-gray-500 text-xs">/{category.slug}</p>
-              
-              <div className="flex gap-2 mt-4">
-                <button
-                  onClick={() => handleEdit(category)}
-                  className="flex-1 py-2 text-xs text-gray-400 border border-gray-600 rounded hover:text-white hover:border-gray-500"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(category._id)}
-                  className="flex-1 py-2 text-xs text-gray-400 border border-gray-600 rounded hover:text-red-400 hover:border-red-500"
-                >
-                  Delete
-                </button>
+              {/* Content */}
+              <div style={{ padding: 20 }}>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 4 }}>{category.name}</h3>
+                <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 12 }}>/{category.slug}</p>
+                
+                {category.description && (
+                  <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 16, lineHeight: 1.5 }}>
+                    {category.description.length > 80 ? category.description.slice(0, 80) + '...' : category.description}
+                  </p>
+                )}
+
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={() => handleEdit(category)}
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      padding: 12,
+                      backgroundColor: '#374151',
+                      color: '#fff',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      borderRadius: 8,
+                      border: 'none',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Edit size={16} />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(category._id)}
+                    style={{
+                      padding: 12,
+                      backgroundColor: '#374151',
+                      color: '#ef4444',
+                      borderRadius: 8,
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex'
+                    }}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ backgroundColor: '#1f2937', borderRadius: 16, padding: 80, textAlign: 'center' }}>
+          <FolderOpen size={64} style={{ color: '#374151', margin: '0 auto 16px' }} />
+          <p style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 8 }}>No categories yet</p>
+          <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>Add your first category to organize products</p>
+          <button
+            onClick={openAddModal}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#3b82f6',
+              color: '#fff',
+              fontSize: 14,
+              fontWeight: 600,
+              borderRadius: 10,
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            Add Category
+          </button>
+        </div>
+      )}
 
-      {/* Add/Edit Modal */}
+      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-[#232a3b] w-full max-w-md rounded-lg">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h2 className="text-lg font-medium text-white">
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: 'rgba(0,0,0,0.8)' }}>
+          <div style={{ width: '100%', maxWidth: 500, backgroundColor: '#1f2937', borderRadius: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 24, borderBottom: '1px solid #374151' }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>
                 {editingCategory ? 'Edit Category' : 'Add Category'}
               </h2>
-              <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
-                <X size={24} />
+              <button onClick={() => setShowModal(false)} style={{ padding: 8, backgroundColor: '#374151', borderRadius: 8, border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex' }}>
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Name</label>
+            <form onSubmit={handleSubmit} style={{ padding: 24 }}>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#fff', marginBottom: 8 }}>
+                  Category Name *
+                </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={handleNameChange}
-                  className="w-full px-4 py-3 bg-[#1a1f2e] border border-gray-700 rounded text-white focus:border-blue-500 outline-none"
+                  placeholder="e.g. Men's Watches"
                   required
+                  style={{
+                    width: '100%',
+                    padding: 14,
+                    backgroundColor: '#111827',
+                    border: '1px solid #374151',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontSize: 14,
+                    outline: 'none'
+                  }}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Slug</label>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#fff', marginBottom: 8 }}>
+                  Slug *
+                </label>
                 <input
                   type="text"
                   value={formData.slug}
                   onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#1a1f2e] border border-gray-700 rounded text-white focus:border-blue-500 outline-none"
+                  placeholder="mens-watches"
                   required
+                  style={{
+                    width: '100%',
+                    padding: 14,
+                    backgroundColor: '#111827',
+                    border: '1px solid #374151',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontSize: 14,
+                    outline: 'none'
+                  }}
                 />
               </div>
 
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Description</label>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#fff', marginBottom: 8 }}>
+                  Description (Optional)
+                </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-[#1a1f2e] border border-gray-700 rounded text-white focus:border-blue-500 outline-none resize-none"
+                  placeholder="Brief description of this category..."
                   rows={3}
+                  style={{
+                    width: '100%',
+                    padding: 14,
+                    backgroundColor: '#111827',
+                    border: '1px solid #374151',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontSize: 14,
+                    outline: 'none',
+                    resize: 'none'
+                  }}
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#fff', marginBottom: 8 }}>
+                  Image URL (Optional)
+                </label>
+                <input
+                  type="url"
+                  value={formData.image}
+                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  placeholder="https://res.cloudinary.com/..."
+                  style={{
+                    width: '100%',
+                    padding: 14,
+                    backgroundColor: '#111827',
+                    border: '1px solid #374151',
+                    borderRadius: 10,
+                    color: '#fff',
+                    fontSize: 14,
+                    outline: 'none'
+                  }}
+                />
+                {formData.image && (
+                  <div style={{ marginTop: 12, height: 120, backgroundColor: '#374151', borderRadius: 10, overflow: 'hidden' }}>
+                    <img src={formData.image} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-3 text-gray-400 border border-gray-600 rounded hover:border-gray-500"
+                  style={{
+                    flex: 1,
+                    padding: 14,
+                    backgroundColor: '#374151',
+                    color: '#9ca3af',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    borderRadius: 10,
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  style={{
+                    flex: 1,
+                    padding: 14,
+                    backgroundColor: '#3b82f6',
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    borderRadius: 10,
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
                 >
-                  {editingCategory ? 'Update' : 'Create'}
+                  {editingCategory ? 'Update' : 'Create'} Category
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* Image URL Modal */}
-      {showImageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-[#232a3b] w-full max-w-md rounded-lg">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h2 className="text-lg font-medium text-white">Category Image</h2>
-              <button onClick={() => setShowImageModal(false)} className="text-gray-400 hover:text-white">
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Image URL</label>
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://res.cloudinary.com/..."
-                  className="w-full px-4 py-3 bg-[#1a1f2e] border border-gray-700 rounded text-white focus:border-blue-500 outline-none"
-                />
-              </div>
-
-              {imageUrl && (
-                <div className="aspect-square bg-gray-700 rounded overflow-hidden max-w-[150px]">
-                  <img src={imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => setShowImageModal(false)}
-                  className="flex-1 py-3 text-gray-400 border border-gray-600 rounded hover:border-gray-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveImage}
-                  className="flex-1 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}
