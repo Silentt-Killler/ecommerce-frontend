@@ -15,7 +15,7 @@ import {
   Menu,
   X,
   LogOut,
-  ChevronDown
+  FolderOpen
 } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 
@@ -23,6 +23,7 @@ const menuItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Home Sliders', href: '/admin/sliders', icon: Image },
   { name: 'Products', href: '/admin/products', icon: Package },
+  { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Brands', href: '/admin/brands', icon: Tag },
@@ -67,10 +68,10 @@ export default function AdminLayout({ children }) {
 
   if (isChecking || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#1a1f2e]">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0f172a' }}>
         <div className="text-center">
-          <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading...</p>
+          <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p style={{ color: '#64748b' }}>Loading...</p>
         </div>
       </div>
     );
@@ -78,97 +79,133 @@ export default function AdminLayout({ children }) {
 
   if (!isAuthenticated || user?.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#1a1f2e]">
-        <p className="text-gray-400">Redirecting...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0f172a' }}>
+        <p style={{ color: '#64748b' }}>Redirecting...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1f2e]">
-      {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#232a3b] flex items-center justify-between px-4 z-50 border-b border-gray-700">
-        <button onClick={() => setSidebarOpen(true)} className="text-gray-400">
-          <Menu size={24} />
-        </button>
-        <span className="text-lg font-semibold text-white tracking-wide">PRISMIN ADMIN</span>
-        <div className="w-6"></div>
-      </div>
-
-      {/* Sidebar Overlay */}
+    <div className="min-h-screen" style={{ backgroundColor: '#0f172a' }}>
+      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/50 z-50"
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`
-        fixed top-0 left-0 h-full w-[200px] bg-[#232a3b] z-50
-        transform transition-transform duration-300
-        lg:translate-x-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
+      <aside 
+        className={`fixed top-0 left-0 h-full z-50 transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{ width: '260px', backgroundColor: '#1e293b' }}
+      >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-700">
-          <Link href="/admin" className="text-lg font-bold text-white tracking-wide">
-            PRISMIN ADMIN
-          </Link>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400">
+        <div className="h-16 flex items-center justify-between px-6" style={{ borderBottom: '1px solid #334155' }}>
+          <span className="text-xl font-bold text-white tracking-wider">PRISMIN</span>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-400 hover:text-white">
             <X size={20} />
           </button>
         </div>
 
-        {/* Menu */}
-        <nav className="py-4 overflow-y-auto h-[calc(100vh-8rem)]">
-          {menuItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={() => setSidebarOpen(false)}
-              className={`
-                flex items-center gap-3 px-4 py-3 text-sm transition-colors
-                ${isActive(item.href) 
-                  ? 'text-white bg-blue-600/20 border-r-2 border-blue-500' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'}
-              `}
-            >
-              <item.icon size={18} />
-              <span>{item.name}</span>
-            </Link>
-          ))}
+        {/* Navigation */}
+        <nav className="p-4 space-y-1 overflow-y-auto" style={{ height: 'calc(100vh - 140px)' }}>
+          {menuItems.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={() => setSidebarOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"
+                style={{
+                  backgroundColor: active ? '#3b82f6' : 'transparent',
+                  color: active ? '#ffffff' : '#94a3b8'
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.backgroundColor = '#334155';
+                    e.currentTarget.style.color = '#ffffff';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#94a3b8';
+                  }
+                }}
+              >
+                <item.icon size={20} />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
         </nav>
 
-        {/* User & Logout */}
-        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-700 p-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-              <span className="text-white text-sm font-medium">
-                {user?.name?.charAt(0).toUpperCase()}
-              </span>
+        {/* User Section */}
+        <div className="absolute bottom-0 left-0 right-0 p-4" style={{ borderTop: '1px solid #334155' }}>
+          <div className="flex items-center gap-3 mb-3 px-2">
+            <div 
+              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+              style={{ backgroundColor: '#3b82f6' }}
+            >
+              {user?.name?.charAt(0).toUpperCase() || 'A'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-white truncate">{user?.name}</p>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              <p className="text-sm font-medium text-white truncate">{user?.name || 'Admin'}</p>
+              <p className="text-xs truncate" style={{ color: '#64748b' }}>{user?.email}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2 text-sm text-gray-400 hover:text-white border border-gray-600 hover:border-gray-500 rounded transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            style={{ backgroundColor: '#334155', color: '#94a3b8' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#475569';
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#334155';
+              e.currentTarget.style.color = '#94a3b8';
+            }}
           >
-            <LogOut size={16} />
+            <LogOut size={18} />
             <span>Logout</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="lg:ml-[200px] min-h-screen pt-16 lg:pt-0">
-        <div className="p-6">
+      {/* Main Content Wrapper */}
+      <div className="lg:ml-[260px]">
+        {/* Top Header */}
+        <header 
+          className="sticky top-0 z-30 h-16 flex items-center justify-between px-6"
+          style={{ backgroundColor: '#1e293b', borderBottom: '1px solid #334155' }}
+        >
+          <button 
+            onClick={() => setSidebarOpen(true)} 
+            className="lg:hidden p-2 rounded-lg"
+            style={{ color: '#94a3b8' }}
+          >
+            <Menu size={24} />
+          </button>
+          
+          <div className="hidden lg:block">
+            <h1 className="text-lg font-semibold text-white">Admin Panel</h1>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <span className="text-sm" style={{ color: '#64748b' }}>
+              Welcome, {user?.name?.split(' ')[0] || 'Admin'}
+            </span>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <main className="p-6">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

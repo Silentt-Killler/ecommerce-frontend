@@ -8,9 +8,9 @@ import {
   ShoppingCart,
   DollarSign,
   TrendingUp,
-  Box,
-  ClipboardList,
-  BarChart3
+  ArrowUpRight,
+  ArrowDownRight,
+  Eye
 } from 'lucide-react';
 import api from '@/lib/api';
 
@@ -63,196 +63,291 @@ export default function AdminDashboard() {
     });
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-500/20 text-yellow-400',
-      confirmed: 'bg-blue-500/20 text-blue-400',
-      processing: 'bg-purple-500/20 text-purple-400',
-      shipped: 'bg-indigo-500/20 text-indigo-400',
-      delivered: 'bg-green-500/20 text-green-400',
-      cancelled: 'bg-red-500/20 text-red-400'
+  const getStatusStyle = (status) => {
+    const styles = {
+      pending: { bg: '#fef3c7', color: '#d97706' },
+      confirmed: { bg: '#dbeafe', color: '#2563eb' },
+      processing: { bg: '#e9d5ff', color: '#9333ea' },
+      shipped: { bg: '#c7d2fe', color: '#4f46e5' },
+      delivered: { bg: '#d1fae5', color: '#059669' },
+      cancelled: { bg: '#fee2e2', color: '#dc2626' }
     };
-    return colors[status] || 'bg-gray-500/20 text-gray-400';
+    return styles[status] || { bg: '#f1f5f9', color: '#64748b' };
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center h-96">
+        <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
+  const statsCards = [
+    {
+      title: 'Total Users',
+      value: stats.totalUsers,
+      icon: Users,
+      color: '#3b82f6',
+      bgColor: '#3b82f620',
+      change: '+12%',
+      up: true
+    },
+    {
+      title: 'Total Products',
+      value: stats.totalProducts,
+      icon: Package,
+      color: '#10b981',
+      bgColor: '#10b98120',
+      change: '+5%',
+      up: true
+    },
+    {
+      title: 'Total Orders',
+      value: stats.totalOrders,
+      icon: ShoppingCart,
+      color: '#8b5cf6',
+      bgColor: '#8b5cf620',
+      change: '+18%',
+      up: true
+    },
+    {
+      title: 'Total Revenue',
+      value: formatCurrency(stats.totalRevenue),
+      icon: DollarSign,
+      color: '#f59e0b',
+      bgColor: '#f59e0b20',
+      change: '+24%',
+      up: true
+    }
+  ];
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-white mb-8">Admin Dashboard</h1>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-[#232a3b] rounded-lg p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Total Users</p>
-              <p className="text-2xl font-semibold text-white mt-1">{stats.totalUsers}</p>
-            </div>
-            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-              <Users size={24} className="text-blue-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-[#232a3b] rounded-lg p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Total Products</p>
-              <p className="text-2xl font-semibold text-white mt-1">{stats.totalProducts}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <Package size={24} className="text-green-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-[#232a3b] rounded-lg p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Total Orders</p>
-              <p className="text-2xl font-semibold text-white mt-1">{stats.totalOrders}</p>
-            </div>
-            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <ShoppingCart size={24} className="text-purple-400" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-[#232a3b] rounded-lg p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm">Total Revenue</p>
-              <p className="text-2xl font-semibold text-white mt-1">{formatCurrency(stats.totalRevenue)}</p>
-            </div>
-            <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-              <DollarSign size={24} className="text-yellow-400" />
-            </div>
-          </div>
-        </div>
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white mb-2">Dashboard</h1>
+        <p style={{ color: '#64748b' }}>Welcome back! Here's what's happening with your store.</p>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <Link href="/admin/products" className="bg-[#232a3b] rounded-lg p-5 hover:bg-[#2a3347] transition-colors">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-              <Box size={24} className="text-blue-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium">Manage Products</p>
-              <p className="text-gray-500 text-sm">Add, edit, or remove products</p>
-            </div>
-          </div>
-        </Link>
-
-        <Link href="/admin/orders" className="bg-[#232a3b] rounded-lg p-5 hover:bg-[#2a3347] transition-colors">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <ClipboardList size={24} className="text-green-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium">View Orders</p>
-              <p className="text-gray-500 text-sm">Track and manage customer orders</p>
-            </div>
-          </div>
-        </Link>
-
-        <Link href="/admin/products" className="bg-[#232a3b] rounded-lg p-5 hover:bg-[#2a3347] transition-colors">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
-              <BarChart3 size={24} className="text-purple-400" />
-            </div>
-            <div>
-              <p className="text-white font-medium">Inventory</p>
-              <p className="text-gray-500 text-sm">Check stock levels</p>
-            </div>
-          </div>
-        </Link>
-      </div>
-
-      {/* Revenue Chart */}
-      <div className="bg-[#232a3b] rounded-lg p-5 mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-white font-medium">Revenue Overview</h2>
-          <div className="flex items-center gap-2 text-green-400 text-sm">
-            <TrendingUp size={16} />
-            <span>+15% from last month</span>
-          </div>
-        </div>
-        
-        {/* Simple Bar Chart */}
-        <div className="flex items-end justify-between h-32 gap-2">
-          {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month, index) => (
-            <div key={month} className="flex-1 flex flex-col items-center gap-2">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {statsCards.map((stat, index) => (
+          <div 
+            key={index}
+            className="rounded-xl p-6"
+            style={{ backgroundColor: '#1e293b' }}
+          >
+            <div className="flex items-start justify-between mb-4">
               <div 
-                className="w-full bg-blue-500 rounded-t"
-                style={{ height: `${30 + Math.random() * 70}%` }}
-              ></div>
-              <span className="text-gray-500 text-xs">{month}</span>
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: stat.bgColor }}
+              >
+                <stat.icon size={24} style={{ color: stat.color }} />
+              </div>
+              <div 
+                className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
+                style={{ 
+                  backgroundColor: stat.up ? '#10b98120' : '#ef444420',
+                  color: stat.up ? '#10b981' : '#ef4444'
+                }}
+              >
+                {stat.up ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                {stat.change}
+              </div>
             </div>
-          ))}
+            <p className="text-2xl font-bold text-white mb-1">{stat.value}</p>
+            <p className="text-sm" style={{ color: '#64748b' }}>{stat.title}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Charts and Tables Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Revenue Chart */}
+        <div 
+          className="lg:col-span-2 rounded-xl p-6"
+          style={{ backgroundColor: '#1e293b' }}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-white">Revenue Overview</h2>
+              <p className="text-sm" style={{ color: '#64748b' }}>Monthly revenue statistics</p>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ backgroundColor: '#10b98120' }}>
+              <TrendingUp size={16} style={{ color: '#10b981' }} />
+              <span className="text-sm font-medium" style={{ color: '#10b981' }}>+15%</span>
+            </div>
+          </div>
+          
+          {/* Chart Bars */}
+          <div className="flex items-end justify-between h-48 gap-3 pt-4">
+            {[
+              { month: 'Jan', height: 60 },
+              { month: 'Feb', height: 80 },
+              { month: 'Mar', height: 65 },
+              { month: 'Apr', height: 90 },
+              { month: 'May', height: 75 },
+              { month: 'Jun', height: 95 },
+              { month: 'Jul', height: 85 }
+            ].map((item, index) => (
+              <div key={index} className="flex-1 flex flex-col items-center gap-2">
+                <div 
+                  className="w-full rounded-t-lg transition-all hover:opacity-80"
+                  style={{ 
+                    height: `${item.height}%`,
+                    backgroundColor: index === 5 ? '#3b82f6' : '#334155'
+                  }}
+                ></div>
+                <span className="text-xs" style={{ color: '#64748b' }}>{item.month}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div 
+          className="rounded-xl p-6"
+          style={{ backgroundColor: '#1e293b' }}
+        >
+          <h2 className="text-lg font-semibold text-white mb-4">Quick Actions</h2>
+          <div className="space-y-3">
+            <Link
+              href="/admin/products/new"
+              className="flex items-center gap-3 p-4 rounded-lg transition-colors"
+              style={{ backgroundColor: '#334155' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#475569'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#334155'}
+            >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#3b82f620' }}>
+                <Package size={20} style={{ color: '#3b82f6' }} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white">Add Product</p>
+                <p className="text-xs" style={{ color: '#64748b' }}>Create new product</p>
+              </div>
+            </Link>
+
+            <Link
+              href="/admin/orders"
+              className="flex items-center gap-3 p-4 rounded-lg transition-colors"
+              style={{ backgroundColor: '#334155' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#475569'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#334155'}
+            >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#10b98120' }}>
+                <ShoppingCart size={20} style={{ color: '#10b981' }} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white">View Orders</p>
+                <p className="text-xs" style={{ color: '#64748b' }}>Manage orders</p>
+              </div>
+            </Link>
+
+            <Link
+              href="/admin/customers"
+              className="flex items-center gap-3 p-4 rounded-lg transition-colors"
+              style={{ backgroundColor: '#334155' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#475569'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#334155'}
+            >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#8b5cf620' }}>
+                <Users size={20} style={{ color: '#8b5cf6' }} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-white">Customers</p>
+                <p className="text-xs" style={{ color: '#64748b' }}>View all customers</p>
+              </div>
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* Recent Orders */}
-      <div className="bg-[#232a3b] rounded-lg overflow-hidden">
-        <div className="p-5 border-b border-gray-700">
-          <h2 className="text-white font-medium">Recent Orders</h2>
+      <div 
+        className="rounded-xl overflow-hidden"
+        style={{ backgroundColor: '#1e293b' }}
+      >
+        <div className="flex items-center justify-between p-6" style={{ borderBottom: '1px solid #334155' }}>
+          <div>
+            <h2 className="text-lg font-semibold text-white">Recent Orders</h2>
+            <p className="text-sm" style={{ color: '#64748b' }}>Latest customer orders</p>
+          </div>
+          <Link 
+            href="/admin/orders"
+            className="text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            style={{ backgroundColor: '#334155', color: '#94a3b8' }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#3b82f6';
+              e.currentTarget.style.color = '#ffffff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#334155';
+              e.currentTarget.style.color = '#94a3b8';
+            }}
+          >
+            View All
+          </Link>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Order ID</th>
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Customer</th>
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Amount</th>
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Status</th>
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Date</th>
-                <th className="text-right p-4 text-gray-400 text-sm font-medium">Action</th>
+              <tr style={{ backgroundColor: '#0f172a' }}>
+                <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Order ID</th>
+                <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Customer</th>
+                <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Amount</th>
+                <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Status</th>
+                <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Date</th>
+                <th className="text-right px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {recentOrders.length > 0 ? (
-                recentOrders.map((order) => (
-                  <tr key={order._id} className="border-b border-gray-700/50 hover:bg-white/5">
-                    <td className="p-4 text-white text-sm font-mono">
-                      #{order.order_number || order._id.slice(-8)}
-                    </td>
-                    <td className="p-4 text-gray-300 text-sm">
-                      {order.shipping_address?.name || 'N/A'}
-                    </td>
-                    <td className="p-4 text-white text-sm font-medium">
-                      {formatCurrency(order.total)}
-                    </td>
-                    <td className="p-4">
-                      <span className={`text-xs px-2 py-1 rounded ${getStatusColor(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-gray-400 text-sm">
-                      {formatDate(order.created_at)}
-                    </td>
-                    <td className="p-4 text-right">
-                      <Link 
-                        href={`/admin/orders?id=${order._id}`}
-                        className="text-blue-400 hover:text-blue-300 text-sm"
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                ))
+                recentOrders.map((order, index) => {
+                  const statusStyle = getStatusStyle(order.status);
+                  return (
+                    <tr 
+                      key={order._id} 
+                      style={{ borderBottom: index < recentOrders.length - 1 ? '1px solid #334155' : 'none' }}
+                    >
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-mono text-white">#{order.order_number || order._id.slice(-8)}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm text-white">{order.shipping_address?.name || 'N/A'}</p>
+                        <p className="text-xs" style={{ color: '#64748b' }}>{order.shipping_address?.phone}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-white">{formatCurrency(order.total)}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span 
+                          className="text-xs font-medium px-3 py-1 rounded-full capitalize"
+                          style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}
+                        >
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-sm" style={{ color: '#94a3b8' }}>{formatDate(order.created_at)}</span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link 
+                          href={`/admin/orders?id=${order._id}`}
+                          className="inline-flex items-center gap-1 text-sm font-medium transition-colors"
+                          style={{ color: '#3b82f6' }}
+                        >
+                          <Eye size={16} />
+                          View
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={6} className="p-8 text-center text-gray-500">
+                  <td colSpan={6} className="px-6 py-12 text-center" style={{ color: '#64748b' }}>
                     No orders found
                   </td>
                 </tr>

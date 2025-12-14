@@ -1,11 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Eye, Download, X, Truck, Package } from 'lucide-react';
+import { Search, Eye, Download, X, Truck, Package, Calendar } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
-const STATUS_OPTIONS = ['all', 'pending', 'processing', 'delivered', 'cancelled'];
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'All Orders' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'processing', label: 'Processing' },
+  { value: 'shipped', label: 'Shipped' },
+  { value: 'delivered', label: 'Delivered' },
+  { value: 'cancelled', label: 'Cancelled' }
+];
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -20,6 +27,7 @@ export default function AdminOrdersPage() {
 
   const fetchOrders = async () => {
     try {
+      setLoading(true);
       let url = `/orders/admin/all?page=${currentPage}&limit=10`;
       if (selectedStatus !== 'all') url += `&status=${selectedStatus}`;
       
@@ -35,7 +43,7 @@ export default function AdminOrdersPage() {
   const updateStatus = async (orderId, newStatus) => {
     try {
       await api.put(`/orders/admin/${orderId}/status`, { status: newStatus });
-      toast.success('Status updated');
+      toast.success('Order status updated');
       fetchOrders();
       if (selectedOrder?._id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
@@ -55,16 +63,16 @@ export default function AdminOrdersPage() {
     });
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-500/20 text-yellow-400',
-      confirmed: 'bg-blue-500/20 text-blue-400',
-      processing: 'bg-purple-500/20 text-purple-400',
-      shipped: 'bg-indigo-500/20 text-indigo-400',
-      delivered: 'bg-green-500/20 text-green-400',
-      cancelled: 'bg-red-500/20 text-red-400'
+  const getStatusStyle = (status) => {
+    const styles = {
+      pending: { bg: '#fef3c7', color: '#d97706' },
+      confirmed: { bg: '#dbeafe', color: '#2563eb' },
+      processing: { bg: '#e9d5ff', color: '#9333ea' },
+      shipped: { bg: '#c7d2fe', color: '#4f46e5' },
+      delivered: { bg: '#d1fae5', color: '#059669' },
+      cancelled: { bg: '#fee2e2', color: '#dc2626' }
     };
-    return colors[status] || 'bg-gray-500/20 text-gray-400';
+    return styles[status] || { bg: '#f1f5f9', color: '#64748b' };
   };
 
   const exportOrders = () => {
@@ -91,209 +99,279 @@ export default function AdminOrdersPage() {
     a.click();
     URL.revokeObjectURL(url);
     
-    toast.success('Orders exported');
+    toast.success('Orders exported successfully');
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
 
   return (
     <div>
-      {/* Header */}
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <h1 className="text-2xl font-semibold text-white">Orders Management</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-2">Orders</h1>
+          <p style={{ color: '#64748b' }}>Manage and track customer orders</p>
+        </div>
         <button
           onClick={exportOrders}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white transition-colors"
+          style={{ backgroundColor: '#10b981' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
         >
-          <Download size={18} />
+          <Download size={20} />
           Export CSV
         </button>
       </div>
 
       {/* Status Tabs */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div 
+        className="rounded-xl p-2 mb-6 flex flex-wrap gap-2"
+        style={{ backgroundColor: '#1e293b' }}
+      >
         {STATUS_OPTIONS.map((status) => (
           <button
-            key={status}
-            onClick={() => { setSelectedStatus(status); setCurrentPage(1); }}
-            className={`px-4 py-2 rounded text-sm capitalize transition-colors ${
-              selectedStatus === status
-                ? 'bg-blue-600 text-white'
-                : 'bg-[#232a3b] text-gray-400 hover:text-white'
-            }`}
+            key={status.value}
+            onClick={() => { setSelectedStatus(status.value); setCurrentPage(1); }}
+            className="px-4 py-2.5 rounded-lg text-sm font-medium transition-colors"
+            style={{
+              backgroundColor: selectedStatus === status.value ? '#3b82f6' : 'transparent',
+              color: selectedStatus === status.value ? '#ffffff' : '#94a3b8'
+            }}
           >
-            {status}
+            {status.label}
           </button>
         ))}
       </div>
 
       {/* Orders Table */}
-      <div className="bg-[#232a3b] rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Order ID</th>
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Date</th>
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Customer</th>
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Amount</th>
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Payment</th>
-                <th className="text-left p-4 text-gray-400 text-sm font-medium">Status</th>
-                <th className="text-right p-4 text-gray-400 text-sm font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.length > 0 ? (
-                orders.map((order) => (
-                  <tr key={order._id} className="border-b border-gray-700/50 hover:bg-white/5">
-                    <td className="p-4 text-white font-mono text-sm">
-                      #{order.order_number || order._id.slice(-8)}
-                    </td>
-                    <td className="p-4 text-gray-400 text-sm">
-                      {formatDate(order.created_at)}
-                    </td>
-                    <td className="p-4">
-                      <p className="text-white text-sm">{order.shipping_address?.name || 'N/A'}</p>
-                      <p className="text-gray-500 text-xs">{order.shipping_address?.phone}</p>
-                    </td>
-                    <td className="p-4 text-white font-medium">
-                      {formatCurrency(order.total)}
-                    </td>
-                    <td className="p-4">
-                      <span className="text-xs px-2 py-1 rounded bg-gray-700 text-gray-300">
-                        {order.payment_method || 'COD'}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <select
-                        value={order.status}
-                        onChange={(e) => updateStatus(order._id, e.target.value)}
-                        className={`text-xs px-2 py-1 rounded border-0 cursor-pointer ${getStatusColor(order.status)}`}
+      <div 
+        className="rounded-xl overflow-hidden"
+        style={{ backgroundColor: '#1e293b' }}
+      >
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr style={{ backgroundColor: '#0f172a' }}>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Order ID</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Customer</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Date</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Amount</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Payment</th>
+                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Status</th>
+                  <th className="text-right px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.length > 0 ? (
+                  orders.map((order, index) => {
+                    const statusStyle = getStatusStyle(order.status);
+                    return (
+                      <tr 
+                        key={order._id}
+                        style={{ borderBottom: index < orders.length - 1 ? '1px solid #334155' : 'none' }}
+                        className="hover:bg-white/5 transition-colors"
                       >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="processing">Processing</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
-                    </td>
-                    <td className="p-4 text-right">
-                      <button
-                        onClick={() => setSelectedOrder(order)}
-                        className="p-2 text-gray-400 hover:text-white transition-colors"
-                      >
-                        <Eye size={18} />
-                      </button>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-mono font-medium text-white">
+                            #{order.order_number || order._id.slice(-8)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-medium text-white">{order.shipping_address?.name || 'N/A'}</p>
+                          <p className="text-xs" style={{ color: '#64748b' }}>{order.shipping_address?.phone}</p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm" style={{ color: '#94a3b8' }}>{formatDate(order.created_at)}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-semibold text-white">{formatCurrency(order.total)}</span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span 
+                            className="text-xs font-medium px-3 py-1.5 rounded-lg"
+                            style={{ backgroundColor: '#334155', color: '#94a3b8' }}
+                          >
+                            {order.payment_method || 'COD'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <select
+                            value={order.status}
+                            onChange={(e) => updateStatus(order._id, e.target.value)}
+                            className="text-xs font-medium px-3 py-1.5 rounded-full border-0 cursor-pointer capitalize"
+                            style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => setSelectedOrder(order)}
+                            className="inline-flex items-center gap-1 text-sm font-medium transition-colors"
+                            style={{ color: '#3b82f6' }}
+                          >
+                            <Eye size={16} />
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-16 text-center">
+                      <Package size={48} className="mx-auto mb-4" style={{ color: '#334155' }} />
+                      <p className="text-white font-medium mb-2">No orders found</p>
+                      <p className="text-sm" style={{ color: '#64748b' }}>Orders will appear here once customers start purchasing</p>
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={7} className="p-12 text-center text-gray-500">
-                    No orders found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Order Detail Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-[#232a3b] w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg">
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h2 className="text-lg font-medium text-white">
-                Order #{selectedOrder.order_number || selectedOrder._id.slice(-8)}
-              </h2>
-              <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
+          <div 
+            className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl"
+            style={{ backgroundColor: '#1e293b' }}
+          >
+            {/* Modal Header */}
+            <div 
+              className="flex items-center justify-between p-6"
+              style={{ borderBottom: '1px solid #334155' }}
+            >
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  Order #{selectedOrder.order_number || selectedOrder._id.slice(-8)}
+                </h2>
+                <p className="text-sm" style={{ color: '#64748b' }}>
+                  <Calendar size={14} className="inline mr-1" />
+                  {formatDate(selectedOrder.created_at)}
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedOrder(null)}
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: '#64748b' }}
+              >
                 <X size={24} />
               </button>
             </div>
 
             <div className="p-6 space-y-6">
-              {/* Status */}
+              {/* Status Badge */}
               <div className="flex items-center justify-between">
-                <span className={`text-sm px-3 py-1 rounded ${getStatusColor(selectedOrder.status)}`}>
+                <span 
+                  className="text-sm font-medium px-4 py-2 rounded-full capitalize"
+                  style={{ 
+                    backgroundColor: getStatusStyle(selectedOrder.status).bg,
+                    color: getStatusStyle(selectedOrder.status).color
+                  }}
+                >
                   {selectedOrder.status}
                 </span>
-                <span className="text-gray-400 text-sm">{formatDate(selectedOrder.created_at)}</span>
+                <span className="text-xl font-bold text-white">{formatCurrency(selectedOrder.total)}</span>
               </div>
 
               {/* Customer Info */}
-              <div className="bg-[#1a1f2e] rounded-lg p-4">
-                <h3 className="text-white font-medium mb-3">Customer Information</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="rounded-xl p-5" style={{ backgroundColor: '#0f172a' }}>
+                <h3 className="text-sm font-semibold text-white mb-4">Customer Information</h3>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-gray-500">Name</p>
-                    <p className="text-white">{selectedOrder.shipping_address?.name}</p>
+                    <p className="text-xs mb-1" style={{ color: '#64748b' }}>Name</p>
+                    <p className="text-sm text-white">{selectedOrder.shipping_address?.name}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Phone</p>
-                    <p className="text-white">{selectedOrder.shipping_address?.phone}</p>
+                    <p className="text-xs mb-1" style={{ color: '#64748b' }}>Phone</p>
+                    <p className="text-sm text-white">{selectedOrder.shipping_address?.phone}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-gray-500">Address</p>
-                    <p className="text-white">
+                    <p className="text-xs mb-1" style={{ color: '#64748b' }}>Address</p>
+                    <p className="text-sm text-white">
                       {selectedOrder.shipping_address?.address}, {selectedOrder.shipping_address?.city}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Items */}
-              <div className="bg-[#1a1f2e] rounded-lg p-4">
-                <h3 className="text-white font-medium mb-3">Order Items</h3>
+              {/* Order Items */}
+              <div className="rounded-xl p-5" style={{ backgroundColor: '#0f172a' }}>
+                <h3 className="text-sm font-semibold text-white mb-4">Order Items</h3>
                 <div className="space-y-3">
                   {selectedOrder.items?.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between py-3"
+                      style={{ borderBottom: index < selectedOrder.items.length - 1 ? '1px solid #334155' : 'none' }}
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-700 rounded">
+                        <div 
+                          className="w-12 h-12 rounded-lg overflow-hidden"
+                          style={{ backgroundColor: '#334155' }}
+                        >
                           {item.image && (
-                            <img src={item.image} alt="" className="w-full h-full object-cover rounded" />
+                            <img src={item.image} alt="" className="w-full h-full object-cover" />
                           )}
                         </div>
                         <div>
-                          <p className="text-white text-sm">{item.name}</p>
-                          <p className="text-gray-500 text-xs">Qty: {item.quantity}</p>
+                          <p className="text-sm font-medium text-white">{item.name}</p>
+                          <p className="text-xs" style={{ color: '#64748b' }}>Qty: {item.quantity}</p>
                         </div>
                       </div>
-                      <p className="text-white text-sm">{formatCurrency(item.price * item.quantity)}</p>
+                      <p className="text-sm font-semibold text-white">{formatCurrency(item.price * item.quantity)}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Total */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-                <span className="text-white font-medium">Total</span>
-                <span className="text-xl font-semibold text-white">{formatCurrency(selectedOrder.total)}</span>
-              </div>
-
               {/* Courier Options */}
-              <div className="bg-[#1a1f2e] rounded-lg p-4">
-                <h3 className="text-white font-medium mb-3 flex items-center gap-2">
+              <div className="rounded-xl p-5" style={{ backgroundColor: '#0f172a' }}>
+                <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
                   <Truck size={18} />
                   Courier Options
                 </h3>
-                <div className="flex gap-3">
-                  <button className="flex-1 py-2 bg-orange-500/20 text-orange-400 rounded text-sm hover:bg-orange-500/30">
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    className="py-3 rounded-lg text-sm font-medium transition-colors"
+                    style={{ backgroundColor: '#f97316', color: '#ffffff' }}
+                  >
                     Pathao
                   </button>
-                  <button className="flex-1 py-2 bg-purple-500/20 text-purple-400 rounded text-sm hover:bg-purple-500/30">
+                  <button 
+                    className="py-3 rounded-lg text-sm font-medium transition-colors"
+                    style={{ backgroundColor: '#8b5cf6', color: '#ffffff' }}
+                  >
                     CarryBe
                   </button>
                 </div>
-                <p className="text-gray-500 text-xs mt-2">API integration coming soon</p>
+                <p className="text-xs mt-3 text-center" style={{ color: '#64748b' }}>
+                  API integration coming soon
+                </p>
               </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6" style={{ borderTop: '1px solid #334155' }}>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="w-full py-3 rounded-lg text-sm font-medium transition-colors"
+                style={{ backgroundColor: '#334155', color: '#94a3b8' }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
