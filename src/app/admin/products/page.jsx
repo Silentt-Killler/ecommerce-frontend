@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Edit, Trash2, Eye, Package, Filter } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Package, Filter, MoreVertical } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -25,7 +25,6 @@ export default function AdminProductsPage() {
       setLoading(true);
       let url = `/products?page=${currentPage}&limit=10`;
       if (selectedCategory) url += `&category=${selectedCategory}`;
-      
       const res = await api.get(url);
       setProducts(res.data.products || []);
       setTotalPages(res.data.pages || 1);
@@ -47,7 +46,6 @@ export default function AdminProductsPage() {
 
   const handleDelete = async (productId) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
-    
     try {
       await api.delete(`/products/${productId}`);
       toast.success('Product deleted successfully');
@@ -63,55 +61,87 @@ export default function AdminProductsPage() {
 
   const formatCurrency = (amount) => '৳' + (amount || 0).toLocaleString();
 
-  const getStockStatus = (stock) => {
-    if (stock === 0) return { text: 'Out of Stock', bg: '#fee2e2', color: '#dc2626' };
-    if (stock <= 5) return { text: 'Low Stock', bg: '#fef3c7', color: '#d97706' };
-    return { text: 'In Stock', bg: '#d1fae5', color: '#059669' };
+  const getStockBadge = (stock) => {
+    if (stock === 0) return { text: 'Out of Stock', bg: '#fef2f2', color: '#dc2626', border: '#fecaca' };
+    if (stock <= 5) return { text: 'Low Stock', bg: '#fffbeb', color: '#d97706', border: '#fde68a' };
+    return { text: 'In Stock', bg: '#f0fdf4', color: '#16a34a', border: '#bbf7d0' };
   };
 
   return (
     <div>
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Products</h1>
-          <p style={{ color: '#64748b' }}>Manage your product inventory</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Products</h1>
+          <p style={{ fontSize: 14, color: '#6b7280' }}>Manage your product inventory</p>
         </div>
         <Link
           href="/admin/products/new"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white transition-colors"
-          style={{ backgroundColor: '#3b82f6' }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 20px',
+            backgroundColor: '#3b82f6',
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: 600,
+            borderRadius: 10,
+            textDecoration: 'none',
+            transition: 'background 0.2s'
+          }}
         >
           <Plus size={20} />
           Add Product
         </Link>
       </div>
 
-      {/* Filters */}
-      <div 
-        className="rounded-xl p-4 mb-6 flex flex-col sm:flex-row gap-4"
-        style={{ backgroundColor: '#1e293b' }}
-      >
-        <div className="relative flex-1">
-          <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: '#64748b' }} />
+      {/* Filters Card */}
+      <div style={{
+        backgroundColor: '#1f2937',
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 24,
+        display: 'flex',
+        gap: 16,
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ flex: 1, minWidth: 250, position: 'relative' }}>
+          <Search size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
           <input
             type="text"
             placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 rounded-lg text-sm text-white placeholder-gray-500 outline-none"
-            style={{ backgroundColor: '#0f172a', border: '1px solid #334155' }}
+            style={{
+              width: '100%',
+              padding: '14px 16px 14px 48px',
+              backgroundColor: '#111827',
+              border: '1px solid #374151',
+              borderRadius: 10,
+              color: '#fff',
+              fontSize: 14,
+              outline: 'none'
+            }}
           />
         </div>
-        <div className="relative">
-          <Filter size={20} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: '#64748b' }} />
+        <div style={{ position: 'relative', minWidth: 200 }}>
+          <Filter size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
           <select
             value={selectedCategory}
             onChange={(e) => { setSelectedCategory(e.target.value); setCurrentPage(1); }}
-            className="pl-12 pr-8 py-3 rounded-lg text-sm text-white outline-none appearance-none min-w-[180px]"
-            style={{ backgroundColor: '#0f172a', border: '1px solid #334155' }}
+            style={{
+              width: '100%',
+              padding: '14px 16px 14px 48px',
+              backgroundColor: '#111827',
+              border: '1px solid #374151',
+              borderRadius: 10,
+              color: '#fff',
+              fontSize: 14,
+              outline: 'none',
+              appearance: 'none',
+              cursor: 'pointer'
+            }}
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
@@ -122,154 +152,110 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Products Table */}
-      <div 
-        className="rounded-xl overflow-hidden"
-        style={{ backgroundColor: '#1e293b' }}
-      >
+      <div style={{ backgroundColor: '#1f2937', borderRadius: 16, overflow: 'hidden' }}>
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80 }}>
+            <div style={{ width: 40, height: 40, border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
-                <tr style={{ backgroundColor: '#0f172a' }}>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Product</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Category</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Price</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Stock</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Status</th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold uppercase" style={{ color: '#64748b' }}>Actions</th>
+                <tr style={{ backgroundColor: '#111827' }}>
+                  <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Product</th>
+                  <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Category</th>
+                  <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Price</th>
+                  <th style={{ textAlign: 'center', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Stock</th>
+                  <th style={{ textAlign: 'center', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                  <th style={{ textAlign: 'right', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((product, index) => {
-                    const stockStatus = getStockStatus(product.stock);
-                    return (
-                      <tr 
-                        key={product._id}
-                        style={{ borderBottom: index < filteredProducts.length - 1 ? '1px solid #334155' : 'none' }}
-                        className="hover:bg-white/5 transition-colors"
-                      >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-4">
-                            <div 
-                              className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0"
-                              style={{ backgroundColor: '#334155' }}
-                            >
-                              {product.images?.[0]?.url ? (
-                                <img 
-                                  src={product.images[0].url}
-                                  alt={product.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <Package size={24} style={{ color: '#64748b' }} />
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-white">{product.name}</p>
-                              <p className="text-xs" style={{ color: '#64748b' }}>SKU: {product.sku || 'N/A'}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span 
-                            className="text-xs font-medium px-3 py-1.5 rounded-lg capitalize"
-                            style={{ backgroundColor: '#334155', color: '#94a3b8' }}
-                          >
-                            {product.category}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div>
-                            <p className="text-sm font-semibold text-white">{formatCurrency(product.price)}</p>
-                            {product.compare_price && (
-                              <p className="text-xs line-through" style={{ color: '#64748b' }}>
-                                {formatCurrency(product.compare_price)}
-                              </p>
+                {filteredProducts.length > 0 ? filteredProducts.map((product, index) => {
+                  const stockBadge = getStockBadge(product.stock);
+                  return (
+                    <tr key={product._id} style={{ borderTop: '1px solid #374151' }}>
+                      <td style={{ padding: '16px 24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                          <div style={{
+                            width: 56,
+                            height: 56,
+                            borderRadius: 12,
+                            overflow: 'hidden',
+                            backgroundColor: '#374151',
+                            flexShrink: 0
+                          }}>
+                            {product.images?.[0]?.url ? (
+                              <img src={product.images[0].url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Package size={24} style={{ color: '#6b7280' }} />
+                              </div>
                             )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm font-medium text-white">{product.stock}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span 
-                            className="text-xs font-medium px-3 py-1.5 rounded-full"
-                            style={{ backgroundColor: stockStatus.bg, color: stockStatus.color }}
-                          >
-                            {stockStatus.text}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <Link
-                              href={`/product/${product.slug}`}
-                              target="_blank"
-                              className="p-2 rounded-lg transition-colors"
-                              style={{ color: '#64748b' }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#334155';
-                                e.currentTarget.style.color = '#ffffff';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                                e.currentTarget.style.color = '#64748b';
-                              }}
-                            >
-                              <Eye size={18} />
-                            </Link>
-                            <Link
-                              href={`/admin/products/${product._id}`}
-                              className="p-2 rounded-lg transition-colors"
-                              style={{ color: '#64748b' }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#334155';
-                                e.currentTarget.style.color = '#3b82f6';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                                e.currentTarget.style.color = '#64748b';
-                              }}
-                            >
-                              <Edit size={18} />
-                            </Link>
-                            <button
-                              onClick={() => handleDelete(product._id)}
-                              className="p-2 rounded-lg transition-colors"
-                              style={{ color: '#64748b' }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.backgroundColor = '#334155';
-                                e.currentTarget.style.color = '#ef4444';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.backgroundColor = 'transparent';
-                                e.currentTarget.style.color = '#64748b';
-                              }}
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                          <div>
+                            <p style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 4 }}>{product.name}</p>
+                            <p style={{ fontSize: 12, color: '#6b7280' }}>SKU: {product.sku || 'N/A'}</p>
                           </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
+                        </div>
+                      </td>
+                      <td style={{ padding: '16px 24px' }}>
+                        <span style={{
+                          fontSize: 12,
+                          fontWeight: 500,
+                          padding: '6px 12px',
+                          backgroundColor: '#374151',
+                          color: '#d1d5db',
+                          borderRadius: 6,
+                          textTransform: 'capitalize'
+                        }}>
+                          {product.category}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 24px' }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{formatCurrency(product.price)}</p>
+                        {product.compare_price && (
+                          <p style={{ fontSize: 12, color: '#6b7280', textDecoration: 'line-through' }}>{formatCurrency(product.compare_price)}</p>
+                        )}
+                      </td>
+                      <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{product.stock}</span>
+                      </td>
+                      <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                        <span style={{
+                          fontSize: 12,
+                          fontWeight: 500,
+                          padding: '6px 12px',
+                          backgroundColor: stockBadge.bg,
+                          color: stockBadge.color,
+                          border: `1px solid ${stockBadge.border}`,
+                          borderRadius: 20
+                        }}>
+                          {stockBadge.text}
+                        </span>
+                      </td>
+                      <td style={{ padding: '16px 24px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+                          <Link href={`/product/${product.slug}`} target="_blank" style={{ padding: 10, borderRadius: 8, backgroundColor: '#374151', color: '#9ca3af', display: 'flex' }}>
+                            <Eye size={18} />
+                          </Link>
+                          <Link href={`/admin/products/${product._id}`} style={{ padding: 10, borderRadius: 8, backgroundColor: '#374151', color: '#3b82f6', display: 'flex' }}>
+                            <Edit size={18} />
+                          </Link>
+                          <button onClick={() => handleDelete(product._id)} style={{ padding: 10, borderRadius: 8, backgroundColor: '#374151', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex' }}>
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                }) : (
                   <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center">
-                      <Package size={48} className="mx-auto mb-4" style={{ color: '#334155' }} />
-                      <p className="text-white font-medium mb-2">No products found</p>
-                      <p className="text-sm mb-4" style={{ color: '#64748b' }}>Get started by adding your first product</p>
-                      <Link
-                        href="/admin/products/new"
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium text-white"
-                        style={{ backgroundColor: '#3b82f6' }}
-                      >
+                    <td colSpan={6} style={{ padding: 80, textAlign: 'center' }}>
+                      <Package size={64} style={{ color: '#374151', marginBottom: 16 }} />
+                      <p style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 8 }}>No products found</p>
+                      <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>Get started by adding your first product</p>
+                      <Link href="/admin/products/new" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', backgroundColor: '#3b82f6', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, textDecoration: 'none' }}>
                         <Plus size={18} />
                         Add Product
                       </Link>
@@ -283,18 +269,21 @@ export default function AdminProductsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div 
-            className="flex items-center justify-center gap-2 p-4"
-            style={{ borderTop: '1px solid #334155' }}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 20, borderTop: '1px solid #374151' }}>
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className="w-10 h-10 rounded-lg text-sm font-medium transition-colors"
                 style={{
-                  backgroundColor: currentPage === page ? '#3b82f6' : 'transparent',
-                  color: currentPage === page ? '#ffffff' : '#64748b'
+                  width: 40,
+                  height: 40,
+                  borderRadius: 10,
+                  border: 'none',
+                  backgroundColor: currentPage === page ? '#3b82f6' : '#374151',
+                  color: currentPage === page ? '#fff' : '#9ca3af',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: 'pointer'
                 }}
               >
                 {page}

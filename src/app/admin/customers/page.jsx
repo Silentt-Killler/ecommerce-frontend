@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Download, Eye, X, ShoppingBag, Phone, MapPin, Mail, Calendar } from 'lucide-react';
+import { Search, Download, Eye, X, ShoppingBag, Phone, MapPin, Mail, Calendar, User, DollarSign, Package, TrendingUp } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,12 @@ export default function AdminCustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerOrders, setCustomerOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [stats, setStats] = useState({
+    totalCustomers: 0,
+    totalRevenue: 0,
+    avgOrderValue: 0,
+    newThisMonth: 0
+  });
 
   useEffect(() => {
     fetchCustomers();
@@ -19,75 +25,104 @@ export default function AdminCustomersPage() {
 
   const fetchCustomers = async () => {
     try {
-      const res = await api.get('/users/admin/customers');
-      setCustomers(res.data || []);
+      const ordersRes = await api.get('/orders/admin/all?limit=500');
+      const orders = ordersRes.data.orders || [];
+      
+      // Extract unique customers with their purchase details
+      const customerMap = new Map();
+      orders.forEach(order => {
+        const oderId = order.user_id || order.shipping_address?.phone;
+        if (!oderId) return;
+        
+        if (!customerMap.has(oderId)) {
+          customerMap.set(oderId, {
+            _id: oderId,
+            name: order.shipping_address?.name || 'Unknown',
+            email: order.user_email || order.shipping_address?.email || '',
+            phone: order.shipping_address?.phone || '',
+            address: order.shipping_address?.address || '',
+            city: order.shipping_address?.city || '',
+            order_count: 0,
+            total_spent: 0,
+            last_order_date: order.created_at,
+            first_order_date: order.created_at,
+            orders: []
+          });
+        }
+        
+        const customer = customerMap.get(oderId);
+        customer.order_count++;
+        customer.total_spent += order.total || 0;
+        customer.orders.push(order);
+        
+        if (new Date(order.created_at) > new Date(customer.last_order_date)) {
+          customer.last_order_date = order.created_at;
+        }
+        if (new Date(order.created_at) < new Date(customer.first_order_date)) {
+          customer.first_order_date = order.created_at;
+        }
+      });
+      
+      const customerList = Array.from(customerMap.values()).sort((a, b) => b.total_spent - a.total_spent);
+      setCustomers(customerList);
+
+      // Calculate stats
+      const totalRevenue = customerList.reduce((sum, c) => sum + c.total_spent, 0);
+      const totalOrders = customerList.reduce((sum, c) => sum + c.order_count, 0);
+      
+      const thisMonth = new Date();
+      thisMonth.setDate(1);
+      const newCustomers = customerList.filter(c => new Date(c.first_order_date) >= thisMonth).length;
+
+      setStats({
+        totalCustomers: customerList.length,
+        totalRevenue: totalRevenue,
+        avgOrderValue: totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0,
+        newThisMonth: newCustomers
+      });
+
     } catch (error) {
-      // Fallback: get unique customers from orders
-      try {
-        const ordersRes = await api.get('/orders/admin/all?limit=500');
-        const orders = ordersRes.data.orders || [];
-        
-        // Extract unique customers
-        const customerMap = new Map();
-        orders.forEach(order => {
-          if (order.user_id && !customerMap.has(order.user_id)) {
-            customerMap.set(order.user_id, {
-              _id: order.user_id,
-              name: order.shipping_address?.name || 'Unknown',
-              email: order.user_email || '',
-              phone: order.shipping_address?.phone || '',
-              address: order.shipping_address,
-              order_count: 0,
-              total_spent: 0
-            });
-          }
-          if (order.user_id) {
-            const customer = customerMap.get(order.user_id);
-            customer.order_count++;
-            customer.total_spent += order.total || 0;
-          }
-        });
-        
-        setCustomers(Array.from(customerMap.values()));
-      } catch (e) {
-        setCustomers([]);
-      }
+      console.error('Failed to fetch customers:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const viewCustomerDetails = async (customer) => {
+  const viewCustomerDetails = (customer) => {
     setSelectedCustomer(customer);
-    setLoadingOrders(true);
-    
-    try {
-      const res = await api.get(`/orders/admin/all?user_id=${customer._id}`);
-      setCustomerOrders(res.data.orders || []);
-    } catch (error) {
-      setCustomerOrders([]);
-    } finally {
-      setLoadingOrders(false);
-    }
+    setCustomerOrders(customer.orders || []);
+  };
+
+  const formatCurrency = (amount) => '৳' + (amount || 0).toLocaleString();
+  const formatDate = (date) => new Date(date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  const getStatusStyle = (status) => {
+    const styles = {
+      pending: { bg: '#fef3c7', color: '#b45309' },
+      confirmed: { bg: '#dbeafe', color: '#1d4ed8' },
+      processing: { bg: '#ede9fe', color: '#7c3aed' },
+      shipped: { bg: '#cffafe', color: '#0891b2' },
+      delivered: { bg: '#d1fae5', color: '#059669' },
+      cancelled: { bg: '#fee2e2', color: '#dc2626' }
+    };
+    return styles[status] || { bg: '#f3f4f6', color: '#6b7280' };
   };
 
   const exportCustomers = () => {
-    const headers = ['Name', 'Email', 'Phone', 'Address', 'City', 'Orders', 'Total Spent'];
+    const headers = ['Name', 'Email', 'Phone', 'Address', 'City', 'Total Orders', 'Total Spent', 'First Order', 'Last Order'];
     const rows = filteredCustomers.map(c => [
-      c.name || '',
-      c.email || '',
-      c.phone || c.address?.phone || '',
-      c.address?.address || '',
-      c.address?.city || '',
-      c.order_count || 0,
-      c.total_spent || 0
+      c.name,
+      c.email,
+      c.phone,
+      c.address,
+      c.city,
+      c.order_count,
+      c.total_spent,
+      formatDate(c.first_order_date),
+      formatDate(c.last_order_date)
     ]);
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
-
+    const csvContent = [headers.join(','), ...rows.map(row => row.map(cell => `"${cell}"`).join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -95,214 +130,380 @@ export default function AdminCustomersPage() {
     a.download = `customers-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    
-    toast.success('Customers exported');
+    toast.success('Customers exported successfully');
   };
 
-  const formatCurrency = (amount) => {
-    return '৳' + (amount || 0).toLocaleString();
+  const exportSingleCustomer = (customer) => {
+    const data = {
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone,
+      address: `${customer.address}, ${customer.city}`,
+      total_orders: customer.order_count,
+      total_spent: customer.total_spent,
+      orders: customer.orders.map(o => ({
+        order_id: o.order_number || o._id.slice(-8),
+        amount: o.total,
+        status: o.status,
+        date: formatDate(o.created_at)
+      }))
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `customer-${customer.name.replace(/\s+/g, '-').toLowerCase()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Customer data exported');
   };
 
-  const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
-
-  const filteredCustomers = customers.filter(c => 
+  const filteredCustomers = customers.filter(c =>
     (c.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
     (c.email?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
     (c.phone || '').includes(searchQuery)
   );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
         <div>
-          <h1 className="text-2xl font-light tracking-wide">Customers</h1>
-          <p className="text-sm text-muted mt-1">{customers.length} total customers</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Customers</h1>
+          <p style={{ fontSize: 14, color: '#6b7280' }}>View and manage your customers</p>
         </div>
         <button
           onClick={exportCustomers}
-          className="flex items-center gap-2 px-4 py-2 bg-focus text-white text-sm hover:bg-gold transition-colors"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '12px 20px',
+            backgroundColor: '#10b981',
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: 600,
+            borderRadius: 10,
+            border: 'none',
+            cursor: 'pointer'
+          }}
         >
-          <Download size={18} />
-          Export CSV
+          <Download size={20} />
+          Export All
         </button>
       </div>
 
+      {/* Stats Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginBottom: 24 }}>
+        <div style={{ backgroundColor: '#1f2937', borderRadius: 16, padding: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 8 }}>Total Customers</p>
+              <p style={{ fontSize: 28, fontWeight: 700, color: '#fff' }}>{stats.totalCustomers}</p>
+            </div>
+            <div style={{ width: 48, height: 48, backgroundColor: '#3b82f620', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <User size={24} style={{ color: '#3b82f6' }} />
+            </div>
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: '#1f2937', borderRadius: 16, padding: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 8 }}>Total Revenue</p>
+              <p style={{ fontSize: 28, fontWeight: 700, color: '#fff' }}>{formatCurrency(stats.totalRevenue)}</p>
+            </div>
+            <div style={{ width: 48, height: 48, backgroundColor: '#10b98120', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <DollarSign size={24} style={{ color: '#10b981' }} />
+            </div>
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: '#1f2937', borderRadius: 16, padding: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 8 }}>Avg. Order Value</p>
+              <p style={{ fontSize: 28, fontWeight: 700, color: '#fff' }}>{formatCurrency(stats.avgOrderValue)}</p>
+            </div>
+            <div style={{ width: 48, height: 48, backgroundColor: '#f59e0b20', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TrendingUp size={24} style={{ color: '#f59e0b' }} />
+            </div>
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: '#1f2937', borderRadius: 16, padding: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ fontSize: 13, color: '#6b7280', marginBottom: 8 }}>New This Month</p>
+              <p style={{ fontSize: 28, fontWeight: 700, color: '#fff' }}>{stats.newThisMonth}</p>
+            </div>
+            <div style={{ width: 48, height: 48, backgroundColor: '#8b5cf620', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <User size={24} style={{ color: '#8b5cf6' }} />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Search */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+      <div style={{ backgroundColor: '#1f2937', borderRadius: 16, padding: 20, marginBottom: 24 }}>
+        <div style={{ position: 'relative', maxWidth: 400 }}>
+          <Search size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
           <input
             type="text"
             placeholder="Search by name, email, or phone..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-field pl-10"
+            style={{
+              width: '100%',
+              padding: '14px 16px 14px 48px',
+              backgroundColor: '#111827',
+              border: '1px solid #374151',
+              borderRadius: 10,
+              color: '#fff',
+              fontSize: 14,
+              outline: 'none'
+            }}
           />
         </div>
       </div>
 
-      {/* Customers List */}
-      {filteredCustomers.length > 0 ? (
-        <div className="bg-white border border-primary-200 overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-primary-50">
-              <tr>
-                <th className="text-left p-4 text-sm font-medium">Customer</th>
-                <th className="text-left p-4 text-sm font-medium hidden md:table-cell">Phone</th>
-                <th className="text-left p-4 text-sm font-medium hidden lg:table-cell">Location</th>
-                <th className="text-center p-4 text-sm font-medium">Orders</th>
-                <th className="text-right p-4 text-sm font-medium">Total Spent</th>
-                <th className="text-right p-4 text-sm font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-primary-100">
-              {filteredCustomers.map((customer) => (
-                <tr key={customer._id} className="hover:bg-primary-50/50">
-                  <td className="p-4">
-                    <div>
-                      <p className="font-medium">{customer.name || 'Unknown'}</p>
-                      <p className="text-sm text-muted">{customer.email}</p>
-                    </div>
-                  </td>
-                  <td className="p-4 hidden md:table-cell text-sm text-muted">
-                    {customer.phone || customer.address?.phone || '-'}
-                  </td>
-                  <td className="p-4 hidden lg:table-cell text-sm text-muted">
-                    {customer.address?.city || '-'}
-                  </td>
-                  <td className="p-4 text-center">
-                    <span className="bg-primary-100 px-2 py-1 text-sm rounded">
-                      {customer.order_count || 0}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right font-medium">
-                    {formatCurrency(customer.total_spent)}
-                  </td>
-                  <td className="p-4 text-right">
-                    <button
-                      onClick={() => viewCustomerDetails(customer)}
-                      className="p-2 text-muted hover:text-focus"
-                    >
-                      <Eye size={18} />
-                    </button>
-                  </td>
+      {/* Customers Table */}
+      <div style={{ backgroundColor: '#1f2937', borderRadius: 16, overflow: 'hidden' }}>
+        {loading ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80 }}>
+            <div style={{ width: 40, height: 40, border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#111827' }}>
+                  <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Customer</th>
+                  <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Contact</th>
+                  <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Location</th>
+                  <th style={{ textAlign: 'center', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Orders</th>
+                  <th style={{ textAlign: 'right', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Spent</th>
+                  <th style={{ textAlign: 'left', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Order</th>
+                  <th style={{ textAlign: 'right', padding: '16px 24px', fontSize: 12, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="bg-white border border-primary-200 p-12 text-center">
-          <ShoppingBag size={48} className="mx-auto mb-4 text-muted opacity-50" />
-          <p className="text-muted">No customers found</p>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {filteredCustomers.length > 0 ? filteredCustomers.map((customer, index) => (
+                  <tr key={customer._id} style={{ borderTop: '1px solid #374151' }}>
+                    <td style={{ padding: '16px 24px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: '50%',
+                          backgroundColor: '#3b82f6',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#fff',
+                          fontWeight: 600,
+                          fontSize: 16
+                        }}>
+                          {customer.name?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{customer.name}</p>
+                          <p style={{ fontSize: 12, color: '#6b7280' }}>Customer</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '16px 24px' }}>
+                      <p style={{ fontSize: 14, color: '#fff', marginBottom: 2 }}>{customer.phone}</p>
+                      <p style={{ fontSize: 12, color: '#6b7280' }}>{customer.email || 'No email'}</p>
+                    </td>
+                    <td style={{ padding: '16px 24px' }}>
+                      <p style={{ fontSize: 14, color: '#9ca3af' }}>{customer.city || 'N/A'}</p>
+                    </td>
+                    <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                      <span style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        padding: '6px 14px',
+                        backgroundColor: '#374151',
+                        color: '#fff',
+                        borderRadius: 20
+                      }}>
+                        {customer.order_count}
+                      </span>
+                    </td>
+                    <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#10b981' }}>{formatCurrency(customer.total_spent)}</span>
+                    </td>
+                    <td style={{ padding: '16px 24px' }}>
+                      <span style={{ fontSize: 14, color: '#9ca3af' }}>{formatDate(customer.last_order_date)}</span>
+                    </td>
+                    <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
+                        <button
+                          onClick={() => viewCustomerDetails(customer)}
+                          style={{ padding: 10, backgroundColor: '#374151', borderRadius: 8, border: 'none', cursor: 'pointer', color: '#3b82f6', display: 'flex' }}
+                        >
+                          <Eye size={18} />
+                        </button>
+                        <button
+                          onClick={() => exportSingleCustomer(customer)}
+                          style={{ padding: 10, backgroundColor: '#374151', borderRadius: 8, border: 'none', cursor: 'pointer', color: '#10b981', display: 'flex' }}
+                        >
+                          <Download size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={7} style={{ padding: 80, textAlign: 'center' }}>
+                      <User size={64} style={{ color: '#374151', marginBottom: 16 }} />
+                      <p style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 8 }}>No customers found</p>
+                      <p style={{ fontSize: 14, color: '#6b7280' }}>Customers will appear here once they make purchases</p>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
-      {/* Customer Details Modal */}
+      {/* Customer Detail Modal */}
       {selectedCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-xl font-light">Customer Details</h2>
-              <button onClick={() => setSelectedCustomer(null)} className="text-muted hover:text-focus">
-                <X size={24} />
-              </button>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: 'rgba(0,0,0,0.8)' }}>
+          <div style={{ width: '100%', maxWidth: 700, maxHeight: '90vh', overflowY: 'auto', backgroundColor: '#1f2937', borderRadius: 20 }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 24, borderBottom: '1px solid #374151' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: '50%',
+                  backgroundColor: '#3b82f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontWeight: 700,
+                  fontSize: 24
+                }}>
+                  {selectedCustomer.name?.charAt(0).toUpperCase() || 'U'}
+                </div>
+                <div>
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>{selectedCustomer.name}</h2>
+                  <p style={{ fontSize: 13, color: '#6b7280' }}>Customer since {formatDate(selectedCustomer.first_order_date)}</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => exportSingleCustomer(selectedCustomer)}
+                  style={{ padding: 10, backgroundColor: '#10b981', borderRadius: 8, border: 'none', cursor: 'pointer', color: '#fff', display: 'flex' }}
+                >
+                  <Download size={20} />
+                </button>
+                <button onClick={() => setSelectedCustomer(null)} style={{ padding: 10, backgroundColor: '#374151', borderRadius: 8, border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex' }}>
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
-            <div className="p-6">
-              {/* Customer Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="flex items-center gap-3 p-3 bg-primary-50 rounded">
-                  <Mail size={18} className="text-muted" />
-                  <div>
-                    <p className="text-xs text-muted">Email</p>
-                    <p className="text-sm">{selectedCustomer.email || '-'}</p>
-                  </div>
+            <div style={{ padding: 24 }}>
+              {/* Customer Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+                <div style={{ backgroundColor: '#111827', borderRadius: 12, padding: 20, textAlign: 'center' }}>
+                  <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>Total Orders</p>
+                  <p style={{ fontSize: 24, fontWeight: 700, color: '#fff' }}>{selectedCustomer.order_count}</p>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-primary-50 rounded">
-                  <Phone size={18} className="text-muted" />
-                  <div>
-                    <p className="text-xs text-muted">Phone</p>
-                    <p className="text-sm">{selectedCustomer.phone || selectedCustomer.address?.phone || '-'}</p>
-                  </div>
+                <div style={{ backgroundColor: '#111827', borderRadius: 12, padding: 20, textAlign: 'center' }}>
+                  <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>Total Spent</p>
+                  <p style={{ fontSize: 24, fontWeight: 700, color: '#10b981' }}>{formatCurrency(selectedCustomer.total_spent)}</p>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-primary-50 rounded">
-                  <MapPin size={18} className="text-muted" />
-                  <div>
-                    <p className="text-xs text-muted">Address</p>
-                    <p className="text-sm">
-                      {selectedCustomer.address?.address ? 
-                        `${selectedCustomer.address.address}, ${selectedCustomer.address.city}` : '-'}
-                    </p>
-                  </div>
+                <div style={{ backgroundColor: '#111827', borderRadius: 12, padding: 20, textAlign: 'center' }}>
+                  <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>Avg. Order</p>
+                  <p style={{ fontSize: 24, fontWeight: 700, color: '#fff' }}>{formatCurrency(Math.round(selectedCustomer.total_spent / selectedCustomer.order_count))}</p>
                 </div>
-                <div className="flex items-center gap-3 p-3 bg-primary-50 rounded">
-                  <ShoppingBag size={18} className="text-muted" />
-                  <div>
-                    <p className="text-xs text-muted">Total Orders</p>
-                    <p className="text-sm font-medium">{selectedCustomer.order_count || 0}</p>
+              </div>
+
+              {/* Contact Info */}
+              <div style={{ backgroundColor: '#111827', borderRadius: 12, padding: 20, marginBottom: 24 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 16 }}>Contact Information</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, backgroundColor: '#374151', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Phone size={18} style={{ color: '#3b82f6' }} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 12, color: '#6b7280' }}>Phone</p>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>{selectedCustomer.phone}</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 40, height: 40, backgroundColor: '#374151', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Mail size={18} style={{ color: '#10b981' }} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 12, color: '#6b7280' }}>Email</p>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>{selectedCustomer.email || 'Not provided'}</p>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, gridColumn: 'span 2' }}>
+                    <div style={{ width: 40, height: 40, backgroundColor: '#374151', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <MapPin size={18} style={{ color: '#f59e0b' }} />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 12, color: '#6b7280' }}>Address</p>
+                      <p style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>{selectedCustomer.address}, {selectedCustomer.city}</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Order History */}
-              <h3 className="font-medium mb-4">Order History</h3>
-              
-              {loadingOrders ? (
-                <div className="text-center py-8">
-                  <div className="w-6 h-6 border-2 border-gold border-t-transparent rounded-full animate-spin mx-auto"></div>
-                </div>
-              ) : customerOrders.length > 0 ? (
-                <div className="space-y-3">
-                  {customerOrders.map((order) => (
-                    <div key={order._id} className="border border-primary-200 p-3 rounded">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-mono text-sm">#{order.order_number || order._id.slice(-8)}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded ${
-                          order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                          order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {order.status}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm text-muted">
-                        <span className="flex items-center gap-1">
-                          <Calendar size={14} />
-                          {formatDate(order.created_at)}
-                        </span>
-                        <span className="font-medium text-focus">{formatCurrency(order.total)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-muted text-center py-4">No orders found</p>
-              )}
-            </div>
-
-            <div className="p-4 border-t">
-              <button
-                onClick={() => setSelectedCustomer(null)}
-                className="w-full py-3 border border-primary-300 text-sm hover:border-focus transition-colors"
-              >
-                Close
-              </button>
+              <div style={{ backgroundColor: '#111827', borderRadius: 12, padding: 20 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 16 }}>Order History</h3>
+                {customerOrders.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {customerOrders.map((order, index) => {
+                      const statusStyle = getStatusStyle(order.status);
+                      return (
+                        <div key={order._id} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: 16,
+                          backgroundColor: '#1f2937',
+                          borderRadius: 10
+                        }}>
+                          <div>
+                            <p style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 4 }}>
+                              #{order.order_number || order._id.slice(-8)}
+                            </p>
+                            <p style={{ fontSize: 12, color: '#6b7280' }}>{formatDate(order.created_at)}</p>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <p style={{ fontSize: 14, fontWeight: 700, color: '#fff', marginBottom: 4 }}>{formatCurrency(order.total)}</p>
+                            <span style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              padding: '4px 10px',
+                              borderRadius: 20,
+                              backgroundColor: statusStyle.bg,
+                              color: statusStyle.color,
+                              textTransform: 'capitalize'
+                            }}>
+                              {order.status}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p style={{ textAlign: 'center', color: '#6b7280', padding: 24 }}>No orders found</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
