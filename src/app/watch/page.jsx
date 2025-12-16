@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { SlidersHorizontal, X, ChevronDown, Grid, List } from 'lucide-react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import api from '@/lib/api';
 
-export default function WatchPage() {
+function WatchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -16,7 +16,6 @@ export default function WatchPage() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   
-  // Filters from URL
   const selectedBrand = searchParams.get('brand') || '';
   const minPrice = searchParams.get('min_price') || '';
   const maxPrice = searchParams.get('max_price') || '';
@@ -68,7 +67,6 @@ export default function WatchPage() {
       params.delete(key);
     }
     
-    // Reset page when filter changes
     if (key !== 'page') {
       params.delete('page');
     }
@@ -81,7 +79,6 @@ export default function WatchPage() {
   };
 
   const hasActiveFilters = selectedBrand || minPrice || maxPrice;
-
   const formatPrice = (price) => '৳' + price?.toLocaleString();
 
   return (
@@ -103,7 +100,6 @@ export default function WatchPage() {
         <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #e5e5e5', position: 'sticky', top: 0, zIndex: 40 }}>
           <div style={{ maxWidth: 1280, margin: '0 auto', padding: '16px 24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
-              {/* All Brands button */}
               <button
                 onClick={() => updateFilter('brand', '')}
                 style={{
@@ -122,7 +118,6 @@ export default function WatchPage() {
                 All Brands
               </button>
               
-              {/* Brand buttons */}
               {brands.map((brand) => (
                 <button
                   key={brand._id}
@@ -179,7 +174,6 @@ export default function WatchPage() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* Sort */}
             <select
               value={sortBy}
               onChange={(e) => updateFilter('sort', e.target.value)}
@@ -199,7 +193,6 @@ export default function WatchPage() {
               <option value="popular">Most Popular</option>
             </select>
 
-            {/* Filter Toggle (Mobile) */}
             <button
               onClick={() => setShowFilters(!showFilters)}
               style={{
@@ -224,7 +217,6 @@ export default function WatchPage() {
         {showFilters && (
           <div style={{ backgroundColor: '#fff', borderRadius: 8, padding: 24, marginBottom: 32, border: '1px solid #e5e5e5' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24 }}>
-              {/* Price Range */}
               <div>
                 <h4 style={{ fontSize: 13, fontWeight: 600, color: '#0C0C0C', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
                   Price Range
@@ -235,13 +227,7 @@ export default function WatchPage() {
                     placeholder="Min"
                     value={minPrice}
                     onChange={(e) => updateFilter('min_price', e.target.value)}
-                    style={{
-                      width: 100,
-                      padding: '8px 12px',
-                      border: '1px solid #ddd',
-                      borderRadius: 4,
-                      fontSize: 13
-                    }}
+                    style={{ width: 100, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13 }}
                   />
                   <span style={{ color: '#999' }}>-</span>
                   <input
@@ -249,13 +235,7 @@ export default function WatchPage() {
                     placeholder="Max"
                     value={maxPrice}
                     onChange={(e) => updateFilter('max_price', e.target.value)}
-                    style={{
-                      width: 100,
-                      padding: '8px 12px',
-                      border: '1px solid #ddd',
-                      borderRadius: 4,
-                      fontSize: 13
-                    }}
+                    style={{ width: 100, padding: '8px 12px', border: '1px solid #ddd', borderRadius: 4, fontSize: 13 }}
                   />
                 </div>
               </div>
@@ -271,76 +251,45 @@ export default function WatchPage() {
         ) : products.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 24 }}>
             {products.map((product) => (
-              <Link 
-                key={product._id} 
-                href={`/product/${product.slug}`}
-                style={{ textDecoration: 'none' }}
-              >
-                <div style={{ 
-                  backgroundColor: '#fff', 
-                  borderRadius: 8, 
-                  overflow: 'hidden',
-                  border: '1px solid #e5e5e5',
-                  transition: 'all 0.3s',
-                  cursor: 'pointer'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.1)'}
-                onMouseOut={(e) => e.currentTarget.style.boxShadow = 'none'}
+              <Link key={product._id} href={`/product/${product.slug}`} style={{ textDecoration: 'none' }}>
+                <div 
+                  style={{ backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden', border: '1px solid #e5e5e5', transition: 'all 0.3s', cursor: 'pointer' }}
+                  onMouseOver={(e) => e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.1)'}
+                  onMouseOut={(e) => e.currentTarget.style.boxShadow = 'none'}
                 >
-                  {/* Image */}
                   <div style={{ position: 'relative', aspectRatio: '1', backgroundColor: '#f5f5f5' }}>
                     {product.images?.[0]?.url ? (
-                      <img
-                        src={product.images[0].url}
-                        alt={product.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
+                      <img src={product.images[0].url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc', fontSize: 14 }}>
                         No Image
                       </div>
                     )}
                     
-                    {/* Discount Badge */}
                     {product.compare_price && product.compare_price > product.price && (
-                      <div style={{
-                        position: 'absolute',
-                        top: 12,
-                        left: 12,
-                        padding: '4px 10px',
-                        backgroundColor: '#dc2626',
-                        color: '#fff',
-                        fontSize: 11,
-                        fontWeight: 600,
-                        borderRadius: 4
-                      }}>
+                      <div style={{ position: 'absolute', top: 12, left: 12, padding: '4px 10px', backgroundColor: '#dc2626', color: '#fff', fontSize: 11, fontWeight: 600, borderRadius: 4 }}>
                         {Math.round(((product.compare_price - product.price) / product.compare_price) * 100)}% OFF
                       </div>
                     )}
                   </div>
 
-                  {/* Info */}
                   <div style={{ padding: 20 }}>
-                    {/* Brand */}
                     {product.brand && (
                       <p style={{ fontSize: 11, color: '#B08B5C', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
                         {brands.find(b => b.slug === product.brand)?.name || product.brand}
                       </p>
                     )}
                     
-                    {/* Name */}
                     <h3 style={{ fontSize: 15, fontWeight: 500, color: '#0C0C0C', marginBottom: 8, lineHeight: 1.4 }}>
                       {product.name}
                     </h3>
                     
-                    {/* Specs Preview */}
                     {product.specs && (
                       <p style={{ fontSize: 12, color: '#666', marginBottom: 12 }}>
                         {[product.specs.movement, product.specs.case_size].filter(Boolean).join(' • ')}
                       </p>
                     )}
                     
-                    {/* Price */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ fontSize: 18, fontWeight: 700, color: '#0C0C0C' }}>
                         {formatPrice(product.price)}
@@ -364,18 +313,7 @@ export default function WatchPage() {
             <h3 style={{ fontSize: 20, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>No products found</h3>
             <p style={{ fontSize: 14, color: '#666', marginBottom: 24 }}>Try adjusting your filters</p>
             {hasActiveFilters && (
-              <button
-                onClick={clearAllFilters}
-                style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#0C0C0C',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 4,
-                  fontSize: 14,
-                  cursor: 'pointer'
-                }}
-              >
+              <button onClick={clearAllFilters} style={{ padding: '12px 24px', backgroundColor: '#0C0C0C', color: '#fff', border: 'none', borderRadius: 4, fontSize: 14, cursor: 'pointer' }}>
                 Clear All Filters
               </button>
             )}
@@ -410,5 +348,35 @@ export default function WatchPage() {
         )}
       </div>
     </div>
+  );
+}
+
+// Loading component
+function LoadingWatch() {
+  return (
+    <div style={{ backgroundColor: '#F7F7F7', minHeight: '100vh' }}>
+      <div style={{ backgroundColor: '#0C0C0C', padding: '48px 0' }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
+          <h1 style={{ fontSize: 36, fontWeight: 300, color: '#fff', letterSpacing: 4, textAlign: 'center', marginBottom: 8 }}>
+            WATCHES
+          </h1>
+          <p style={{ fontSize: 14, color: '#919191', textAlign: 'center', letterSpacing: 1 }}>
+            Premium timepieces collection
+          </p>
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80 }}>
+        <div style={{ width: 40, height: 40, border: '3px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      </div>
+    </div>
+  );
+}
+
+// Main export with Suspense
+export default function WatchPage() {
+  return (
+    <Suspense fallback={<LoadingWatch />}>
+      <WatchContent />
+    </Suspense>
   );
 }
