@@ -70,18 +70,19 @@ export default function HomePage() {
     { name: 'Accessories', slug: 'accessories', link: '/shop?category=accessories' }
   ];
 
-  // Featured Section Component - White background only
+  // Featured Section Component
   const FeaturedSection = ({ title, products, viewAllLink }) => {
     if (!products || products.length === 0) return null;
 
     return (
       <section style={{ backgroundColor: '#FFFFFF', padding: '80px 0' }}>
-        <div style={{ width: '100%', padding: '0 50px' }}>
-          {/* Section Title */}
+        <div style={{ maxWidth: 1800, margin: '0 auto', padding: '0 50px' }}>
+          {/* Section Title - Weight 400, Size 32px, Line Height 40px */}
           <h2 style={{ 
-            fontSize: 28, 
+            fontSize: 32, 
             fontWeight: 400, 
-            letterSpacing: 10, 
+            lineHeight: '40px',
+            letterSpacing: 8, 
             textAlign: 'center', 
             marginBottom: 50,
             color: '#0C0C0C',
@@ -90,41 +91,41 @@ export default function HomePage() {
             {title}
           </h2>
           
-          {/* Products Grid - Full width */}
+          {/* Products Grid */}
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: 15
+            gap: 30
           }}>
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
 
-          {/* View All Button */}
+          {/* View All Button - Black background */}
           <div style={{ textAlign: 'center', marginTop: 50 }}>
             <Link 
               href={viewAllLink}
               style={{
                 display: 'inline-block',
                 padding: '15px 45px',
-                border: '1px solid #0C0C0C',
-                color: '#0C0C0C',
+                backgroundColor: '#0C0C0C',
+                color: '#FFFFFF',
                 fontSize: 11,
                 fontWeight: 400,
                 letterSpacing: 3,
                 textTransform: 'uppercase',
                 textDecoration: 'none',
                 transition: 'all 0.3s ease',
-                backgroundColor: 'transparent'
+                border: '1px solid #0C0C0C'
               }}
               onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#0C0C0C';
-                e.currentTarget.style.color = '#FFFFFF';
+                e.currentTarget.style.backgroundColor = '#B08B5C';
+                e.currentTarget.style.borderColor = '#B08B5C';
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#0C0C0C';
+                e.currentTarget.style.backgroundColor = '#0C0C0C';
+                e.currentTarget.style.borderColor = '#0C0C0C';
               }}
             >
               View All
@@ -162,7 +163,7 @@ export default function HomePage() {
           </div>
         )}
         
-        {/* Logo - Original smaller size, just below navbar */}
+        {/* Logo */}
         <div style={{
           position: 'absolute',
           top: '12%',
@@ -186,7 +187,7 @@ export default function HomePage() {
           </h1>
         </div>
         
-        {/* Hero Content - Bottom Center */}
+        {/* Hero Content - Bottom */}
         <div style={{ 
           position: 'absolute', 
           bottom: 80, 
@@ -259,13 +260,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Category Section - Full Width like Gucci */}
+      {/* Category Section */}
       <section style={{ backgroundColor: '#FFFFFF', padding: '80px 0 60px 0' }}>
-        {/* Section Title */}
+        {/* Section Title - Weight 400, Size 32px, Line Height 40px */}
         <h2 style={{ 
-          fontSize: 28, 
+          fontSize: 32, 
           fontWeight: 400, 
-          letterSpacing: 10, 
+          lineHeight: '40px',
+          letterSpacing: 8, 
           textAlign: 'center', 
           marginBottom: 50,
           color: '#0C0C0C',
@@ -274,12 +276,11 @@ export default function HomePage() {
           Explore Our Collection
         </h2>
         
-        {/* Categories Grid - Edge to edge like Gucci */}
+        {/* Categories Grid - 50px gap, centered */}
         <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(4, 1fr)', 
-          gap: 15,
-          padding: '0 50px'
+          display: 'flex', 
+          justifyContent: 'center',
+          gap: 50
         }}>
           {categoryData.map((cat) => {
             const categoryInfo = categories.find(c => c.slug === cat.slug);
@@ -289,14 +290,15 @@ export default function HomePage() {
                 href={cat.link}
                 style={{ textDecoration: 'none', display: 'block' }}
               >
-                {/* Category Image - Taller, fills space */}
+                {/* Category Image - Width 405px, Height 545px */}
                 <div 
                   style={{ 
                     position: 'relative', 
-                    paddingBottom: '130%',
+                    width: 405,
+                    height: 545,
                     backgroundColor: '#E8E8E8', 
                     overflow: 'hidden',
-                    marginBottom: 12
+                    marginBottom: 16
                   }}
                   className="category-image"
                 >
@@ -324,12 +326,12 @@ export default function HomePage() {
                   )}
                 </div>
                 
-                {/* Category Name */}
+                {/* Category Name - Weight 500, Size 16px, Line Height 24px */}
                 <h3 style={{ 
                   textAlign: 'center', 
-                  fontSize: 14, 
-                  fontWeight: 400, 
-                  letterSpacing: 1,
+                  fontSize: 16, 
+                  fontWeight: 500, 
+                  lineHeight: '24px',
                   color: '#0C0C0C',
                   margin: 0
                 }}>
@@ -341,28 +343,28 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Watches - White background */}
+      {/* Featured Watches */}
       <FeaturedSection 
         title="Featured Watches" 
         products={watchProducts} 
         viewAllLink="/watch"
       />
 
-      {/* Featured Menswear - White background */}
+      {/* Featured Menswear */}
       <FeaturedSection 
         title="Featured Menswear" 
         products={menswearProducts} 
         viewAllLink="/menswear"
       />
 
-      {/* Featured Womenswear - White background */}
+      {/* Featured Womenswear */}
       <FeaturedSection 
         title="Featured Womenswear" 
         products={womenswearProducts} 
         viewAllLink="/womenswear"
       />
 
-      {/* Featured Accessories - White background */}
+      {/* Featured Accessories */}
       <FeaturedSection 
         title="Featured Accessories" 
         products={accessoriesProducts} 
