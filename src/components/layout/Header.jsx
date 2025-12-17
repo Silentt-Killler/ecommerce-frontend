@@ -3,16 +3,16 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/contexts/AuthContext';
+// import { useCart } from '@/contexts/CartContext';  // COMMENTED OUT
+// import { useAuth } from '@/contexts/AuthContext';  // COMMENTED OUT
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const { cartItems } = useCart();
-  const { user, logout } = useAuth();
-
-  const cartCount = cartItems?.reduce((total, item) => total + item.quantity, 0) || 0;
+  
+  // Temporary values - context commented out
+  const cartCount = 0;  // const { cartItems } = useCart();
+  const user = null;    // const { user, logout } = useAuth();
 
   // Handle scroll to show/hide PRISMIN in nav
   useEffect(() => {
