@@ -18,7 +18,8 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
+      // Very sensitive - just 20px scroll shows logo in navbar
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -33,7 +34,7 @@ export default function Header() {
 
   return (
     <>
-      {/* Fixed Header - Transparent initially, white on scroll */}
+      {/* Fixed Header */}
       <header 
         style={{
           position: 'fixed',
@@ -41,17 +42,17 @@ export default function Header() {
           left: 0,
           right: 0,
           zIndex: 50,
-          transition: 'all 0.4s ease',
+          transition: 'all 0.3s ease',
           backgroundColor: isScrolled ? '#FFFFFF' : 'transparent',
-          borderBottom: isScrolled ? '1px solid #E0E0E0' : '1px solid transparent'
+          borderBottom: isScrolled ? '1px solid #E0E0E0' : 'none'
         }}
       >
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between',
-            height: 70
+            height: 60
           }}>
             
             {/* Left - Contact */}
@@ -62,19 +63,19 @@ export default function Header() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 4,
-                  fontSize: 13,
+                  fontSize: 12,
                   letterSpacing: 1,
                   color: isScrolled ? '#0C0C0C' : '#FFFFFF',
                   textDecoration: 'none',
                   transition: 'color 0.3s'
                 }}
               >
-                <Plus size={14} />
+                <Plus size={12} />
                 <span>Contact Us</span>
               </Link>
             </div>
 
-            {/* Center - Logo (only shows on scroll) */}
+            {/* Center - Logo (appears on scroll) */}
             <Link 
               href="/"
               style={{
@@ -82,14 +83,14 @@ export default function Header() {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 opacity: isScrolled ? 1 : 0,
-                transition: 'opacity 0.4s ease',
+                transition: 'opacity 0.3s ease',
                 pointerEvents: isScrolled ? 'auto' : 'none'
               }}
             >
               <h1 style={{ 
-                fontSize: 24, 
+                fontSize: 22, 
                 fontWeight: 300, 
-                letterSpacing: 8,
+                letterSpacing: 6,
                 color: '#0C0C0C',
                 margin: 0
               }}>
@@ -103,7 +104,7 @@ export default function Header() {
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'flex-end',
-              gap: 24 
+              gap: 20 
             }}>
               {/* Cart */}
               <Link 
@@ -114,17 +115,17 @@ export default function Header() {
                   transition: 'color 0.3s'
                 }}
               >
-                <ShoppingBag size={22} strokeWidth={1.5} />
+                <ShoppingBag size={20} strokeWidth={1.5} />
                 {itemCount > 0 && (
                   <span style={{
                     position: 'absolute',
-                    top: -8,
-                    right: -8,
-                    width: 18,
-                    height: 18,
+                    top: -6,
+                    right: -6,
+                    width: 16,
+                    height: 16,
                     backgroundColor: '#B08B5C',
                     color: '#FFFFFF',
-                    fontSize: 10,
+                    fontSize: 9,
                     fontWeight: 500,
                     display: 'flex',
                     alignItems: 'center',
@@ -144,15 +145,16 @@ export default function Header() {
                     border: 'none', 
                     cursor: 'pointer',
                     color: isScrolled ? '#0C0C0C' : '#FFFFFF',
-                    transition: 'color 0.3s'
+                    transition: 'color 0.3s',
+                    padding: 0
                   }}>
-                    <User size={22} strokeWidth={1.5} />
+                    <User size={20} strokeWidth={1.5} />
                   </button>
                   <div className="dropdown-menu" style={{
                     position: 'absolute',
                     right: 0,
                     top: '100%',
-                    marginTop: 8,
+                    marginTop: 10,
                     width: 180,
                     backgroundColor: '#FFFFFF',
                     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
@@ -161,17 +163,17 @@ export default function Header() {
                     transition: 'all 0.2s'
                   }}>
                     <div style={{ padding: '8px 0' }}>
-                      <p style={{ padding: '8px 16px', fontSize: 13, color: '#919191', borderBottom: '1px solid #E0E0E0' }}>
+                      <p style={{ padding: '8px 16px', fontSize: 12, color: '#888', borderBottom: '1px solid #E0E0E0' }}>
                         {user?.name}
                       </p>
-                      <Link href="/account" style={{ display: 'block', padding: '10px 16px', fontSize: 13, color: '#0C0C0C', textDecoration: 'none' }}>
+                      <Link href="/account" style={{ display: 'block', padding: '10px 16px', fontSize: 12, color: '#0C0C0C', textDecoration: 'none' }}>
                         My Account
                       </Link>
-                      <Link href="/orders" style={{ display: 'block', padding: '10px 16px', fontSize: 13, color: '#0C0C0C', textDecoration: 'none' }}>
+                      <Link href="/orders" style={{ display: 'block', padding: '10px 16px', fontSize: 12, color: '#0C0C0C', textDecoration: 'none' }}>
                         My Orders
                       </Link>
                       {user?.role === 'admin' && (
-                        <Link href="/admin" style={{ display: 'block', padding: '10px 16px', fontSize: 13, color: '#0C0C0C', textDecoration: 'none' }}>
+                        <Link href="/admin" style={{ display: 'block', padding: '10px 16px', fontSize: 12, color: '#0C0C0C', textDecoration: 'none' }}>
                           Admin Panel
                         </Link>
                       )}
@@ -182,7 +184,7 @@ export default function Header() {
                           width: '100%', 
                           textAlign: 'left',
                           padding: '10px 16px', 
-                          fontSize: 13, 
+                          fontSize: 12, 
                           color: '#B00020',
                           background: 'none',
                           border: 'none',
@@ -202,7 +204,7 @@ export default function Header() {
                     transition: 'color 0.3s'
                   }}
                 >
-                  <User size={22} strokeWidth={1.5} />
+                  <User size={20} strokeWidth={1.5} />
                 </Link>
               )}
 
@@ -214,10 +216,11 @@ export default function Header() {
                   border: 'none', 
                   cursor: 'pointer',
                   color: isScrolled ? '#0C0C0C' : '#FFFFFF',
-                  transition: 'color 0.3s'
+                  transition: 'color 0.3s',
+                  padding: 0
                 }}
               >
-                <Search size={22} strokeWidth={1.5} />
+                <Search size={20} strokeWidth={1.5} />
               </button>
 
               {/* Menu Toggle */}
@@ -226,16 +229,17 @@ export default function Header() {
                 style={{ 
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
+                  gap: 6,
                   background: 'none', 
                   border: 'none', 
                   cursor: 'pointer',
                   color: isScrolled ? '#0C0C0C' : '#FFFFFF',
-                  transition: 'color 0.3s'
+                  transition: 'color 0.3s',
+                  padding: 0
                 }}
               >
-                <Menu size={22} strokeWidth={1.5} />
-                <span style={{ fontSize: 13, letterSpacing: 1 }}>MENU</span>
+                <Menu size={20} strokeWidth={1.5} />
+                <span style={{ fontSize: 12, letterSpacing: 1 }}>MENU</span>
               </button>
             </div>
           </div>
@@ -244,12 +248,12 @@ export default function Header() {
         {/* Search Bar */}
         <div style={{
           overflow: 'hidden',
-          maxHeight: isSearchOpen ? 70 : 0,
+          maxHeight: isSearchOpen ? 60 : 0,
           transition: 'max-height 0.3s ease',
           backgroundColor: '#FFFFFF',
           borderTop: isSearchOpen ? '1px solid #E0E0E0' : 'none'
         }}>
-          <div style={{ maxWidth: 1400, margin: '0 auto', padding: '16px 24px' }}>
+          <div style={{ maxWidth: 1600, margin: '0 auto', padding: '12px 40px' }}>
             <form onSubmit={handleSearch} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <input
                 type="text"
@@ -262,15 +266,15 @@ export default function Header() {
                   border: 'none',
                   borderBottom: '1px solid #E0E0E0',
                   padding: '8px 0',
-                  fontSize: 14,
+                  fontSize: 13,
                   outline: 'none'
                 }}
               />
-              <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <Search size={20} />
+              <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                <Search size={18} />
               </button>
-              <button type="button" onClick={() => setIsSearchOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <X size={20} />
+              <button type="button" onClick={() => setIsSearchOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                <X size={18} />
               </button>
             </form>
           </div>
@@ -286,25 +290,25 @@ export default function Header() {
         transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
         transition: 'transform 0.5s ease'
       }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px', height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Menu Header */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'space-between',
-            height: 70,
+            height: 60,
             borderBottom: '1px solid #E0E0E0'
           }}>
             <Link href="/" onClick={() => setIsMenuOpen(false)}>
-              <h1 style={{ fontSize: 24, fontWeight: 300, letterSpacing: 8, color: '#0C0C0C', margin: 0 }}>
+              <h1 style={{ fontSize: 22, fontWeight: 300, letterSpacing: 6, color: '#0C0C0C', margin: 0 }}>
                 PRISMIN
               </h1>
             </Link>
             <button 
               onClick={() => setIsMenuOpen(false)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
-              <X size={28} strokeWidth={1.5} />
+              <X size={24} strokeWidth={1.5} />
             </button>
           </div>
 
@@ -318,14 +322,14 @@ export default function Header() {
                 { name: 'ACCESSORIES', href: '/shop?category=accessories' },
                 { name: 'ALL PRODUCTS', href: '/shop' }
               ].map((item, index) => (
-                <li key={index} style={{ marginBottom: 24 }}>
+                <li key={index} style={{ marginBottom: 20 }}>
                   <Link 
                     href={item.href}
                     onClick={() => setIsMenuOpen(false)}
                     style={{
-                      fontSize: 42,
+                      fontSize: 38,
                       fontWeight: 300,
-                      letterSpacing: 4,
+                      letterSpacing: 3,
                       color: '#0C0C0C',
                       textDecoration: 'none',
                       transition: 'opacity 0.3s'
@@ -341,8 +345,8 @@ export default function Header() {
           </nav>
 
           {/* Menu Footer */}
-          <div style={{ borderTop: '1px solid #E0E0E0', padding: '24px 0' }}>
-            <div style={{ display: 'flex', gap: 24, fontSize: 13, letterSpacing: 1 }}>
+          <div style={{ borderTop: '1px solid #E0E0E0', padding: '20px 0' }}>
+            <div style={{ display: 'flex', gap: 20, fontSize: 12, letterSpacing: 1 }}>
               <Link href="/about" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>About</Link>
               <Link href="/contact" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>Contact</Link>
               <Link href="/faq" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>FAQ</Link>
