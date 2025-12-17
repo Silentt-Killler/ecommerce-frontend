@@ -14,6 +14,7 @@ export default function HomePage() {
   const [womenswearProducts, setWomenswearProducts] = useState([]);
   const [accessoriesProducts, setAccessoriesProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showLogo, setShowLogo] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -24,7 +25,6 @@ export default function HomePage() {
         const catRes = await api.get('/categories');
         setCategories(catRes.data || []);
 
-        // Fetch products for each category
         try {
           const watchRes = await api.get('/products?category=watch&limit=4');
           setWatchProducts(watchRes.data.products || []);
@@ -53,11 +53,17 @@ export default function HomePage() {
     };
 
     fetchData();
+
+    // Hide large logo on scroll
+    const handleScroll = () => {
+      setShowLogo(window.scrollY < 100);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const heroSlide = settings?.hero_slides?.[0];
 
-  // Category data with proper links
   const categoryData = [
     { name: 'Watches', slug: 'watch', link: '/watch' },
     { name: 'Menswear', slug: 'menswear', link: '/menswear' },
@@ -66,31 +72,61 @@ export default function HomePage() {
   ];
 
   // Featured Section Component
-  const FeaturedSection = ({ title, products, viewAllLink, bgColor = 'bg-white' }) => {
+  const FeaturedSection = ({ title, products, viewAllLink, bgColor = '#FFFFFF' }) => {
     if (!products || products.length === 0) return null;
 
     return (
-      <section className={`py-20 md:py-28 ${bgColor}`}>
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl tracking-[0.2em] font-light uppercase text-focus">
-              {title}
-            </h2>
-          </div>
+      <section style={{ backgroundColor: bgColor, padding: '80px 0' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }}>
+          {/* Section Title */}
+          <h2 style={{ 
+            fontSize: 24, 
+            fontWeight: 400, 
+            letterSpacing: 6, 
+            textAlign: 'center', 
+            marginBottom: 50,
+            color: '#0C0C0C',
+            textTransform: 'uppercase'
+          }}>
+            {title}
+          </h2>
           
           {/* Products Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(4, 1fr)', 
+            gap: 24
+          }}>
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
 
           {/* View All Button */}
-          <div className="text-center mt-14">
+          <div style={{ textAlign: 'center', marginTop: 50 }}>
             <Link 
               href={viewAllLink}
-              className="inline-block px-12 py-4 border border-focus text-xs tracking-[0.25em] hover:bg-focus hover:text-white transition-all duration-300 uppercase font-light"
+              style={{
+                display: 'inline-block',
+                padding: '16px 48px',
+                border: '1px solid #0C0C0C',
+                color: '#0C0C0C',
+                fontSize: 12,
+                fontWeight: 400,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                transition: 'all 0.3s ease',
+                backgroundColor: 'transparent'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#0C0C0C';
+                e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#0C0C0C';
+              }}
             >
               View All
             </Link>
@@ -101,46 +137,123 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-base">
-      {/* Hero Section */}
-      <section className="relative h-[85vh] md:h-[95vh]">
+    <div style={{ backgroundColor: '#F7F7F7' }}>
+      {/* Hero Section - Full Screen */}
+      <section style={{ position: 'relative', height: '100vh', width: '100%' }}>
         {heroSlide?.image_url ? (
           <Image
             src={heroSlide.image_url}
             alt="Hero"
             fill
-            className="object-cover"
+            style={{ objectFit: 'cover' }}
             priority
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
-            <p className="text-muted text-sm tracking-wider">Upload hero image from Admin Panel</p>
+          <div style={{ 
+            position: 'absolute', 
+            inset: 0, 
+            backgroundColor: '#D0D0D0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
+            <p style={{ color: '#919191', fontSize: 14, letterSpacing: 2 }}>
+              Upload hero image from Admin Panel
+            </p>
           </div>
         )}
         
-        {/* Dark Overlay for better text visibility */}
-        <div className="absolute inset-0 bg-black/20" />
+        {/* Large Logo - Gucci Style (centered on hero, fades out on scroll) */}
+        <div style={{
+          position: 'absolute',
+          top: '25%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          opacity: showLogo ? 1 : 0,
+          transition: 'opacity 0.5s ease',
+          pointerEvents: 'none'
+        }}>
+          <h1 style={{
+            fontSize: 'clamp(80px, 15vw, 200px)',
+            fontWeight: 300,
+            letterSpacing: '0.15em',
+            color: '#FFFFFF',
+            margin: 0,
+            textShadow: '0 2px 40px rgba(0,0,0,0.1)'
+          }}>
+            PRISMIN
+          </h1>
+        </div>
         
-        {/* Hero Content */}
-        <div className="absolute bottom-20 md:bottom-28 left-1/2 transform -translate-x-1/2 text-center">
-          {/* Optional Title */}
-          {heroSlide?.title && (
-            <h1 className="text-white text-3xl md:text-5xl tracking-[0.3em] font-light mb-8">
-              {heroSlide.title}
-            </h1>
-          )}
+        {/* Hero Content - Bottom Center */}
+        <div style={{ 
+          position: 'absolute', 
+          bottom: 100, 
+          left: '50%', 
+          transform: 'translateX(-50%)',
+          textAlign: 'center'
+        }}>
+          {/* Optional Title above buttons */}
+          <p style={{
+            fontSize: 18,
+            fontWeight: 300,
+            letterSpacing: 3,
+            color: '#FFFFFF',
+            marginBottom: 24,
+            fontStyle: 'italic'
+          }}>
+            Premium Collection
+          </p>
           
           {/* Gucci-style Buttons */}
-          <div className="flex gap-4 md:gap-6 justify-center">
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
             <Link 
               href="/womenswear"
-              className="px-8 md:px-10 py-3 md:py-3.5 bg-white text-focus text-xs md:text-sm tracking-[0.2em] font-light hover:bg-focus hover:text-white transition-all duration-300 uppercase"
+              style={{
+                padding: '14px 40px',
+                backgroundColor: '#FFFFFF',
+                color: '#0C0C0C',
+                fontSize: 12,
+                fontWeight: 400,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                transition: 'all 0.3s ease',
+                border: 'none'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#0C0C0C';
+                e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFFFFF';
+                e.currentTarget.style.color = '#0C0C0C';
+              }}
             >
               For Her
             </Link>
             <Link 
               href="/menswear"
-              className="px-8 md:px-10 py-3 md:py-3.5 bg-white text-focus text-xs md:text-sm tracking-[0.2em] font-light hover:bg-focus hover:text-white transition-all duration-300 uppercase"
+              style={{
+                padding: '14px 40px',
+                backgroundColor: '#FFFFFF',
+                color: '#0C0C0C',
+                fontSize: 12,
+                fontWeight: 400,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                transition: 'all 0.3s ease',
+                border: 'none'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#0C0C0C';
+                e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFFFFF';
+                e.currentTarget.style.color = '#0C0C0C';
+              }}
             >
               For Him
             </Link>
@@ -148,44 +261,80 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Explore Our Collection - Category Section */}
-      <section className="py-20 md:py-28 bg-white">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-          {/* Section Header */}
-          <div className="text-center mb-16 md:mb-20">
-            <h2 className="text-2xl md:text-3xl tracking-[0.2em] font-light uppercase text-focus">
-              Explore Our Collection
-            </h2>
-          </div>
+      {/* Category Section - Gucci Style */}
+      <section style={{ backgroundColor: '#FFFFFF', padding: '100px 0' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }}>
+          {/* Section Title - with proper spacing */}
+          <h2 style={{ 
+            fontSize: 24, 
+            fontWeight: 400, 
+            letterSpacing: 6, 
+            textAlign: 'center', 
+            marginBottom: 70,
+            color: '#0C0C0C',
+            textTransform: 'uppercase'
+          }}>
+            Explore Our Collection
+          </h2>
           
-          {/* Categories Grid - Gucci Style */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {/* Categories Grid - Large Images like Gucci */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(4, 1fr)', 
+            gap: 24
+          }}>
             {categoryData.map((cat) => {
               const categoryInfo = categories.find(c => c.slug === cat.slug);
               return (
                 <Link 
                   key={cat.slug} 
                   href={cat.link}
-                  className="group block"
+                  style={{ textDecoration: 'none', display: 'block' }}
                 >
-                  {/* Category Image */}
-                  <div className="relative aspect-[3/4] bg-primary-100 overflow-hidden mb-5">
+                  {/* Category Image - Tall like Gucci */}
+                  <div 
+                    style={{ 
+                      position: 'relative', 
+                      paddingBottom: '130%', /* Tall aspect ratio like Gucci */
+                      backgroundColor: '#F0F0F0', 
+                      overflow: 'hidden',
+                      marginBottom: 16
+                    }}
+                    className="category-image"
+                  >
                     {categoryInfo?.image ? (
                       <Image
                         src={categoryInfo.image}
                         alt={cat.name}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-700"
+                        style={{ 
+                          objectFit: 'cover',
+                          transition: 'transform 0.6s ease'
+                        }}
                       />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
-                        <span className="text-muted text-sm tracking-wider">No Image</span>
+                      <div style={{ 
+                        position: 'absolute', 
+                        inset: 0, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        backgroundColor: '#E8E8E8'
+                      }}>
+                        <span style={{ color: '#919191', fontSize: 13 }}>No Image</span>
                       </div>
                     )}
                   </div>
                   
-                  {/* Category Name - Simple like Gucci */}
-                  <h3 className="text-center text-sm md:text-base tracking-[0.15em] font-light text-focus">
+                  {/* Category Name - Centered below image */}
+                  <h3 style={{ 
+                    textAlign: 'center', 
+                    fontSize: 14, 
+                    fontWeight: 400, 
+                    letterSpacing: 1,
+                    color: '#0C0C0C',
+                    margin: 0
+                  }}>
                     {cat.name}
                   </h3>
                 </Link>
@@ -200,7 +349,7 @@ export default function HomePage() {
         title="Featured Watches" 
         products={watchProducts} 
         viewAllLink="/watch"
-        bgColor="bg-base"
+        bgColor="#F7F7F7"
       />
 
       {/* Featured Menswear */}
@@ -208,7 +357,7 @@ export default function HomePage() {
         title="Featured Menswear" 
         products={menswearProducts} 
         viewAllLink="/menswear"
-        bgColor="bg-white"
+        bgColor="#FFFFFF"
       />
 
       {/* Featured Womenswear */}
@@ -216,7 +365,7 @@ export default function HomePage() {
         title="Featured Womenswear" 
         products={womenswearProducts} 
         viewAllLink="/womenswear"
-        bgColor="bg-base"
+        bgColor="#F7F7F7"
       />
 
       {/* Featured Accessories */}
@@ -224,34 +373,81 @@ export default function HomePage() {
         title="Featured Accessories" 
         products={accessoriesProducts} 
         viewAllLink="/shop?category=accessories"
-        bgColor="bg-white"
+        bgColor="#FFFFFF"
       />
 
       {/* Newsletter Section */}
-      <section className="py-20 md:py-28 bg-focus text-white">
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="text-2xl md:text-3xl tracking-[0.2em] mb-5 font-light uppercase">
+      <section style={{ backgroundColor: '#0C0C0C', padding: '80px 0' }}>
+        <div style={{ maxWidth: 550, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
+          <h2 style={{ 
+            fontSize: 22, 
+            fontWeight: 400, 
+            letterSpacing: 4, 
+            marginBottom: 12,
+            color: '#FFFFFF',
+            textTransform: 'uppercase'
+          }}>
             Stay Updated
           </h2>
-          <p className="text-primary-400 mb-10 text-sm tracking-wide">
+          <p style={{ 
+            color: '#919191', 
+            marginBottom: 32, 
+            fontSize: 13, 
+            letterSpacing: 1 
+          }}>
             Subscribe to receive updates on new arrivals and special offers
           </p>
           
-          <form className="flex flex-col sm:flex-row gap-4">
+          <form style={{ display: 'flex', gap: 0 }}>
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 px-5 py-4 bg-transparent border border-primary-600 text-white placeholder:text-primary-500 focus:border-white outline-none text-sm tracking-wide"
+              style={{
+                flex: 1,
+                padding: '16px 20px',
+                backgroundColor: 'transparent',
+                border: '1px solid #444',
+                borderRight: 'none',
+                color: '#FFFFFF',
+                fontSize: 13,
+                letterSpacing: 1,
+                outline: 'none'
+              }}
             />
             <button
               type="submit"
-              className="px-10 py-4 bg-white text-focus text-xs tracking-[0.2em] hover:bg-gold hover:text-white transition-all duration-300 uppercase font-light"
+              style={{
+                padding: '16px 32px',
+                backgroundColor: '#FFFFFF',
+                color: '#0C0C0C',
+                border: 'none',
+                fontSize: 11,
+                fontWeight: 400,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#B08B5C';
+                e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFFFFF';
+                e.currentTarget.style.color = '#0C0C0C';
+              }}
             >
               Subscribe
             </button>
           </form>
         </div>
       </section>
+
+      <style jsx global>{`
+        .category-image:hover img {
+          transform: scale(1.05) !important;
+        }
+      `}</style>
     </div>
   );
 }
