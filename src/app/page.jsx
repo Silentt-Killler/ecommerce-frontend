@@ -14,36 +14,50 @@ export default function HomePage() {
   const [womenswearProducts, setWomenswearProducts] = useState([]);
   const [accessoriesProducts, setAccessoriesProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch settings
         const settingsRes = await api.get('/settings');
         setSettings(settingsRes.data);
 
+        // Fetch categories
         const catRes = await api.get('/categories');
         setCategories(catRes.data || []);
 
-        // Fetch products for each category
+        // Fetch Watch products
         try {
           const watchRes = await api.get('/products?category=watch&limit=4');
           setWatchProducts(watchRes.data.products || []);
-        } catch (e) { setWatchProducts([]); }
+        } catch (e) {
+          setWatchProducts([]);
+        }
 
+        // Fetch Menswear products
         try {
           const menswearRes = await api.get('/products?category=menswear&limit=4');
           setMenswearProducts(menswearRes.data.products || []);
-        } catch (e) { setMenswearProducts([]); }
+        } catch (e) {
+          setMenswearProducts([]);
+        }
 
+        // Fetch Womenswear products
         try {
           const womenswearRes = await api.get('/products?category=womenswear&limit=4');
           setWomenswearProducts(womenswearRes.data.products || []);
-        } catch (e) { setWomenswearProducts([]); }
+        } catch (e) {
+          setWomenswearProducts([]);
+        }
 
+        // Fetch Accessories products
         try {
           const accessoriesRes = await api.get('/products?category=accessories&limit=4');
           setAccessoriesProducts(accessoriesRes.data.products || []);
-        } catch (e) { setAccessoriesProducts([]); }
+        } catch (e) {
+          setAccessoriesProducts([]);
+        }
 
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -55,42 +69,38 @@ export default function HomePage() {
     fetchData();
   }, []);
 
+  // Handle scroll for PRISMIN logo animation
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 100);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const heroSlide = settings?.hero_slides?.[0];
 
-  // Category data with proper links
-  const categoryData = [
-    { name: 'Watches', slug: 'watch', link: '/watch' },
-    { name: 'Menswear', slug: 'menswear', link: '/menswear' },
-    { name: 'Womenswear', slug: 'womenswear', link: '/womenswear' },
-    { name: 'Accessories', slug: 'accessories', link: '/shop?category=accessories' }
-  ];
-
-  // Featured Section Component
-  const FeaturedSection = ({ title, products, viewAllLink, bgColor = 'bg-white' }) => {
+  // Featured Products Section Component
+  const FeaturedSection = ({ title, products, categorySlug }) => {
     if (!products || products.length === 0) return null;
 
     return (
-      <section className={`py-20 md:py-28 ${bgColor}`}>
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <h2 className="text-2xl md:text-3xl tracking-[0.2em] font-light uppercase text-focus">
-              {title}
-            </h2>
-          </div>
+      <section className="py-16 md:py-24">
+        <div className="container-custom">
+          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light uppercase">
+            {title}
+          </h2>
           
-          {/* Products Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
 
-          {/* View All Button */}
-          <div className="text-center mt-14">
+          <div className="text-center mt-12">
             <Link 
-              href={viewAllLink}
-              className="inline-block px-12 py-4 border border-focus text-xs tracking-[0.25em] hover:bg-focus hover:text-white transition-all duration-300 uppercase font-light"
+              href={`/shop?category=${categorySlug}`}
+              className="inline-block px-10 py-4 border border-[#0C0C0C] text-sm tracking-[0.2em] hover:bg-[#0C0C0C] hover:text-white transition-colors uppercase"
             >
               View All
             </Link>
@@ -101,9 +111,18 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-base">
-      {/* Hero Section */}
-      <section className="relative h-[85vh] md:h-[95vh]">
+    <div className="bg-[#F7F7F7]">
+      {/* PRISMIN Logo - Fixed position, moves to nav on scroll */}
+      <div className={`fixed top-8 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-500 ${
+        scrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}>
+        <h1 className="text-5xl md:text-6xl font-light tracking-[0.3em] text-[#0C0C0C]">
+          PRISMIN
+        </h1>
+      </div>
+
+      {/* Hero Section - Full Screen */}
+      <section className="relative h-screen bg-[#F7F7F7]">
         {heroSlide?.image_url ? (
           <Image
             src={heroSlide.image_url}
@@ -113,127 +132,129 @@ export default function HomePage() {
             priority
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
-            <p className="text-muted text-sm tracking-wider">Upload hero image from Admin Panel</p>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-[#919191] tracking-[0.2em] uppercase text-sm">
+              Upload hero image from Admin Panel
+            </p>
           </div>
         )}
         
-        {/* Dark Overlay for better text visibility */}
-        <div className="absolute inset-0 bg-black/20" />
+        {/* Hero Text Overlay - Optional */}
+        {heroSlide?.title && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-white">
+              <h2 className="text-4xl md:text-6xl font-light tracking-[0.2em] mb-4">
+                {heroSlide.title}
+              </h2>
+              {heroSlide.subtitle && (
+                <p className="text-lg tracking-[0.15em]">{heroSlide.subtitle}</p>
+              )}
+            </div>
+          </div>
+        )}
         
-        {/* Hero Content */}
-        <div className="absolute bottom-20 md:bottom-28 left-1/2 transform -translate-x-1/2 text-center">
-          {/* Optional Title */}
-          {heroSlide?.title && (
-            <h1 className="text-white text-3xl md:text-5xl tracking-[0.3em] font-light mb-8">
-              {heroSlide.title}
-            </h1>
-          )}
-          
-          {/* Gucci-style Buttons */}
-          <div className="flex gap-4 md:gap-6 justify-center">
-            <Link 
-              href="/womenswear"
-              className="px-8 md:px-10 py-3 md:py-3.5 bg-white text-focus text-xs md:text-sm tracking-[0.2em] font-light hover:bg-focus hover:text-white transition-all duration-300 uppercase"
-            >
-              For Her
-            </Link>
-            <Link 
-              href="/menswear"
-              className="px-8 md:px-10 py-3 md:py-3.5 bg-white text-focus text-xs md:text-sm tracking-[0.2em] font-light hover:bg-focus hover:text-white transition-all duration-300 uppercase"
-            >
-              For Him
-            </Link>
-          </div>
+        {/* Hero Buttons - Centered at bottom */}
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 flex gap-6">
+          <Link 
+            href="/shop?category=womenswear"
+            className="px-16 py-5 bg-white/90 backdrop-blur text-[#0C0C0C] text-xs tracking-[0.3em] hover:bg-[#0C0C0C] hover:text-white transition-all duration-300 uppercase font-light"
+          >
+            FOR HER
+          </Link>
+          <Link 
+            href="/shop?category=menswear"
+            className="px-16 py-5 bg-white/90 backdrop-blur text-[#0C0C0C] text-xs tracking-[0.3em] hover:bg-[#0C0C0C] hover:text-white transition-all duration-300 uppercase font-light"
+          >
+            FOR HIM
+          </Link>
         </div>
       </section>
 
-      {/* Explore Our Collection - Category Section */}
-      <section className="py-20 md:py-28 bg-white">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-          {/* Section Header */}
+      {/* Categories Section - Gucci Style */}
+      <section className="py-20 md:py-32 bg-white">
+        <div className="container-custom">
+          {/* Section Title with proper spacing */}
           <div className="text-center mb-16 md:mb-20">
-            <h2 className="text-2xl md:text-3xl tracking-[0.2em] font-light uppercase text-focus">
-              Explore Our Collection
+            <h2 className="text-xs tracking-[0.3em] text-[#919191] mb-4 uppercase">
+              Explore
             </h2>
+            <h3 className="text-3xl md:text-4xl font-light tracking-[0.2em] text-[#0C0C0C] uppercase">
+              Our Collections
+            </h3>
           </div>
           
-          {/* Categories Grid - Gucci Style */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-            {categoryData.map((cat) => {
-              const categoryInfo = categories.find(c => c.slug === cat.slug);
-              return (
-                <Link 
-                  key={cat.slug} 
-                  href={cat.link}
-                  className="group block"
-                >
-                  {/* Category Image */}
-                  <div className="relative aspect-[3/4] bg-primary-100 overflow-hidden mb-5">
-                    {categoryInfo?.image ? (
-                      <Image
-                        src={categoryInfo.image}
-                        alt={cat.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
-                        <span className="text-muted text-sm tracking-wider">No Image</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Category Name - Simple like Gucci */}
-                  <h3 className="text-center text-sm md:text-base tracking-[0.15em] font-light text-focus">
-                    {cat.name}
-                  </h3>
-                </Link>
-              );
-            })}
+          {/* Category Grid - Gucci style with taller images */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
+            {categories.slice(0, 4).map((category) => (
+              <Link 
+                key={category._id} 
+                href={`/shop?category=${category.slug}`}
+                className="group"
+              >
+                {/* Taller aspect ratio like Gucci (3:4) */}
+                <div className="relative aspect-[3/4] bg-[#F7F7F7] overflow-hidden mb-6">
+                  {category.image ? (
+                    <Image
+                      src={category.image}
+                      alt={category.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-[#919191] text-sm tracking-[0.2em] uppercase">No Image</span>
+                    </div>
+                  )}
+                </div>
+                {/* Category Name with proper spacing */}
+                <h4 className="text-center text-sm tracking-[0.25em] font-light text-[#0C0C0C] uppercase">
+                  {category.name}
+                </h4>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Watches */}
+      {/* Featured Watch Products */}
       <FeaturedSection 
-        title="Featured Watches" 
+        title="Watch Collection" 
         products={watchProducts} 
-        viewAllLink="/watch"
-        bgColor="bg-base"
+        categorySlug="watch" 
       />
 
-      {/* Featured Menswear */}
-      <FeaturedSection 
-        title="Featured Menswear" 
-        products={menswearProducts} 
-        viewAllLink="/menswear"
-        bgColor="bg-white"
-      />
+      {/* Featured Menswear Products */}
+      <div className="bg-white">
+        <FeaturedSection 
+          title="Menswear" 
+          products={menswearProducts} 
+          categorySlug="menswear" 
+        />
+      </div>
 
-      {/* Featured Womenswear */}
+      {/* Featured Womenswear Products */}
       <FeaturedSection 
-        title="Featured Womenswear" 
+        title="Womenswear" 
         products={womenswearProducts} 
-        viewAllLink="/womenswear"
-        bgColor="bg-base"
+        categorySlug="womenswear" 
       />
 
-      {/* Featured Accessories */}
-      <FeaturedSection 
-        title="Featured Accessories" 
-        products={accessoriesProducts} 
-        viewAllLink="/shop?category=accessories"
-        bgColor="bg-white"
-      />
+      {/* Featured Accessories Products */}
+      <div className="bg-white">
+        <FeaturedSection 
+          title="Accessories" 
+          products={accessoriesProducts} 
+          categorySlug="accessories" 
+        />
+      </div>
 
       {/* Newsletter Section */}
-      <section className="py-20 md:py-28 bg-focus text-white">
-        <div className="max-w-2xl mx-auto px-6 text-center">
-          <h2 className="text-2xl md:text-3xl tracking-[0.2em] mb-5 font-light uppercase">
+      <section className="py-16 md:py-24 bg-[#0C0C0C] text-white">
+        <div className="container-custom max-w-2xl text-center">
+          <h2 className="text-2xl md:text-3xl tracking-[0.15em] mb-4 font-light uppercase">
             Stay Updated
           </h2>
-          <p className="text-primary-400 mb-10 text-sm tracking-wide">
+          <p className="text-[#919191] mb-8 text-sm">
             Subscribe to receive updates on new arrivals and special offers
           </p>
           
@@ -241,11 +262,11 @@ export default function HomePage() {
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 px-5 py-4 bg-transparent border border-primary-600 text-white placeholder:text-primary-500 focus:border-white outline-none text-sm tracking-wide"
+              className="flex-1 px-4 py-3 bg-transparent border border-[#919191] text-white placeholder:text-[#919191] focus:border-white outline-none text-sm"
             />
             <button
               type="submit"
-              className="px-10 py-4 bg-white text-focus text-xs tracking-[0.2em] hover:bg-gold hover:text-white transition-all duration-300 uppercase font-light"
+              className="px-8 py-3 bg-white text-[#0C0C0C] text-sm tracking-[0.15em] hover:bg-[#B08B5C] hover:text-white transition-colors uppercase"
             >
               Subscribe
             </button>
