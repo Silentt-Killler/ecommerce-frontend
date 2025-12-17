@@ -2,13 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { ShoppingBag, User, Search, Menu, X, Plus } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 import useCartStore from '@/store/cartStore';
 
 export default function Header() {
-  const pathname = usePathname();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { getItemCount } = useCartStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,7 +18,7 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 100);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -35,37 +33,104 @@ export default function Header() {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white shadow-sm' : 'bg-white'
-      }`}>
-        <div className="container-custom">
-          <div className="flex items-center justify-between h-16 md:h-20">
+      {/* Fixed Header - Transparent initially, white on scroll */}
+      <header 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          transition: 'all 0.4s ease',
+          backgroundColor: isScrolled ? '#FFFFFF' : 'transparent',
+          borderBottom: isScrolled ? '1px solid #E0E0E0' : '1px solid transparent'
+        }}
+      >
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            height: 70
+          }}>
             
             {/* Left - Contact */}
-            <div className="hidden md:flex items-center">
+            <div style={{ flex: 1 }}>
               <Link 
                 href="/contact" 
-                className="flex items-center gap-1 text-sm tracking-wide hover:opacity-70 transition-opacity"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 13,
+                  letterSpacing: 1,
+                  color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                  textDecoration: 'none',
+                  transition: 'color 0.3s'
+                }}
               >
                 <Plus size={14} />
                 <span>Contact Us</span>
               </Link>
             </div>
 
-            {/* Center - Logo */}
-            <Link href="/" className="absolute left-1/2 transform -translate-x-1/2">
-              <h1 className="text-2xl md:text-3xl tracking-[0.3em] font-light">
+            {/* Center - Logo (only shows on scroll) */}
+            <Link 
+              href="/"
+              style={{
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                opacity: isScrolled ? 1 : 0,
+                transition: 'opacity 0.4s ease',
+                pointerEvents: isScrolled ? 'auto' : 'none'
+              }}
+            >
+              <h1 style={{ 
+                fontSize: 24, 
+                fontWeight: 300, 
+                letterSpacing: 8,
+                color: '#0C0C0C',
+                margin: 0
+              }}>
                 PRISMIN
               </h1>
             </Link>
 
             {/* Right - Icons */}
-            <div className="flex items-center gap-4 md:gap-6 ml-auto">
+            <div style={{ 
+              flex: 1, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'flex-end',
+              gap: 24 
+            }}>
               {/* Cart */}
-              <Link href="/cart" className="relative hover:opacity-70 transition-opacity">
+              <Link 
+                href="/cart" 
+                style={{ 
+                  position: 'relative',
+                  color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                  transition: 'color 0.3s'
+                }}
+              >
                 <ShoppingBag size={22} strokeWidth={1.5} />
                 {itemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-focus text-white text-xs flex items-center justify-center rounded-full">
+                  <span style={{
+                    position: 'absolute',
+                    top: -8,
+                    right: -8,
+                    width: 18,
+                    height: 18,
+                    backgroundColor: '#B08B5C',
+                    color: '#FFFFFF',
+                    fontSize: 10,
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%'
+                  }}>
                     {itemCount}
                   </span>
                 )}
@@ -73,27 +138,56 @@ export default function Header() {
 
               {/* User */}
               {isAuthenticated ? (
-                <div className="relative group">
-                  <button className="hover:opacity-70 transition-opacity">
+                <div style={{ position: 'relative' }} className="user-dropdown">
+                  <button style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                    transition: 'color 0.3s'
+                  }}>
                     <User size={22} strokeWidth={1.5} />
                   </button>
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                    <div className="py-2">
-                      <p className="px-4 py-2 text-sm text-muted border-b">{user?.name}</p>
-                      <Link href="/account" className="block px-4 py-2 text-sm hover:bg-primary-50">
+                  <div className="dropdown-menu" style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: '100%',
+                    marginTop: 8,
+                    width: 180,
+                    backgroundColor: '#FFFFFF',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    opacity: 0,
+                    visibility: 'hidden',
+                    transition: 'all 0.2s'
+                  }}>
+                    <div style={{ padding: '8px 0' }}>
+                      <p style={{ padding: '8px 16px', fontSize: 13, color: '#919191', borderBottom: '1px solid #E0E0E0' }}>
+                        {user?.name}
+                      </p>
+                      <Link href="/account" style={{ display: 'block', padding: '10px 16px', fontSize: 13, color: '#0C0C0C', textDecoration: 'none' }}>
                         My Account
                       </Link>
-                      <Link href="/orders" className="block px-4 py-2 text-sm hover:bg-primary-50">
+                      <Link href="/orders" style={{ display: 'block', padding: '10px 16px', fontSize: 13, color: '#0C0C0C', textDecoration: 'none' }}>
                         My Orders
                       </Link>
                       {user?.role === 'admin' && (
-                        <Link href="/admin" className="block px-4 py-2 text-sm hover:bg-primary-50">
+                        <Link href="/admin" style={{ display: 'block', padding: '10px 16px', fontSize: 13, color: '#0C0C0C', textDecoration: 'none' }}>
                           Admin Panel
                         </Link>
                       )}
                       <button
                         onClick={() => logout()}
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-primary-50 text-red-600"
+                        style={{ 
+                          display: 'block', 
+                          width: '100%', 
+                          textAlign: 'left',
+                          padding: '10px 16px', 
+                          fontSize: 13, 
+                          color: '#B00020',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer'
+                        }}
                       >
                         Logout
                       </button>
@@ -101,7 +195,13 @@ export default function Header() {
                   </div>
                 </div>
               ) : (
-                <Link href="/login" className="hover:opacity-70 transition-opacity">
+                <Link 
+                  href="/login" 
+                  style={{ 
+                    color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                    transition: 'color 0.3s'
+                  }}
+                >
                   <User size={22} strokeWidth={1.5} />
                 </Link>
               )}
@@ -109,7 +209,13 @@ export default function Header() {
               {/* Search */}
               <button 
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="hover:opacity-70 transition-opacity"
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                  transition: 'color 0.3s'
+                }}
               >
                 <Search size={22} strokeWidth={1.5} />
               </button>
@@ -117,32 +223,53 @@ export default function Header() {
               {/* Menu Toggle */}
               <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                  transition: 'color 0.3s'
+                }}
               >
                 <Menu size={22} strokeWidth={1.5} />
-                <span className="hidden md:inline text-sm tracking-wide">MENU</span>
+                <span style={{ fontSize: 13, letterSpacing: 1 }}>MENU</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className={`border-t overflow-hidden transition-all duration-300 ${
-          isSearchOpen ? 'max-h-20' : 'max-h-0'
-        }`}>
-          <div className="container-custom py-4">
-            <form onSubmit={handleSearch} className="flex items-center gap-4">
+        <div style={{
+          overflow: 'hidden',
+          maxHeight: isSearchOpen ? 70 : 0,
+          transition: 'max-height 0.3s ease',
+          backgroundColor: '#FFFFFF',
+          borderTop: isSearchOpen ? '1px solid #E0E0E0' : 'none'
+        }}>
+          <div style={{ maxWidth: 1400, margin: '0 auto', padding: '16px 24px' }}>
+            <form onSubmit={handleSearch} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               <input
                 type="text"
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent border-b border-focus/20 py-2 focus:border-focus outline-none text-sm"
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: '1px solid #E0E0E0',
+                  padding: '8px 0',
+                  fontSize: 14,
+                  outline: 'none'
+                }}
               />
-              <button type="submit" className="hover:opacity-70">
+              <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                 <Search size={20} />
               </button>
-              <button type="button" onClick={() => setIsSearchOpen(false)} className="hover:opacity-70">
+              <button type="button" onClick={() => setIsSearchOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </form>
@@ -151,96 +278,86 @@ export default function Header() {
       </header>
 
       {/* Full Screen Menu */}
-      <div className={`fixed inset-0 z-[60] bg-white transition-transform duration-500 ${
-        isMenuOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}>
-        <div className="container-custom h-full flex flex-col">
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 60,
+        backgroundColor: '#FFFFFF',
+        transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.5s ease'
+      }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
           {/* Menu Header */}
-          <div className="flex items-center justify-between h-16 md:h-20 border-b">
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            height: 70,
+            borderBottom: '1px solid #E0E0E0'
+          }}>
             <Link href="/" onClick={() => setIsMenuOpen(false)}>
-              <h1 className="text-2xl md:text-3xl tracking-[0.3em] font-light">PRISMIN</h1>
+              <h1 style={{ fontSize: 24, fontWeight: 300, letterSpacing: 8, color: '#0C0C0C', margin: 0 }}>
+                PRISMIN
+              </h1>
             </Link>
             <button 
               onClick={() => setIsMenuOpen(false)}
-              className="hover:opacity-70 transition-opacity"
+              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
             >
               <X size={28} strokeWidth={1.5} />
             </button>
           </div>
 
           {/* Menu Content */}
-          <nav className="flex-1 flex flex-col justify-center">
-            <ul className="space-y-6 md:space-y-8">
-              <li>
-                <Link 
-                  href="/shop?category=menswear"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-3xl md:text-5xl font-light tracking-wide hover:opacity-50 transition-opacity"
-                >
-                  MENSWEAR
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  href="/shop?category=womenswear"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-3xl md:text-5xl font-light tracking-wide hover:opacity-50 transition-opacity"
-                >
-                  WOMENSWEAR
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  href="/shop?category=winter-collection"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-3xl md:text-5xl font-light tracking-wide hover:opacity-50 transition-opacity"
-                >
-                  WINTER COLLECTION
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  href="/shop?category=watch"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-3xl md:text-5xl font-light tracking-wide hover:opacity-50 transition-opacity"
-                >
-                  WATCH
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  href="/shop"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-3xl md:text-5xl font-light tracking-wide hover:opacity-50 transition-opacity"
-                >
-                  ALL PRODUCTS
-                </Link>
-              </li>
+          <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {[
+                { name: 'MENSWEAR', href: '/menswear' },
+                { name: 'WOMENSWEAR', href: '/womenswear' },
+                { name: 'WATCHES', href: '/watch' },
+                { name: 'ACCESSORIES', href: '/shop?category=accessories' },
+                { name: 'ALL PRODUCTS', href: '/shop' }
+              ].map((item, index) => (
+                <li key={index} style={{ marginBottom: 24 }}>
+                  <Link 
+                    href={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    style={{
+                      fontSize: 42,
+                      fontWeight: 300,
+                      letterSpacing: 4,
+                      color: '#0C0C0C',
+                      textDecoration: 'none',
+                      transition: 'opacity 0.3s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.opacity = '0.5'}
+                    onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+                  >
+                    {item.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
 
           {/* Menu Footer */}
-          <div className="border-t py-6">
-            <div className="flex flex-wrap gap-6 text-sm tracking-wide">
-              <Link href="/about" onClick={() => setIsMenuOpen(false)} className="hover:opacity-50">
-                About
-              </Link>
-              <Link href="/contact" onClick={() => setIsMenuOpen(false)} className="hover:opacity-50">
-                Contact
-              </Link>
-              <Link href="/faq" onClick={() => setIsMenuOpen(false)} className="hover:opacity-50">
-                FAQ
-              </Link>
-              <Link href="/shipping" onClick={() => setIsMenuOpen(false)} className="hover:opacity-50">
-                Shipping
-              </Link>
+          <div style={{ borderTop: '1px solid #E0E0E0', padding: '24px 0' }}>
+            <div style={{ display: 'flex', gap: 24, fontSize: 13, letterSpacing: 1 }}>
+              <Link href="/about" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>About</Link>
+              <Link href="/contact" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>Contact</Link>
+              <Link href="/faq" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>FAQ</Link>
+              <Link href="/shipping" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>Shipping</Link>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Spacer for fixed header */}
-      <div className="h-16 md:h-20"></div>
+      <style jsx global>{`
+        .user-dropdown:hover .dropdown-menu {
+          opacity: 1 !important;
+          visibility: visible !important;
+        }
+      `}</style>
     </>
   );
 }
