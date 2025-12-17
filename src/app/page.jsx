@@ -12,42 +12,38 @@ export default function HomePage() {
   const [watchProducts, setWatchProducts] = useState([]);
   const [menswearProducts, setMenswearProducts] = useState([]);
   const [womenswearProducts, setWomenswearProducts] = useState([]);
+  const [accessoriesProducts, setAccessoriesProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch settings
         const settingsRes = await api.get('/settings');
         setSettings(settingsRes.data);
 
-        // Fetch categories
         const catRes = await api.get('/categories');
         setCategories(catRes.data || []);
 
-        // Fetch Watch products
+        // Fetch products for each category
         try {
           const watchRes = await api.get('/products?category=watch&limit=4');
           setWatchProducts(watchRes.data.products || []);
-        } catch (e) {
-          setWatchProducts([]);
-        }
+        } catch (e) { setWatchProducts([]); }
 
-        // Fetch Menswear products
         try {
           const menswearRes = await api.get('/products?category=menswear&limit=4');
           setMenswearProducts(menswearRes.data.products || []);
-        } catch (e) {
-          setMenswearProducts([]);
-        }
+        } catch (e) { setMenswearProducts([]); }
 
-        // Fetch Womenswear products
         try {
           const womenswearRes = await api.get('/products?category=womenswear&limit=4');
           setWomenswearProducts(womenswearRes.data.products || []);
-        } catch (e) {
-          setWomenswearProducts([]);
-        }
+        } catch (e) { setWomenswearProducts([]); }
+
+        try {
+          const accessoriesRes = await api.get('/products?category=accessories&limit=4');
+          setAccessoriesProducts(accessoriesRes.data.products || []);
+        } catch (e) { setAccessoriesProducts([]); }
 
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -61,27 +57,40 @@ export default function HomePage() {
 
   const heroSlide = settings?.hero_slides?.[0];
 
-  // Featured Products Section Component
-  const FeaturedSection = ({ title, products, categorySlug }) => {
+  // Category data with proper links
+  const categoryData = [
+    { name: 'Watches', slug: 'watch', link: '/watch' },
+    { name: 'Menswear', slug: 'menswear', link: '/menswear' },
+    { name: 'Womenswear', slug: 'womenswear', link: '/womenswear' },
+    { name: 'Accessories', slug: 'accessories', link: '/shop?category=accessories' }
+  ];
+
+  // Featured Section Component
+  const FeaturedSection = ({ title, products, viewAllLink, bgColor = 'bg-white' }) => {
     if (!products || products.length === 0) return null;
 
     return (
-      <section className="py-16 md:py-24">
-        <div className="container-custom">
-          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light uppercase">
-            {title}
-          </h2>
+      <section className={`py-20 md:py-28 ${bgColor}`}>
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-2xl md:text-3xl tracking-[0.2em] font-light uppercase text-focus">
+              {title}
+            </h2>
+          </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          {/* Products Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
 
-          <div className="text-center mt-12">
+          {/* View All Button */}
+          <div className="text-center mt-14">
             <Link 
-              href={`/shop?category=${categorySlug}`}
-              className="inline-block px-10 py-4 border border-focus text-sm tracking-[0.2em] hover:bg-focus hover:text-white transition-colors uppercase"
+              href={viewAllLink}
+              className="inline-block px-12 py-4 border border-focus text-xs tracking-[0.25em] hover:bg-focus hover:text-white transition-all duration-300 uppercase font-light"
             >
               View All
             </Link>
@@ -92,9 +101,9 @@ export default function HomePage() {
   };
 
   return (
-    <div>
+    <div className="bg-base">
       {/* Hero Section */}
-      <section className="relative h-[80vh] md:h-[90vh] bg-primary-200">
+      <section className="relative h-[85vh] md:h-[95vh]">
         {heroSlide?.image_url ? (
           <Image
             src={heroSlide.image_url}
@@ -105,94 +114,126 @@ export default function HomePage() {
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
-            <p className="text-muted">Upload hero image from Admin Panel</p>
+            <p className="text-muted text-sm tracking-wider">Upload hero image from Admin Panel</p>
           </div>
         )}
         
-        {/* Hero Buttons */}
-        <div className="absolute bottom-16 md:bottom-24 left-1/2 transform -translate-x-1/2 flex gap-4">
-          <Link 
-            href="/shop?category=womenswear"
-            className="px-8 py-3 bg-white text-focus text-sm tracking-[0.2em] hover:bg-focus hover:text-white transition-colors"
-          >
-            FOR HER
-          </Link>
-          <Link 
-            href="/shop?category=menswear"
-            className="px-8 py-3 bg-white text-focus text-sm tracking-[0.2em] hover:bg-focus hover:text-white transition-colors"
-          >
-            FOR HIM
-          </Link>
-        </div>
-      </section>
-
-      {/* Categories Section - Large Gucci Style */}
-      <section className="py-16 md:py-24">
-        <div className="container-custom">
-          <h2 className="text-2xl md:text-3xl text-center tracking-[0.15em] mb-12 md:mb-16 font-light uppercase">
-            Shop by Category
-          </h2>
+        {/* Dark Overlay for better text visibility */}
+        <div className="absolute inset-0 bg-black/20" />
+        
+        {/* Hero Content */}
+        <div className="absolute bottom-20 md:bottom-28 left-1/2 transform -translate-x-1/2 text-center">
+          {/* Optional Title */}
+          {heroSlide?.title && (
+            <h1 className="text-white text-3xl md:text-5xl tracking-[0.3em] font-light mb-8">
+              {heroSlide.title}
+            </h1>
+          )}
           
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {categories.slice(0, 4).map((category) => (
-              <Link 
-                key={category._id} 
-                href={`/shop?category=${category.slug}`}
-                className="group text-center"
-              >
-                <div className="relative aspect-[3/4] bg-primary-100 overflow-hidden mb-4">
-                  {category.image ? (
-                    <Image
-                      src={category.image}
-                      alt={category.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
-                      <span className="text-muted text-sm">No Image</span>
-                    </div>
-                  )}
-                </div>
-                <h3 className="text-sm md:text-base tracking-[0.15em] font-light">
-                  {category.name}
-                </h3>
-              </Link>
-            ))}
+          {/* Gucci-style Buttons */}
+          <div className="flex gap-4 md:gap-6 justify-center">
+            <Link 
+              href="/womenswear"
+              className="px-8 md:px-10 py-3 md:py-3.5 bg-white text-focus text-xs md:text-sm tracking-[0.2em] font-light hover:bg-focus hover:text-white transition-all duration-300 uppercase"
+            >
+              For Her
+            </Link>
+            <Link 
+              href="/menswear"
+              className="px-8 md:px-10 py-3 md:py-3.5 bg-white text-focus text-xs md:text-sm tracking-[0.2em] font-light hover:bg-focus hover:text-white transition-all duration-300 uppercase"
+            >
+              For Him
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Featured Watch Products */}
+      {/* Explore Our Collection - Category Section */}
+      <section className="py-20 md:py-28 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          {/* Section Header */}
+          <div className="text-center mb-16 md:mb-20">
+            <h2 className="text-2xl md:text-3xl tracking-[0.2em] font-light uppercase text-focus">
+              Explore Our Collection
+            </h2>
+          </div>
+          
+          {/* Categories Grid - Gucci Style */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {categoryData.map((cat) => {
+              const categoryInfo = categories.find(c => c.slug === cat.slug);
+              return (
+                <Link 
+                  key={cat.slug} 
+                  href={cat.link}
+                  className="group block"
+                >
+                  {/* Category Image */}
+                  <div className="relative aspect-[3/4] bg-primary-100 overflow-hidden mb-5">
+                    {categoryInfo?.image ? (
+                      <Image
+                        src={categoryInfo.image}
+                        alt={cat.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
+                        <span className="text-muted text-sm tracking-wider">No Image</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Category Name - Simple like Gucci */}
+                  <h3 className="text-center text-sm md:text-base tracking-[0.15em] font-light text-focus">
+                    {cat.name}
+                  </h3>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Watches */}
       <FeaturedSection 
-        title="Watch Collection" 
+        title="Featured Watches" 
         products={watchProducts} 
-        categorySlug="watch" 
+        viewAllLink="/watch"
+        bgColor="bg-base"
       />
 
-      {/* Featured Menswear Products */}
-      <div className="bg-primary-50">
-        <FeaturedSection 
-          title="Menswear" 
-          products={menswearProducts} 
-          categorySlug="menswear" 
-        />
-      </div>
-
-      {/* Featured Womenswear Products */}
+      {/* Featured Menswear */}
       <FeaturedSection 
-        title="Womenswear" 
+        title="Featured Menswear" 
+        products={menswearProducts} 
+        viewAllLink="/menswear"
+        bgColor="bg-white"
+      />
+
+      {/* Featured Womenswear */}
+      <FeaturedSection 
+        title="Featured Womenswear" 
         products={womenswearProducts} 
-        categorySlug="womenswear" 
+        viewAllLink="/womenswear"
+        bgColor="bg-base"
+      />
+
+      {/* Featured Accessories */}
+      <FeaturedSection 
+        title="Featured Accessories" 
+        products={accessoriesProducts} 
+        viewAllLink="/shop?category=accessories"
+        bgColor="bg-white"
       />
 
       {/* Newsletter Section */}
-      <section className="py-16 md:py-24 bg-focus text-white">
-        <div className="container-custom max-w-2xl text-center">
-          <h2 className="text-2xl md:text-3xl tracking-[0.15em] mb-4 font-light uppercase">
+      <section className="py-20 md:py-28 bg-focus text-white">
+        <div className="max-w-2xl mx-auto px-6 text-center">
+          <h2 className="text-2xl md:text-3xl tracking-[0.2em] mb-5 font-light uppercase">
             Stay Updated
           </h2>
-          <p className="text-primary-400 mb-8 text-sm">
+          <p className="text-primary-400 mb-10 text-sm tracking-wide">
             Subscribe to receive updates on new arrivals and special offers
           </p>
           
@@ -200,11 +241,11 @@ export default function HomePage() {
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 px-4 py-3 bg-transparent border border-primary-600 text-white placeholder:text-primary-500 focus:border-white outline-none text-sm"
+              className="flex-1 px-5 py-4 bg-transparent border border-primary-600 text-white placeholder:text-primary-500 focus:border-white outline-none text-sm tracking-wide"
             />
             <button
               type="submit"
-              className="px-8 py-3 bg-white text-focus text-sm tracking-[0.15em] hover:bg-gold hover:text-white transition-colors uppercase"
+              className="px-10 py-4 bg-white text-focus text-xs tracking-[0.2em] hover:bg-gold hover:text-white transition-all duration-300 uppercase font-light"
             >
               Subscribe
             </button>
