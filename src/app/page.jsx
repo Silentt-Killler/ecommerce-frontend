@@ -3,876 +3,466 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import api from '@/lib/api';
+import ProductCard from '@/components/product/ProductCard';
 
 export default function HomePage() {
-  const [sliders, setSliders] = useState([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [settings, setSettings] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [featuredProducts, setFeaturedProducts] = useState({
-    watch: [],
-    menswear: [],
-    womenswear: [],
-    accessories: []
-  });
+  const [watchProducts, setWatchProducts] = useState([]);
+  const [menswearProducts, setMenswearProducts] = useState([]);
+  const [womenswearProducts, setWomenswearProducts] = useState([]);
+  const [accessoriesProducts, setAccessoriesProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    fetchData();
-    
-    // Handle scroll for hero text animation
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 100);
+    const fetchData = async () => {
+      try {
+        const settingsRes = await api.get('/settings');
+        setSettings(settingsRes.data);
+
+        const catRes = await api.get('/categories');
+        setCategories(catRes.data || []);
+
+        // Fetch products for each category
+        try {
+          const watchRes = await api.get('/products?category=watch&limit=4');
+          setWatchProducts(watchRes.data.products || []);
+        } catch (e) { setWatchProducts([]); }
+
+        try {
+          const menswearRes = await api.get('/products?category=menswear&limit=4');
+          setMenswearProducts(menswearRes.data.products || []);
+        } catch (e) { setMenswearProducts([]); }
+
+        try {
+          const womenswearRes = await api.get('/products?category=womenswear&limit=4');
+          setWomenswearProducts(womenswearRes.data.products || []);
+        } catch (e) { setWomenswearProducts([]); }
+
+        try {
+          const accessoriesRes = await api.get('/products?category=accessories&limit=4');
+          setAccessoriesProducts(accessoriesRes.data.products || []);
+        } catch (e) { setAccessoriesProducts([]); }
+
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      } finally {
+        setLoading(false);
+      }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    fetchData();
   }, []);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (sliders.length > 0) {
-        setCurrentSlide((prev) => (prev + 1) % sliders.length);
-      }
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [sliders]);
+  const heroSlide = settings?.hero_slides?.[0];
 
-  const fetchData = async () => {
-    try {
-      // Fetch sliders
-      const slidersRes = await fetch('https://ecommerce-backend-silk.onrender.com/api/v1/settings');
-      const slidersData = await slidersRes.json();
-      if (slidersData.hero_sliders) {
-        setSliders(slidersData.hero_sliders);
-      }
+  // Category data with proper links
+  const categoryData = [
+    { name: 'Watches', slug: 'watch', link: '/watch' },
+    { name: 'Menswear', slug: 'menswear', link: '/menswear' },
+    { name: 'Womenswear', slug: 'womenswear', link: '/womenswear' },
+    { name: 'Accessories', slug: 'accessories', link: '/shop?category=accessories' }
+  ];
 
-      // Fetch categories
-      const categoriesRes = await fetch('https://ecommerce-backend-silk.onrender.com/api/v1/categories');
-      const categoriesData = await categoriesRes.json();
-      setCategories(categoriesData);
+  // Featured Section Component
+  const FeaturedSection = ({ title, products, viewAllLink, bgColor = 'bg-white' }) => {
+  // Featured Section Component - Gucci Style
+  const FeaturedSection = ({ title, products, viewAllLink, bgColor = '#FFFFFF' }) => {
+    if (!products || products.length === 0) return null;
 
-      // Fetch featured products for each category
-      const categoryPromises = ['watch', 'menswear', 'womenswear', 'accessories'].map(async (cat) => {
-        const res = await fetch(`https://ecommerce-backend-silk.onrender.com/api/v1/products?category=${cat}&limit=4`);
-        const data = await res.json();
-        return { category: cat, products: data.items || [] };
-      });
-
-      const results = await Promise.all(categoryPromises);
-      const productsMap = {};
-      results.forEach(({ category, products }) => {
-        productsMap[category] = products;
-      });
-      setFeaturedProducts(productsMap);
-
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatPrice = (price) => {
-    return `৳ ${price.toLocaleString()}`;
-  };
-
-  if (loading) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        backgroundColor: '#F7F7F7',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ fontSize: 24, letterSpacing: 8, fontWeight: 300, color: '#0C0C0C' }}>LOADING</h2>
+      <section className={`py-20 md:py-28 ${bgColor}`}>
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-2xl md:text-3xl tracking-[0.2em] font-light uppercase text-focus">
+              {title}
+            </h2>
+          </div>
+      <section style={{ backgroundColor: bgColor, paddingTop: 100, paddingBottom: 100 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }}>
+          {/* Section Title - Gucci Style */}
+          <h2 style={{ 
+            fontSize: 28, 
+            fontWeight: 400, 
+            letterSpacing: 8, 
+            textAlign: 'center', 
+            marginBottom: 60,
+            color: '#0C0C0C',
+            textTransform: 'uppercase'
+          }}>
+            {title}
+          </h2>
+
+          {/* Products Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(4, 1fr)', 
+            gap: 30,
+            marginBottom: 60
+          }}>
+            {products.map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
+          </div>
+
+          {/* View All Button */}
+          <div className="text-center mt-14">
+          {/* View All Button - Gucci Style */}
+          <div style={{ textAlign: 'center' }}>
+            <Link 
+              href={viewAllLink}
+              className="inline-block px-12 py-4 border border-focus text-xs tracking-[0.25em] hover:bg-focus hover:text-white transition-all duration-300 uppercase font-light"
+              style={{
+                display: 'inline-block',
+                padding: '18px 50px',
+                border: '1px solid #0C0C0C',
+                color: '#0C0C0C',
+                fontSize: 12,
+                fontWeight: 400,
+                letterSpacing: 3,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                transition: 'all 0.3s ease',
+                backgroundColor: 'transparent'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#0C0C0C';
+                e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#0C0C0C';
+              }}
+            >
+              View All
+            </Link>
+          </div>
         </div>
-      </div>
+      </section>
     );
-  }
+  };
 
   return (
-    <div style={{ backgroundColor: '#F7F7F7' }}>
+    <div className="bg-base">
       {/* Hero Section */}
-      <section style={{ 
-        position: 'relative', 
-        height: '85vh',
-        overflow: 'hidden'
-      }}>
-        {/* Hero Slider */}
-        {sliders.length > 0 && (
-          <div style={{ position: 'relative', height: '100%', width: '100%' }}>
-            <Image
-              src={sliders[currentSlide].image}
-              alt={sliders[currentSlide].title || 'Hero'}
-              fill
-              style={{ objectFit: 'cover' }}
-              priority
-            />
-            
-            {/* Dark overlay for better text visibility */}
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              backgroundColor: 'rgba(0, 0, 0, 0.25)',
-              zIndex: 10
-            }} />
-
-            {/* Hero Brand Text - Medium size overlay */}
-            <div style={{
-              position: 'absolute',
-              top: scrolled ? '-100px' : '45%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              zIndex: 20,
-              transition: 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-              opacity: scrolled ? 0 : 1,
-              textAlign: 'center'
-            }}>
-              <h1 style={{
-                fontSize: '64px',
-                fontWeight: 300,
-                letterSpacing: '16px',
-                color: '#FFFFFF',
-                textShadow: '0 2px 10px rgba(0,0,0,0.3)',
-                marginBottom: 0
-              }}>
-                PRISMIN
-              </h1>
-            </div>
-
-            {/* Hero Buttons - Bottom Center */}
-            <div style={{
-              position: 'absolute',
-              bottom: '80px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 30,
-              display: 'flex',
-              gap: '30px'
-            }}>
-              <Link href="/womenswear" style={{ textDecoration: 'none' }}>
-                <button style={{
-                  padding: '16px 50px',
-                  backgroundColor: '#F7F7F7',
-                  color: '#0C0C0C',
-                  border: 'none',
-                  fontSize: '12px',
-                  letterSpacing: '2.5px',
-                  fontWeight: 400,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textTransform: 'uppercase'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#0C0C0C';
-                  e.currentTarget.style.color = '#F7F7F7';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#F7F7F7';
-                  e.currentTarget.style.color = '#0C0C0C';
-                }}>
-                  For Her
-                </button>
-              </Link>
-
-              <Link href="/menswear" style={{ textDecoration: 'none' }}>
-                <button style={{
-                  padding: '16px 50px',
-                  backgroundColor: 'transparent',
-                  color: '#F7F7F7',
-                  border: '1px solid #F7F7F7',
-                  fontSize: '12px',
-                  letterSpacing: '2.5px',
-                  fontWeight: 400,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textTransform: 'uppercase'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#F7F7F7';
-                  e.currentTarget.style.color = '#0C0C0C';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = '#F7F7F7';
-                }}>
-                  For Him
-                </button>
-              </Link>
-            </div>
-
-            {/* Slide Indicators */}
-            <div style={{
-              position: 'absolute',
-              bottom: '30px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              gap: '12px',
-              zIndex: 30
-            }}>
-              {sliders.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  style={{
-                    width: index === currentSlide ? '35px' : '8px',
-                    height: '2px',
-                    backgroundColor: index === currentSlide ? '#F7F7F7' : 'rgba(247, 247, 247, 0.5)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease'
-                  }}
-                />
-              ))}
-            </div>
+      <section className="relative h-[85vh] md:h-[95vh]">
+    <div style={{ backgroundColor: '#F7F7F7' }}>
+      {/* Hero Section - Full Screen with Gucci Style Buttons */}
+      <section style={{ position: 'relative', height: '100vh', minHeight: 700 }}>
+        {heroSlide?.image_url ? (
+          <Image
+            src={heroSlide.image_url}
+            alt="Hero"
+            fill
+            className="object-cover"
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
+            <p className="text-muted text-sm tracking-wider">Upload hero image from Admin Panel</p>
+          <div style={{ 
+            position: 'absolute', 
+            inset: 0, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            backgroundColor: '#E0E0E0' 
+          }}>
+            <p style={{ color: '#919191', fontSize: 14, letterSpacing: 2 }}>
+              Upload hero image from Admin Panel
+            </p>
           </div>
         )}
+
+        {/* Dark Overlay for better text visibility */}
+        <div className="absolute inset-0 bg-black/20" />
+        {/* Dark Overlay */}
+        <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.15)' }} />
+
+        {/* Hero Content */}
+        <div className="absolute bottom-20 md:bottom-28 left-1/2 transform -translate-x-1/2 text-center">
+          {/* Optional Title */}
+          {heroSlide?.title && (
+            <h1 className="text-white text-3xl md:text-5xl tracking-[0.3em] font-light mb-8">
+              {heroSlide.title}
+            </h1>
+          )}
+          
+        {/* Hero Content - Bottom Center */}
+        <div style={{ 
+          position: 'absolute', 
+          bottom: 80, 
+          left: '50%', 
+          transform: 'translateX(-50%)',
+          textAlign: 'center'
+        }}>
+          {/* Gucci-style Buttons */}
+          <div className="flex gap-4 md:gap-6 justify-center">
+          <div style={{ display: 'flex', gap: 20, justifyContent: 'center' }}>
+            <Link 
+              href="/womenswear"
+              className="px-8 md:px-10 py-3 md:py-3.5 bg-white text-focus text-xs md:text-sm tracking-[0.2em] font-light hover:bg-focus hover:text-white transition-all duration-300 uppercase"
+              style={{
+                padding: '16px 45px',
+                backgroundColor: '#FFFFFF',
+                color: '#0C0C0C',
+                fontSize: 13,
+                fontWeight: 400,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                transition: 'all 0.3s ease',
+                border: 'none'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#0C0C0C';
+                e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFFFFF';
+                e.currentTarget.style.color = '#0C0C0C';
+              }}
+            >
+              For Her
+            </Link>
+            <Link 
+              href="/menswear"
+              className="px-8 md:px-10 py-3 md:py-3.5 bg-white text-focus text-xs md:text-sm tracking-[0.2em] font-light hover:bg-focus hover:text-white transition-all duration-300 uppercase"
+              style={{
+                padding: '16px 45px',
+                backgroundColor: '#FFFFFF',
+                color: '#0C0C0C',
+                fontSize: 13,
+                fontWeight: 400,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                textDecoration: 'none',
+                transition: 'all 0.3s ease',
+                border: 'none'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#0C0C0C';
+                e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFFFFF';
+                e.currentTarget.style.color = '#0C0C0C';
+              }}
+            >
+              For Him
+            </Link>
+          </div>
+        </div>
       </section>
 
-      {/* Category Section */}
-      <section style={{ 
-        padding: '100px 0',
-        backgroundColor: '#FFFFFF'
-      }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px' }}>
+      {/* Explore Our Collection - Category Section */}
+      <section className="py-20 md:py-28 bg-white">
+        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+          {/* Section Header */}
+          <div className="text-center mb-16 md:mb-20">
+            <h2 className="text-2xl md:text-3xl tracking-[0.2em] font-light uppercase text-focus">
+              Explore Our Collection
+            </h2>
+          </div>
+      {/* Explore Our Collection - Category Section - Gucci Style */}
+      <section style={{ backgroundColor: '#FFFFFF', paddingTop: 100, paddingBottom: 100 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }}>
           {/* Section Title */}
-          <h2 style={{
-            fontSize: '28px',
-            fontWeight: 300,
-            letterSpacing: '6px',
-            textAlign: 'center',
-            marginBottom: '70px',
+          <h2 style={{ 
+            fontSize: 28, 
+            fontWeight: 400, 
+            letterSpacing: 8, 
+            textAlign: 'center', 
+            marginBottom: 80,
             color: '#0C0C0C',
             textTransform: 'uppercase'
           }}>
             Explore Our Collection
           </h2>
 
-          {/* Category Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '35px'
+          {/* Categories Grid - Gucci Style */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {/* Categories Grid - Centered, Gucci Style */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(4, 1fr)', 
+            gap: 30,
+            maxWidth: 1200,
+            margin: '0 auto'
           }}>
-            {categories.map((category) => (
-              <Link 
-                key={category._id} 
-                href={`/${category.slug}`}
-                style={{ textDecoration: 'none' }}
-              >
-                <div style={{
-                  position: 'relative',
-                  cursor: 'pointer',
-                  transition: 'transform 0.4s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}>
-                  {/* Category Image - 4:5 aspect ratio */}
-                  <div style={{
-                    position: 'relative',
-                    paddingBottom: '125%', // 4:5 aspect ratio
+            {categoryData.map((cat) => {
+              const categoryInfo = categories.find(c => c.slug === cat.slug);
+              return (
+                <Link 
+                  key={cat.slug} 
+                  href={cat.link}
+                  className="group block"
+                  style={{ textDecoration: 'none', display: 'block' }}
+                >
+                  {/* Category Image */}
+                  <div className="relative aspect-[3/4] bg-primary-100 overflow-hidden mb-5">
+                  {/* Category Image - Square, Centered */}
+                  <div style={{ 
+                    position: 'relative', 
+                    aspectRatio: '1/1', 
+                    backgroundColor: '#F5F5F5', 
                     overflow: 'hidden',
-                    backgroundColor: '#f5f5f5'
+                    marginBottom: 20
                   }}>
-                    <Image
-                      src={category.image || '/placeholder.jpg'}
-                      alt={category.name}
-                      fill
-                      style={{ 
-                        objectFit: 'cover',
-                        transition: 'transform 0.6s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    />
+                    {categoryInfo?.image ? (
+                      <Image
+                        src={categoryInfo.image}
+                        alt={cat.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-700"
+                        style={{ 
+                          objectFit: 'cover',
+                          transition: 'transform 0.6s ease'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                        onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-primary-200">
+                        <span className="text-muted text-sm tracking-wider">No Image</span>
+                      <div style={{ 
+                        position: 'absolute', 
+                        inset: 0, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        backgroundColor: '#E8E8E8'
+                      }}>
+                        <span style={{ color: '#919191', fontSize: 13 }}>No Image</span>
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Category Name */}
-                  <h3 style={{
-                    marginTop: '20px',
-                    fontSize: '13px',
-                    fontWeight: 400,
-                    letterSpacing: '2px',
-                    textAlign: 'center',
+
+                  {/* Category Name - Simple like Gucci */}
+                  <h3 className="text-center text-sm md:text-base tracking-[0.15em] font-light text-focus">
+                  {/* Category Name - Below Image, Centered */}
+                  <h3 style={{ 
+                    textAlign: 'center', 
+                    fontSize: 15, 
+                    fontWeight: 400, 
+                    letterSpacing: 2,
                     color: '#0C0C0C',
-                    textTransform: 'uppercase'
+                    margin: 0
                   }}>
-                    {category.name}
+                    {cat.name}
                   </h3>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* Featured Watches */}
-      {featuredProducts.watch.length > 0 && (
-        <section style={{ 
-          padding: '100px 0',
-          backgroundColor: '#F7F7F7'
-        }}>
-          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px' }}>
-            <h2 style={{
-              fontSize: '28px',
-              fontWeight: 300,
-              letterSpacing: '6px',
-              textAlign: 'center',
-              marginBottom: '70px',
-              color: '#0C0C0C',
-              textTransform: 'uppercase'
-            }}>
-              Featured Watches
-            </h2>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '35px'
-            }}>
-              {featuredProducts.watch.map((product) => (
-                <Link 
-                  key={product._id}
-                  href={`/product/${product.slug}`}
-                  style={{ textDecoration: 'none' }}
-                >
-                  <div style={{
-                    backgroundColor: '#FFFFFF',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.08)';
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}>
-                    <div style={{
-                      position: 'relative',
-                      paddingBottom: '100%',
-                      overflow: 'hidden',
-                      backgroundColor: '#f9f9f9'
-                    }}>
-                      <Image
-                        src={product.images?.[0]?.url || '/placeholder.jpg'}
-                        alt={product.name}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                      />
-                      {product.compare_price && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '15px',
-                          left: '15px',
-                          backgroundColor: '#B08B5C',
-                          color: '#FFFFFF',
-                          padding: '5px 12px',
-                          fontSize: '11px',
-                          letterSpacing: '1px',
-                          fontWeight: 500
-                        }}>
-                          SALE
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ padding: '20px' }}>
-                      <h3 style={{
-                        fontSize: '14px',
-                        fontWeight: 400,
-                        color: '#0C0C0C',
-                        marginBottom: '8px',
-                        letterSpacing: '0.5px'
-                      }}>
-                        {product.name}
-                      </h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{
-                          fontSize: '15px',
-                          fontWeight: 500,
-                          color: '#0C0C0C'
-                        }}>
-                          {formatPrice(product.price)}
-                        </span>
-                        {product.compare_price && (
-                          <span style={{
-                            fontSize: '13px',
-                            color: '#919191',
-                            textDecoration: 'line-through'
-                          }}>
-                            {formatPrice(product.compare_price)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '60px' }}>
-              <Link href="/watch" style={{ textDecoration: 'none' }}>
-                <button style={{
-                  padding: '15px 45px',
-                  backgroundColor: 'transparent',
-                  color: '#0C0C0C',
-                  border: '1px solid #0C0C0C',
-                  fontSize: '12px',
-                  letterSpacing: '2px',
-                  fontWeight: 400,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textTransform: 'uppercase',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#0C0C0C';
-                  e.currentTarget.style.color = '#F7F7F7';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = '#0C0C0C';
-                }}>
-                  View All Watches
-                  <ArrowRight size={16} />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      <FeaturedSection 
+        title="Featured Watches" 
+        products={watchProducts} 
+        viewAllLink="/watch"
+        bgColor="bg-base"
+        bgColor="#F7F7F7"
+      />
 
       {/* Featured Menswear */}
-      {featuredProducts.menswear.length > 0 && (
-        <section style={{ 
-          padding: '100px 0',
-          backgroundColor: '#FFFFFF'
-        }}>
-          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px' }}>
-            <h2 style={{
-              fontSize: '28px',
-              fontWeight: 300,
-              letterSpacing: '6px',
-              textAlign: 'center',
-              marginBottom: '70px',
-              color: '#0C0C0C',
-              textTransform: 'uppercase'
-            }}>
-              Featured Menswear
-            </h2>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '35px'
-            }}>
-              {featuredProducts.menswear.map((product) => (
-                <Link 
-                  key={product._id}
-                  href={`/product/${product.slug}`}
-                  style={{ textDecoration: 'none' }}
-                >
-                  <div style={{
-                    backgroundColor: '#F7F7F7',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.08)';
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}>
-                    <div style={{
-                      position: 'relative',
-                      paddingBottom: '125%',
-                      overflow: 'hidden',
-                      backgroundColor: '#f9f9f9'
-                    }}>
-                      <Image
-                        src={product.images?.[0]?.url || '/placeholder.jpg'}
-                        alt={product.name}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                      />
-                      {product.compare_price && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '15px',
-                          left: '15px',
-                          backgroundColor: '#B08B5C',
-                          color: '#FFFFFF',
-                          padding: '5px 12px',
-                          fontSize: '11px',
-                          letterSpacing: '1px',
-                          fontWeight: 500
-                        }}>
-                          SALE
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ padding: '20px' }}>
-                      <h3 style={{
-                        fontSize: '14px',
-                        fontWeight: 400,
-                        color: '#0C0C0C',
-                        marginBottom: '8px',
-                        letterSpacing: '0.5px'
-                      }}>
-                        {product.name}
-                      </h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{
-                          fontSize: '15px',
-                          fontWeight: 500,
-                          color: '#0C0C0C'
-                        }}>
-                          {formatPrice(product.price)}
-                        </span>
-                        {product.compare_price && (
-                          <span style={{
-                            fontSize: '13px',
-                            color: '#919191',
-                            textDecoration: 'line-through'
-                          }}>
-                            {formatPrice(product.compare_price)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '60px' }}>
-              <Link href="/menswear" style={{ textDecoration: 'none' }}>
-                <button style={{
-                  padding: '15px 45px',
-                  backgroundColor: 'transparent',
-                  color: '#0C0C0C',
-                  border: '1px solid #0C0C0C',
-                  fontSize: '12px',
-                  letterSpacing: '2px',
-                  fontWeight: 400,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textTransform: 'uppercase',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#0C0C0C';
-                  e.currentTarget.style.color = '#F7F7F7';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = '#0C0C0C';
-                }}>
-                  View All Menswear
-                  <ArrowRight size={16} />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      <FeaturedSection 
+        title="Featured Menswear" 
+        products={menswearProducts} 
+        viewAllLink="/menswear"
+        bgColor="bg-white"
+        bgColor="#FFFFFF"
+      />
 
       {/* Featured Womenswear */}
-      {featuredProducts.womenswear.length > 0 && (
-        <section style={{ 
-          padding: '100px 0',
-          backgroundColor: '#F7F7F7'
-        }}>
-          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px' }}>
-            <h2 style={{
-              fontSize: '28px',
-              fontWeight: 300,
-              letterSpacing: '6px',
-              textAlign: 'center',
-              marginBottom: '70px',
-              color: '#0C0C0C',
-              textTransform: 'uppercase'
-            }}>
-              Featured Womenswear
-            </h2>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '35px'
-            }}>
-              {featuredProducts.womenswear.map((product) => (
-                <Link 
-                  key={product._id}
-                  href={`/product/${product.slug}`}
-                  style={{ textDecoration: 'none' }}
-                >
-                  <div style={{
-                    backgroundColor: '#FFFFFF',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.08)';
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}>
-                    <div style={{
-                      position: 'relative',
-                      paddingBottom: '125%',
-                      overflow: 'hidden',
-                      backgroundColor: '#f9f9f9'
-                    }}>
-                      <Image
-                        src={product.images?.[0]?.url || '/placeholder.jpg'}
-                        alt={product.name}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                      />
-                      {product.compare_price && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '15px',
-                          left: '15px',
-                          backgroundColor: '#B08B5C',
-                          color: '#FFFFFF',
-                          padding: '5px 12px',
-                          fontSize: '11px',
-                          letterSpacing: '1px',
-                          fontWeight: 500
-                        }}>
-                          SALE
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ padding: '20px' }}>
-                      <h3 style={{
-                        fontSize: '14px',
-                        fontWeight: 400,
-                        color: '#0C0C0C',
-                        marginBottom: '8px',
-                        letterSpacing: '0.5px'
-                      }}>
-                        {product.name}
-                      </h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{
-                          fontSize: '15px',
-                          fontWeight: 500,
-                          color: '#0C0C0C'
-                        }}>
-                          {formatPrice(product.price)}
-                        </span>
-                        {product.compare_price && (
-                          <span style={{
-                            fontSize: '13px',
-                            color: '#919191',
-                            textDecoration: 'line-through'
-                          }}>
-                            {formatPrice(product.compare_price)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '60px' }}>
-              <Link href="/womenswear" style={{ textDecoration: 'none' }}>
-                <button style={{
-                  padding: '15px 45px',
-                  backgroundColor: 'transparent',
-                  color: '#0C0C0C',
-                  border: '1px solid #0C0C0C',
-                  fontSize: '12px',
-                  letterSpacing: '2px',
-                  fontWeight: 400,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textTransform: 'uppercase',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#0C0C0C';
-                  e.currentTarget.style.color = '#F7F7F7';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = '#0C0C0C';
-                }}>
-                  View All Womenswear
-                  <ArrowRight size={16} />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      <FeaturedSection 
+        title="Featured Womenswear" 
+        products={womenswearProducts} 
+        viewAllLink="/womenswear"
+        bgColor="bg-base"
+        bgColor="#F7F7F7"
+      />
 
       {/* Featured Accessories */}
-      {featuredProducts.accessories.length > 0 && (
-        <section style={{ 
-          padding: '100px 0',
-          backgroundColor: '#FFFFFF'
-        }}>
-          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 40px' }}>
-            <h2 style={{
-              fontSize: '28px',
-              fontWeight: 300,
-              letterSpacing: '6px',
-              textAlign: 'center',
-              marginBottom: '70px',
-              color: '#0C0C0C',
-              textTransform: 'uppercase'
-            }}>
-              Featured Accessories
-            </h2>
+      <FeaturedSection 
+        title="Featured Accessories" 
+        products={accessoriesProducts} 
+        viewAllLink="/shop?category=accessories"
+        bgColor="bg-white"
+        bgColor="#FFFFFF"
+      />
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '35px'
-            }}>
-              {featuredProducts.accessories.map((product) => (
-                <Link 
-                  key={product._id}
-                  href={`/product/${product.slug}`}
-                  style={{ textDecoration: 'none' }}
-                >
-                  <div style={{
-                    backgroundColor: '#F7F7F7',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.08)';
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = 'none';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}>
-                    <div style={{
-                      position: 'relative',
-                      paddingBottom: '100%',
-                      overflow: 'hidden',
-                      backgroundColor: '#f9f9f9'
-                    }}>
-                      <Image
-                        src={product.images?.[0]?.url || '/placeholder.jpg'}
-                        alt={product.name}
-                        fill
-                        style={{ objectFit: 'cover' }}
-                      />
-                      {product.compare_price && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '15px',
-                          left: '15px',
-                          backgroundColor: '#B08B5C',
-                          color: '#FFFFFF',
-                          padding: '5px 12px',
-                          fontSize: '11px',
-                          letterSpacing: '1px',
-                          fontWeight: 500
-                        }}>
-                          SALE
-                        </div>
-                      )}
-                    </div>
-                    <div style={{ padding: '20px' }}>
-                      <h3 style={{
-                        fontSize: '14px',
-                        fontWeight: 400,
-                        color: '#0C0C0C',
-                        marginBottom: '8px',
-                        letterSpacing: '0.5px'
-                      }}>
-                        {product.name}
-                      </h3>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{
-                          fontSize: '15px',
-                          fontWeight: 500,
-                          color: '#0C0C0C'
-                        }}>
-                          {formatPrice(product.price)}
-                        </span>
-                        {product.compare_price && (
-                          <span style={{
-                            fontSize: '13px',
-                            color: '#919191',
-                            textDecoration: 'line-through'
-                          }}>
-                            {formatPrice(product.compare_price)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+      {/* Newsletter Section */}
+      <section className="py-20 md:py-28 bg-focus text-white">
+        <div className="max-w-2xl mx-auto px-6 text-center">
+          <h2 className="text-2xl md:text-3xl tracking-[0.2em] mb-5 font-light uppercase">
+      <section style={{ backgroundColor: '#0C0C0C', paddingTop: 100, paddingBottom: 100 }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
+          <h2 style={{ 
+            fontSize: 24, 
+            fontWeight: 400, 
+            letterSpacing: 6, 
+            marginBottom: 16,
+            color: '#FFFFFF',
+            textTransform: 'uppercase'
+          }}>
+            Stay Updated
+          </h2>
+          <p className="text-primary-400 mb-10 text-sm tracking-wide">
+          <p style={{ 
+            color: '#919191', 
+            marginBottom: 40, 
+            fontSize: 14, 
+            letterSpacing: 1 
+          }}>
+            Subscribe to receive updates on new arrivals and special offers
+          </p>
 
-            <div style={{ textAlign: 'center', marginTop: '60px' }}>
-              <Link href="/accessories" style={{ textDecoration: 'none' }}>
-                <button style={{
-                  padding: '15px 45px',
-                  backgroundColor: 'transparent',
-                  color: '#0C0C0C',
-                  border: '1px solid #0C0C0C',
-                  fontSize: '12px',
-                  letterSpacing: '2px',
-                  fontWeight: 400,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  textTransform: 'uppercase',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#0C0C0C';
-                  e.currentTarget.style.color = '#F7F7F7';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = '#0C0C0C';
-                }}>
-                  View All Accessories
-                  <ArrowRight size={16} />
-                </button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+          <form className="flex flex-col sm:flex-row gap-4">
+          <form style={{ display: 'flex', gap: 0 }}>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="flex-1 px-5 py-4 bg-transparent border border-primary-600 text-white placeholder:text-primary-500 focus:border-white outline-none text-sm tracking-wide"
+              style={{
+                flex: 1,
+                padding: '18px 20px',
+                backgroundColor: 'transparent',
+                border: '1px solid #444',
+                borderRight: 'none',
+                color: '#FFFFFF',
+                fontSize: 13,
+                letterSpacing: 1,
+                outline: 'none'
+              }}
+            />
+            <button
+              type="submit"
+              className="px-10 py-4 bg-white text-focus text-xs tracking-[0.2em] hover:bg-gold hover:text-white transition-all duration-300 uppercase font-light"
+              style={{
+                padding: '18px 40px',
+                backgroundColor: '#FFFFFF',
+                color: '#0C0C0C',
+                border: 'none',
+                fontSize: 12,
+                fontWeight: 400,
+                letterSpacing: 2,
+                textTransform: 'uppercase',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Subscribe
+            </button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }
