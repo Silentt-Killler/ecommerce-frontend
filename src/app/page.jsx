@@ -54,9 +54,9 @@ export default function HomePage() {
 
     fetchData();
 
-    // Hide large logo on scroll
+    // Hide large logo on scroll - very sensitive (just 20px)
     const handleScroll = () => {
-      setShowLogo(window.scrollY < 100);
+      setShowLogo(window.scrollY < 20);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -72,30 +72,33 @@ export default function HomePage() {
   ];
 
   // Featured Section Component
-  const FeaturedSection = ({ title, products, viewAllLink, bgColor = '#FFFFFF' }) => {
+  const FeaturedSection = ({ title, products, viewAllLink, isAlt = false }) => {
     if (!products || products.length === 0) return null;
 
     return (
-      <section style={{ backgroundColor: bgColor, padding: '80px 0' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }}>
-          {/* Section Title */}
+      <section style={{ 
+        backgroundColor: isAlt ? '#F5F5F5' : '#FFFFFF', 
+        padding: '90px 0' 
+      }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
+          {/* Section Title - Bigger */}
           <h2 style={{ 
-            fontSize: 24, 
+            fontSize: 32, 
             fontWeight: 400, 
-            letterSpacing: 6, 
+            letterSpacing: 8, 
             textAlign: 'center', 
-            marginBottom: 50,
+            marginBottom: 60,
             color: '#0C0C0C',
             textTransform: 'uppercase'
           }}>
             {title}
           </h2>
           
-          {/* Products Grid */}
+          {/* Products Grid - Wider */}
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: 24
+            gap: 20
           }}>
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
@@ -108,12 +111,12 @@ export default function HomePage() {
               href={viewAllLink}
               style={{
                 display: 'inline-block',
-                padding: '16px 48px',
+                padding: '16px 50px',
                 border: '1px solid #0C0C0C',
                 color: '#0C0C0C',
                 fontSize: 12,
                 fontWeight: 400,
-                letterSpacing: 2,
+                letterSpacing: 3,
                 textTransform: 'uppercase',
                 textDecoration: 'none',
                 transition: 'all 0.3s ease',
@@ -137,7 +140,7 @@ export default function HomePage() {
   };
 
   return (
-    <div style={{ backgroundColor: '#F7F7F7' }}>
+    <div style={{ backgroundColor: '#FFFFFF' }}>
       {/* Hero Section - Full Screen */}
       <section style={{ position: 'relative', height: '100vh', width: '100%' }}>
         {heroSlide?.image_url ? (
@@ -152,34 +155,36 @@ export default function HomePage() {
           <div style={{ 
             position: 'absolute', 
             inset: 0, 
-            backgroundColor: '#D0D0D0',
+            backgroundColor: '#C8C8C8',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <p style={{ color: '#919191', fontSize: 14, letterSpacing: 2 }}>
+            <p style={{ color: '#777', fontSize: 14, letterSpacing: 2 }}>
               Upload hero image from Admin Panel
             </p>
           </div>
         )}
         
-        {/* Large Logo - Gucci Style (centered on hero, fades out on scroll) */}
+        {/* Large Logo - Just below navbar (top: 12%) - Gucci Style */}
         <div style={{
           position: 'absolute',
-          top: '25%',
+          top: '12%',
           left: '50%',
           transform: 'translateX(-50%)',
           opacity: showLogo ? 1 : 0,
-          transition: 'opacity 0.5s ease',
-          pointerEvents: 'none'
+          transition: 'opacity 0.4s ease',
+          pointerEvents: 'none',
+          width: '100%',
+          textAlign: 'center'
         }}>
           <h1 style={{
-            fontSize: 'clamp(80px, 15vw, 200px)',
+            fontSize: 'clamp(100px, 18vw, 280px)',
             fontWeight: 300,
-            letterSpacing: '0.15em',
+            letterSpacing: '0.12em',
             color: '#FFFFFF',
             margin: 0,
-            textShadow: '0 2px 40px rgba(0,0,0,0.1)'
+            lineHeight: 0.9
           }}>
             PRISMIN
           </h1>
@@ -188,29 +193,29 @@ export default function HomePage() {
         {/* Hero Content - Bottom Center */}
         <div style={{ 
           position: 'absolute', 
-          bottom: 100, 
+          bottom: 80, 
           left: '50%', 
           transform: 'translateX(-50%)',
           textAlign: 'center'
         }}>
-          {/* Optional Title above buttons */}
+          {/* Title above buttons */}
           <p style={{
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: 300,
-            letterSpacing: 3,
+            letterSpacing: 2,
             color: '#FFFFFF',
-            marginBottom: 24,
+            marginBottom: 20,
             fontStyle: 'italic'
           }}>
             Premium Collection
           </p>
           
           {/* Gucci-style Buttons */}
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
             <Link 
               href="/womenswear"
               style={{
-                padding: '14px 40px',
+                padding: '14px 36px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
                 fontSize: 12,
@@ -218,8 +223,7 @@ export default function HomePage() {
                 letterSpacing: 2,
                 textTransform: 'uppercase',
                 textDecoration: 'none',
-                transition: 'all 0.3s ease',
-                border: 'none'
+                transition: 'all 0.3s ease'
               }}
               onMouseOver={(e) => {
                 e.currentTarget.style.backgroundColor = '#0C0C0C';
@@ -235,7 +239,7 @@ export default function HomePage() {
             <Link 
               href="/menswear"
               style={{
-                padding: '14px 40px',
+                padding: '14px 36px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
                 fontSize: 12,
@@ -243,8 +247,7 @@ export default function HomePage() {
                 letterSpacing: 2,
                 textTransform: 'uppercase',
                 textDecoration: 'none',
-                transition: 'all 0.3s ease',
-                border: 'none'
+                transition: 'all 0.3s ease'
               }}
               onMouseOver={(e) => {
                 e.currentTarget.style.backgroundColor = '#0C0C0C';
@@ -261,14 +264,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Category Section - Gucci Style */}
-      <section style={{ backgroundColor: '#FFFFFF', padding: '100px 0' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 48px' }}>
-          {/* Section Title - with proper spacing */}
+      {/* Category Section - Full Width like Gucci */}
+      <section style={{ backgroundColor: '#FFFFFF', padding: '90px 0' }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
+          {/* Section Title - Bigger */}
           <h2 style={{ 
-            fontSize: 24, 
+            fontSize: 32, 
             fontWeight: 400, 
-            letterSpacing: 6, 
+            letterSpacing: 8, 
             textAlign: 'center', 
             marginBottom: 70,
             color: '#0C0C0C',
@@ -277,11 +280,11 @@ export default function HomePage() {
             Explore Our Collection
           </h2>
           
-          {/* Categories Grid - Large Images like Gucci */}
+          {/* Categories Grid - Wider, fills the page */}
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: 24
+            gap: 20
           }}>
             {categoryData.map((cat) => {
               const categoryInfo = categories.find(c => c.slug === cat.slug);
@@ -291,14 +294,14 @@ export default function HomePage() {
                   href={cat.link}
                   style={{ textDecoration: 'none', display: 'block' }}
                 >
-                  {/* Category Image - Tall like Gucci */}
+                  {/* Category Image - Taller aspect ratio */}
                   <div 
                     style={{ 
                       position: 'relative', 
-                      paddingBottom: '130%', /* Tall aspect ratio like Gucci */
-                      backgroundColor: '#F0F0F0', 
+                      paddingBottom: '135%',
+                      backgroundColor: '#E8E8E8', 
                       overflow: 'hidden',
-                      marginBottom: 16
+                      marginBottom: 14
                     }}
                     className="category-image"
                   >
@@ -319,17 +322,17 @@ export default function HomePage() {
                         display: 'flex', 
                         alignItems: 'center', 
                         justifyContent: 'center',
-                        backgroundColor: '#E8E8E8'
+                        backgroundColor: '#E0E0E0'
                       }}>
-                        <span style={{ color: '#919191', fontSize: 13 }}>No Image</span>
+                        <span style={{ color: '#999', fontSize: 13 }}>No Image</span>
                       </div>
                     )}
                   </div>
                   
-                  {/* Category Name - Centered below image */}
+                  {/* Category Name */}
                   <h3 style={{ 
                     textAlign: 'center', 
-                    fontSize: 14, 
+                    fontSize: 15, 
                     fontWeight: 400, 
                     letterSpacing: 1,
                     color: '#0C0C0C',
@@ -349,7 +352,7 @@ export default function HomePage() {
         title="Featured Watches" 
         products={watchProducts} 
         viewAllLink="/watch"
-        bgColor="#F7F7F7"
+        isAlt={true}
       />
 
       {/* Featured Menswear */}
@@ -357,7 +360,7 @@ export default function HomePage() {
         title="Featured Menswear" 
         products={menswearProducts} 
         viewAllLink="/menswear"
-        bgColor="#FFFFFF"
+        isAlt={false}
       />
 
       {/* Featured Womenswear */}
@@ -365,7 +368,7 @@ export default function HomePage() {
         title="Featured Womenswear" 
         products={womenswearProducts} 
         viewAllLink="/womenswear"
-        bgColor="#F7F7F7"
+        isAlt={true}
       />
 
       {/* Featured Accessories */}
@@ -373,26 +376,26 @@ export default function HomePage() {
         title="Featured Accessories" 
         products={accessoriesProducts} 
         viewAllLink="/shop?category=accessories"
-        bgColor="#FFFFFF"
+        isAlt={false}
       />
 
       {/* Newsletter Section */}
-      <section style={{ backgroundColor: '#0C0C0C', padding: '80px 0' }}>
-        <div style={{ maxWidth: 550, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
+      <section style={{ backgroundColor: '#0C0C0C', padding: '90px 0' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
           <h2 style={{ 
-            fontSize: 22, 
+            fontSize: 28, 
             fontWeight: 400, 
-            letterSpacing: 4, 
-            marginBottom: 12,
+            letterSpacing: 6, 
+            marginBottom: 14,
             color: '#FFFFFF',
             textTransform: 'uppercase'
           }}>
             Stay Updated
           </h2>
           <p style={{ 
-            color: '#919191', 
-            marginBottom: 32, 
-            fontSize: 13, 
+            color: '#888', 
+            marginBottom: 36, 
+            fontSize: 14, 
             letterSpacing: 1 
           }}>
             Subscribe to receive updates on new arrivals and special offers
@@ -417,11 +420,11 @@ export default function HomePage() {
             <button
               type="submit"
               style={{
-                padding: '16px 32px',
+                padding: '16px 36px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
                 border: 'none',
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 400,
                 letterSpacing: 2,
                 textTransform: 'uppercase',
