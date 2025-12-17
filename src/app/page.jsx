@@ -54,7 +54,6 @@ export default function HomePage() {
 
     fetchData();
 
-    // Hide large logo on scroll - very sensitive (just 20px)
     const handleScroll = () => {
       setShowLogo(window.scrollY < 20);
     };
@@ -71,34 +70,31 @@ export default function HomePage() {
     { name: 'Accessories', slug: 'accessories', link: '/shop?category=accessories' }
   ];
 
-  // Featured Section Component
-  const FeaturedSection = ({ title, products, viewAllLink, isAlt = false }) => {
+  // Featured Section Component - White background only
+  const FeaturedSection = ({ title, products, viewAllLink }) => {
     if (!products || products.length === 0) return null;
 
     return (
-      <section style={{ 
-        backgroundColor: isAlt ? '#F5F5F5' : '#FFFFFF', 
-        padding: '90px 0' 
-      }}>
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
-          {/* Section Title - Bigger */}
+      <section style={{ backgroundColor: '#FFFFFF', padding: '80px 0' }}>
+        <div style={{ width: '100%', padding: '0 50px' }}>
+          {/* Section Title */}
           <h2 style={{ 
-            fontSize: 32, 
+            fontSize: 28, 
             fontWeight: 400, 
-            letterSpacing: 8, 
+            letterSpacing: 10, 
             textAlign: 'center', 
-            marginBottom: 60,
+            marginBottom: 50,
             color: '#0C0C0C',
             textTransform: 'uppercase'
           }}>
             {title}
           </h2>
           
-          {/* Products Grid - Wider */}
+          {/* Products Grid - Full width */}
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: 20
+            gap: 15
           }}>
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
@@ -111,10 +107,10 @@ export default function HomePage() {
               href={viewAllLink}
               style={{
                 display: 'inline-block',
-                padding: '16px 50px',
+                padding: '15px 45px',
                 border: '1px solid #0C0C0C',
                 color: '#0C0C0C',
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 400,
                 letterSpacing: 3,
                 textTransform: 'uppercase',
@@ -166,7 +162,7 @@ export default function HomePage() {
           </div>
         )}
         
-        {/* Large Logo - Just below navbar (top: 12%) - Gucci Style */}
+        {/* Logo - Original smaller size, just below navbar */}
         <div style={{
           position: 'absolute',
           top: '12%',
@@ -179,9 +175,9 @@ export default function HomePage() {
           textAlign: 'center'
         }}>
           <h1 style={{
-            fontSize: 'clamp(100px, 18vw, 280px)',
+            fontSize: 'clamp(60px, 12vw, 180px)',
             fontWeight: 300,
-            letterSpacing: '0.12em',
+            letterSpacing: '0.15em',
             color: '#FFFFFF',
             margin: 0,
             lineHeight: 0.9
@@ -198,9 +194,8 @@ export default function HomePage() {
           transform: 'translateX(-50%)',
           textAlign: 'center'
         }}>
-          {/* Title above buttons */}
           <p style={{
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: 300,
             letterSpacing: 2,
             color: '#FFFFFF',
@@ -210,7 +205,7 @@ export default function HomePage() {
             Premium Collection
           </p>
           
-          {/* Gucci-style Buttons */}
+          {/* Buttons */}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
             <Link 
               href="/womenswear"
@@ -265,128 +260,123 @@ export default function HomePage() {
       </section>
 
       {/* Category Section - Full Width like Gucci */}
-      <section style={{ backgroundColor: '#FFFFFF', padding: '90px 0' }}>
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
-          {/* Section Title - Bigger */}
-          <h2 style={{ 
-            fontSize: 32, 
-            fontWeight: 400, 
-            letterSpacing: 8, 
-            textAlign: 'center', 
-            marginBottom: 70,
-            color: '#0C0C0C',
-            textTransform: 'uppercase'
-          }}>
-            Explore Our Collection
-          </h2>
-          
-          {/* Categories Grid - Wider, fills the page */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: 20
-          }}>
-            {categoryData.map((cat) => {
-              const categoryInfo = categories.find(c => c.slug === cat.slug);
-              return (
-                <Link 
-                  key={cat.slug} 
-                  href={cat.link}
-                  style={{ textDecoration: 'none', display: 'block' }}
+      <section style={{ backgroundColor: '#FFFFFF', padding: '80px 0 60px 0' }}>
+        {/* Section Title */}
+        <h2 style={{ 
+          fontSize: 28, 
+          fontWeight: 400, 
+          letterSpacing: 10, 
+          textAlign: 'center', 
+          marginBottom: 50,
+          color: '#0C0C0C',
+          textTransform: 'uppercase'
+        }}>
+          Explore Our Collection
+        </h2>
+        
+        {/* Categories Grid - Edge to edge like Gucci */}
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(4, 1fr)', 
+          gap: 15,
+          padding: '0 50px'
+        }}>
+          {categoryData.map((cat) => {
+            const categoryInfo = categories.find(c => c.slug === cat.slug);
+            return (
+              <Link 
+                key={cat.slug} 
+                href={cat.link}
+                style={{ textDecoration: 'none', display: 'block' }}
+              >
+                {/* Category Image - Taller, fills space */}
+                <div 
+                  style={{ 
+                    position: 'relative', 
+                    paddingBottom: '130%',
+                    backgroundColor: '#E8E8E8', 
+                    overflow: 'hidden',
+                    marginBottom: 12
+                  }}
+                  className="category-image"
                 >
-                  {/* Category Image - Taller aspect ratio */}
-                  <div 
-                    style={{ 
-                      position: 'relative', 
-                      paddingBottom: '135%',
-                      backgroundColor: '#E8E8E8', 
-                      overflow: 'hidden',
-                      marginBottom: 14
-                    }}
-                    className="category-image"
-                  >
-                    {categoryInfo?.image ? (
-                      <Image
-                        src={categoryInfo.image}
-                        alt={cat.name}
-                        fill
-                        style={{ 
-                          objectFit: 'cover',
-                          transition: 'transform 0.6s ease'
-                        }}
-                      />
-                    ) : (
-                      <div style={{ 
-                        position: 'absolute', 
-                        inset: 0, 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center',
-                        backgroundColor: '#E0E0E0'
-                      }}>
-                        <span style={{ color: '#999', fontSize: 13 }}>No Image</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Category Name */}
-                  <h3 style={{ 
-                    textAlign: 'center', 
-                    fontSize: 15, 
-                    fontWeight: 400, 
-                    letterSpacing: 1,
-                    color: '#0C0C0C',
-                    margin: 0
-                  }}>
-                    {cat.name}
-                  </h3>
-                </Link>
-              );
-            })}
-          </div>
+                  {categoryInfo?.image ? (
+                    <Image
+                      src={categoryInfo.image}
+                      alt={cat.name}
+                      fill
+                      style={{ 
+                        objectFit: 'cover',
+                        transition: 'transform 0.6s ease'
+                      }}
+                    />
+                  ) : (
+                    <div style={{ 
+                      position: 'absolute', 
+                      inset: 0, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      backgroundColor: '#E0E0E0'
+                    }}>
+                      <span style={{ color: '#999', fontSize: 13 }}>No Image</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Category Name */}
+                <h3 style={{ 
+                  textAlign: 'center', 
+                  fontSize: 14, 
+                  fontWeight: 400, 
+                  letterSpacing: 1,
+                  color: '#0C0C0C',
+                  margin: 0
+                }}>
+                  {cat.name}
+                </h3>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
-      {/* Featured Watches */}
+      {/* Featured Watches - White background */}
       <FeaturedSection 
         title="Featured Watches" 
         products={watchProducts} 
         viewAllLink="/watch"
-        isAlt={true}
       />
 
-      {/* Featured Menswear */}
+      {/* Featured Menswear - White background */}
       <FeaturedSection 
         title="Featured Menswear" 
         products={menswearProducts} 
         viewAllLink="/menswear"
-        isAlt={false}
       />
 
-      {/* Featured Womenswear */}
+      {/* Featured Womenswear - White background */}
       <FeaturedSection 
         title="Featured Womenswear" 
         products={womenswearProducts} 
         viewAllLink="/womenswear"
-        isAlt={true}
       />
 
-      {/* Featured Accessories */}
+      {/* Featured Accessories - White background */}
       <FeaturedSection 
         title="Featured Accessories" 
         products={accessoriesProducts} 
         viewAllLink="/shop?category=accessories"
-        isAlt={false}
       />
 
       {/* Newsletter Section */}
-      <section style={{ backgroundColor: '#0C0C0C', padding: '90px 0' }}>
-        <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
+      <section style={{ backgroundColor: '#0C0C0C', padding: '80px 0' }}>
+        <div style={{ maxWidth: 550, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
           <h2 style={{ 
-            fontSize: 28, 
+            fontSize: 24, 
             fontWeight: 400, 
             letterSpacing: 6, 
-            marginBottom: 14,
+            marginBottom: 12,
             color: '#FFFFFF',
             textTransform: 'uppercase'
           }}>
@@ -394,8 +384,8 @@ export default function HomePage() {
           </h2>
           <p style={{ 
             color: '#888', 
-            marginBottom: 36, 
-            fontSize: 14, 
+            marginBottom: 32, 
+            fontSize: 13, 
             letterSpacing: 1 
           }}>
             Subscribe to receive updates on new arrivals and special offers
@@ -407,7 +397,7 @@ export default function HomePage() {
               placeholder="Enter your email"
               style={{
                 flex: 1,
-                padding: '16px 20px',
+                padding: '15px 18px',
                 backgroundColor: 'transparent',
                 border: '1px solid #444',
                 borderRight: 'none',
@@ -420,11 +410,11 @@ export default function HomePage() {
             <button
               type="submit"
               style={{
-                padding: '16px 36px',
+                padding: '15px 32px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
                 border: 'none',
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 400,
                 letterSpacing: 2,
                 textTransform: 'uppercase',
