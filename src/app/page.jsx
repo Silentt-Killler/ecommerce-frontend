@@ -70,21 +70,21 @@ export default function HomePage() {
     { name: 'Accessories', slug: 'accessories', link: '/shop?category=accessories' }
   ];
 
-  // Featured Section Component
+  // Featured Section Component - Standard gap
   const FeaturedSection = ({ title, products, viewAllLink }) => {
     if (!products || products.length === 0) return null;
 
     return (
-      <section style={{ backgroundColor: '#FFFFFF', padding: '80px 0' }}>
+      <section style={{ backgroundColor: '#FFFFFF', paddingTop: 60, paddingBottom: 60 }}>
         <div style={{ maxWidth: 1800, margin: '0 auto', padding: '0 50px' }}>
-          {/* Section Title - Weight 400, Size 32px, Line Height 40px */}
+          {/* Section Title - Standard margin */}
           <h2 style={{ 
             fontSize: 32, 
             fontWeight: 400, 
             lineHeight: '40px',
             letterSpacing: 8, 
             textAlign: 'center', 
-            marginBottom: 50,
+            marginBottom: 40,
             color: '#0C0C0C',
             textTransform: 'uppercase'
           }}>
@@ -102,13 +102,13 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* View All Button - Black background */}
-          <div style={{ textAlign: 'center', marginTop: 50 }}>
+          {/* View All Button */}
+          <div style={{ textAlign: 'center', marginTop: 40 }}>
             <Link 
               href={viewAllLink}
               style={{
                 display: 'inline-block',
-                padding: '15px 45px',
+                padding: '14px 40px',
                 backgroundColor: '#0C0C0C',
                 color: '#FFFFFF',
                 fontSize: 11,
@@ -138,7 +138,7 @@ export default function HomePage() {
 
   return (
     <div style={{ backgroundColor: '#FFFFFF' }}>
-      {/* Hero Section - Full Screen */}
+      {/* Hero Section */}
       <section style={{ position: 'relative', height: '100vh', width: '100%' }}>
         {heroSlide?.image_url ? (
           <Image
@@ -187,7 +187,7 @@ export default function HomePage() {
           </h1>
         </div>
         
-        {/* Hero Content - Bottom */}
+        {/* Hero Buttons */}
         <div style={{ 
           position: 'absolute', 
           bottom: 80, 
@@ -206,7 +206,6 @@ export default function HomePage() {
             Premium Collection
           </p>
           
-          {/* Buttons */}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
             <Link 
               href="/womenswear"
@@ -261,8 +260,7 @@ export default function HomePage() {
       </section>
 
       {/* Category Section */}
-      <section style={{ backgroundColor: '#FFFFFF', padding: '80px 0 60px 0' }}>
-        {/* Section Title - Weight 400, Size 32px, Line Height 40px */}
+      <section style={{ backgroundColor: '#FFFFFF', paddingTop: 70, paddingBottom: 50 }}>
         <h2 style={{ 
           fontSize: 32, 
           fontWeight: 400, 
@@ -276,7 +274,6 @@ export default function HomePage() {
           Explore Our Collection
         </h2>
         
-        {/* Categories Grid - 50px gap, centered */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'center',
@@ -290,7 +287,6 @@ export default function HomePage() {
                 href={cat.link}
                 style={{ textDecoration: 'none', display: 'block' }}
               >
-                {/* Category Image - Width 405px, Height 545px */}
                 <div 
                   style={{ 
                     position: 'relative', 
@@ -326,7 +322,6 @@ export default function HomePage() {
                   )}
                 </div>
                 
-                {/* Category Name - Weight 500, Size 16px, Line Height 24px */}
                 <h3 style={{ 
                   textAlign: 'center', 
                   fontSize: 16, 
@@ -343,36 +338,33 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Watches */}
+      {/* Featured Sections - Standard gap */}
       <FeaturedSection 
         title="Featured Watches" 
         products={watchProducts} 
         viewAllLink="/watch"
       />
 
-      {/* Featured Menswear */}
       <FeaturedSection 
         title="Featured Menswear" 
         products={menswearProducts} 
         viewAllLink="/menswear"
       />
 
-      {/* Featured Womenswear */}
       <FeaturedSection 
         title="Featured Womenswear" 
         products={womenswearProducts} 
         viewAllLink="/womenswear"
       />
 
-      {/* Featured Accessories */}
       <FeaturedSection 
         title="Featured Accessories" 
         products={accessoriesProducts} 
         viewAllLink="/shop?category=accessories"
       />
 
-      {/* Newsletter Section */}
-      <section style={{ backgroundColor: '#0C0C0C', padding: '80px 0' }}>
+      {/* Newsletter */}
+      <section style={{ backgroundColor: '#0C0C0C', padding: '70px 0' }}>
         <div style={{ maxWidth: 550, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
           <h2 style={{ 
             fontSize: 24, 
@@ -386,7 +378,7 @@ export default function HomePage() {
           </h2>
           <p style={{ 
             color: '#888', 
-            marginBottom: 32, 
+            marginBottom: 30, 
             fontSize: 13, 
             letterSpacing: 1 
           }}>
