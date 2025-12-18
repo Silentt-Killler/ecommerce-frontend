@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 
 export default function SignupPage() {
   const router = useRouter();
-  const { login, isAuthenticated } = useAuthStore();
+  const { register, isAuthenticated, isLoading, isInitialized } = useAuthStore();
   
   const [formData, setFormData] = useState({ 
     name: '',
@@ -21,16 +21,17 @@ export default function SignupPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [authImage, setAuthImage] = useState(null);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Wait for auth to initialize before redirecting
+    if (isInitialized && isAuthenticated) {
       router.push('/');
     }
     fetchAuthImage();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isInitialized, router]);
 
   const fetchAuthImage = async () => {
     try {
@@ -49,28 +50,40 @@ export default function SignupPage() {
       return;
     }
 
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
     if (!agreeTerms) {
       toast.error('Please agree to the terms and conditions');
       return;
     }
 
-    setLoading(true);
+    setSubmitting(true);
 
-    try {
-      const res = await api.post('/auth/register', {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password
-      });
-      login(res.data.user, res.data.access_token);
+    // Use the store's register function (which takes name, email, password)
+    const result = await register(formData.name, formData.email, formData.password);
+
+    if (result.success) {
       toast.success('Account created successfully!');
       router.push('/');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Registration failed');
-    } finally {
-      setLoading(false);
+    } else {
+      toast.error(result.error || 'Registration failed');
     }
+    
+    setSubmitting(false);
   };
+
+  // Show loading while checking auth
+  if (!isInitialized) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -102,7 +115,7 @@ export default function SignupPage() {
             gap: 16
           }}>
             <p style={{ color: '#999', fontSize: 14 }}>Auth image not set</p>
-            <p style={{ color: '#BBB', fontSize: 12 }}>Add from Admin \E2\86\92 Settings</p>
+            <p style={{ color: '#BBB', fontSize: 12 }}>Add from Admin → Settings</p>
           </div>
         )}
       </div>
@@ -330,7 +343,7 @@ export default function SignupPage() {
             {/* Sign Up Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={submitting || isLoading}
               style={{
                 width: '100%',
                 padding: '16px',
@@ -340,14 +353,14 @@ export default function SignupPage() {
                 borderRadius: 8,
                 fontSize: 15,
                 fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1,
+                cursor: (submitting || isLoading) ? 'not-allowed' : 'pointer',
+                opacity: (submitting || isLoading) ? 0.7 : 1,
                 transition: 'background-color 0.2s'
               }}
-              onMouseOver={(e) => !loading && (e.target.style.backgroundColor = '#333')}
+              onMouseOver={(e) => !(submitting || isLoading) && (e.target.style.backgroundColor = '#333')}
               onMouseOut={(e) => e.target.style.backgroundColor = '#0C0C0C'}
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {(submitting || isLoading) ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
 
