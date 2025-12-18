@@ -1,99 +1,189 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingBag } from 'lucide-react';
-import useCartStore from '@/store/cartStore';
-import useAuthStore from '@/store/authStore';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import useCartStore from '@/store/cartStore';
 
 export default function ProductCard({ product }) {
-  const { addToCart, isLoading } = useCartStore();
-  const { isAuthenticated } = useAuthStore();
   const router = useRouter();
+  const { addItem } = useCartStore();
 
-  const handleAddToCart = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isAuthenticated) {
-      router.push('/login');
-      return;
-    }
-    await addToCart(product._id);
+  const formatPrice = (price) => {
+    return '৳' + price?.toLocaleString('en-BD');
   };
 
-  const primaryImage = product.images?.find(img => img.is_primary)?.url 
-    || product.images?.[0]?.url 
-    || null;
+  const handleBuyNow = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Add to cart and redirect to checkout
+    addItem({
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      image: product.images?.[0]?.url,
+      quantity: 1,
+      variant: null
+    });
+    
+    // Direct to checkout (guest checkout)
+    router.push('/checkout');
+  };
 
-  const discount = product.compare_price 
-    ? Math.round((1 - product.price / product.compare_price) * 100)
+  const discount = product.compare_price && product.compare_price > product.price
+    ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
     : 0;
 
   return (
-    <Link href={`/product/${product.slug}`} className="group block">
-      {/* Image */}
-      <div className="relative aspect-[3/4] bg-primary-100 overflow-hidden mb-4">
-        {primaryImage ? (
-          <Image
-            src={primaryImage}
-            alt={product.name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-700"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <ShoppingBag size={40} className="text-primary-300" />
-          </div>
-        )}
-        
-        {/* Discount Badge */}
-        {discount > 0 && (
-          <span className="absolute top-3 left-3 bg-focus text-white text-xs px-2 py-1 tracking-wide">
-            -{discount}%
-          </span>
-        )}
-
-        {/* Out of Stock */}
-        {product.stock === 0 && (
-          <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
-            <span className="text-focus text-sm tracking-[0.1em]">SOLD OUT</span>
-          </div>
-        )}
-
-        {/* Quick Add Button */}
-        {product.stock > 0 && (
-          <button
-            onClick={handleAddToCart}
-            disabled={isLoading}
-            className="absolute bottom-4 left-4 right-4 py-3 bg-white/90 text-focus text-xs tracking-[0.15em] 
-                       opacity-0 group-hover:opacity-100 transition-opacity duration-300
-                       hover:bg-focus hover:text-white"
-          >
-            ADD TO BAG
-          </button>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="text-center">
-        <p className="text-xs text-muted tracking-[0.1em] uppercase mb-1">
-          {product.category}
-        </p>
-        <h3 className="text-sm font-light mb-2 line-clamp-1">
-          {product.name}
-        </h3>
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-sm">
-            ৳{product.price.toLocaleString()}
-          </span>
-          {product.compare_price && (
-            <span className="text-muted text-xs line-through">
-              ৳{product.compare_price.toLocaleString()}
-            </span>
+    <div style={{ position: 'relative' }}>
+      <Link href={`/product/${product.slug}`} style={{ textDecoration: 'none', display: 'block' }}>
+        {/* Product Image - 4:5 aspect ratio */}
+        <div 
+          style={{ 
+            position: 'relative', 
+            paddingBottom: '125%', /* 4:5 = 125% */
+            backgroundColor: '#F5F5F5', 
+            overflow: 'hidden',
+            marginBottom: 16
+          }}
+          className="product-image"
+        >
+          {product.images?.[0]?.url ? (
+            <Image
+              src={product.images[0].url}
+              alt={product.name}
+              fill
+              style={{ 
+                objectFit: 'cover',
+                transition: 'transform 0.5s ease'
+              }}
+            />
+          ) : (
+            <div style={{ 
+              position: 'absolute', 
+              inset: 0, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              backgroundColor: '#E8E8E8'
+            }}>
+              <span style={{ color: '#999', fontSize: 13 }}>No Image</span>
+            </div>
+          )}
+          
+          {/* Discount Badge */}
+          {discount > 0 && (
+            <div style={{
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              padding: '5px 10px',
+              backgroundColor: '#B08B5C',
+              color: '#FFFFFF',
+              fontSize: 11,
+              fontWeight: 500,
+              letterSpacing: 0.5
+            }}>
+              {discount}% OFF
+            </div>
           )}
         </div>
-      </div>
-    </Link>
+
+        {/* Product Info */}
+        <div style={{ padding: '0 4px' }}>
+          {/* Title */}
+          <h3 style={{ 
+            fontSize: 15, 
+            fontWeight: 500, 
+            color: '#0C0C0C',
+            marginBottom: 6,
+            lineHeight: '22px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 1,
+            WebkitBoxOrient: 'vertical'
+          }}>
+            {product.name}
+          </h3>
+          
+          {/* Description - 1-2 lines */}
+          {product.short_description && (
+            <p style={{ 
+              fontSize: 13, 
+              color: '#919191',
+              marginBottom: 10,
+              lineHeight: '20px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical'
+            }}>
+              {product.short_description}
+            </p>
+          )}
+          
+          {/* Price */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 10,
+            marginBottom: 14
+          }}>
+            <span style={{ 
+              fontSize: 16, 
+              fontWeight: 600, 
+              color: '#0C0C0C' 
+            }}>
+              {formatPrice(product.price)}
+            </span>
+            {product.compare_price && product.compare_price > product.price && (
+              <span style={{ 
+                fontSize: 13, 
+                color: '#919191', 
+                textDecoration: 'line-through' 
+              }}>
+                {formatPrice(product.compare_price)}
+              </span>
+            )}
+          </div>
+        </div>
+      </Link>
+
+      {/* Buy Now Button */}
+      <button
+        onClick={handleBuyNow}
+        style={{
+          width: 'calc(100% - 8px)',
+          margin: '0 4px',
+          padding: '12px 0',
+          backgroundColor: '#0C0C0C',
+          color: '#FFFFFF',
+          border: 'none',
+          fontSize: 12,
+          fontWeight: 500,
+          letterSpacing: 2,
+          textTransform: 'uppercase',
+          cursor: 'pointer',
+          transition: 'all 0.3s ease'
+        }}
+        onMouseOver={(e) => {
+          e.currentTarget.style.backgroundColor = '#B08B5C';
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.backgroundColor = '#0C0C0C';
+        }}
+      >
+        Buy Now
+      </button>
+
+      <style jsx global>{`
+        .product-image:hover img {
+          transform: scale(1.05) !important;
+        }
+      `}</style>
+    </div>
   );
 }
