@@ -11,20 +11,21 @@ import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated } = useAuthStore();
+  const { login, isAuthenticated, isLoading, isInitialized } = useAuthStore();
   
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [authImage, setAuthImage] = useState(null);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Wait for auth to initialize before redirecting
+    if (isInitialized && isAuthenticated) {
       router.push('/');
     }
     fetchAuthImage();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isInitialized, router]);
 
   const fetchAuthImage = async () => {
     try {
@@ -37,19 +38,30 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
 
-    try {
-      const res = await api.post('/auth/login', formData);
-      login(res.data.user, res.data.access_token);
+    // Use the store's login function (which takes email, password)
+    const result = await login(formData.email, formData.password);
+
+    if (result.success) {
       toast.success('Welcome back!');
       router.push('/');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Invalid credentials');
-    } finally {
-      setLoading(false);
+    } else {
+      toast.error(result.error || 'Invalid credentials');
     }
+    
+    setSubmitting(false);
   };
+
+  // Show loading while checking auth
+  if (!isInitialized) {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 40, height: 40, border: '3px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -190,7 +202,7 @@ export default function LoginPage() {
             {/* Login Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={submitting || isLoading}
               style={{
                 width: '100%',
                 padding: '16px',
@@ -200,14 +212,14 @@ export default function LoginPage() {
                 borderRadius: 8,
                 fontSize: 15,
                 fontWeight: 600,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1,
+                cursor: (submitting || isLoading) ? 'not-allowed' : 'pointer',
+                opacity: (submitting || isLoading) ? 0.7 : 1,
                 transition: 'background-color 0.2s'
               }}
-              onMouseOver={(e) => !loading && (e.target.style.backgroundColor = '#333')}
+              onMouseOver={(e) => !(submitting || isLoading) && (e.target.style.backgroundColor = '#333')}
               onMouseOut={(e) => e.target.style.backgroundColor = '#0C0C0C'}
             >
-              {loading ? 'Signing in...' : 'Login'}
+              {(submitting || isLoading) ? 'Signing in...' : 'Login'}
             </button>
           </form>
 
