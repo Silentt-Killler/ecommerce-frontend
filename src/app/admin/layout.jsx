@@ -12,6 +12,7 @@ import {
   Tag,
   Ticket,
   Shield,
+  Settings,
   Menu,
   X,
   LogOut,
@@ -28,33 +29,39 @@ const menuItems = [
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Brands', href: '/admin/brands', icon: Tag },
   { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
-  { name: 'Admin Roles', href: '/admin/roles', icon: Shield }
+  { name: 'Admin Roles', href: '/admin/roles', icon: Shield },
+  { name: 'Settings', href: '/admin/settings', icon: Settings }
 ];
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, logout, checkAuth, isLoading } = useAuthStore();
+  const { user, isAuthenticated, logout, checkAuth, isLoading, isInitialized } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isChecking, setIsChecking] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
+  // Handle client-side mounting
   useEffect(() => {
-    const verifyAuth = async () => {
-      await checkAuth();
-      setIsChecking(false);
-    };
-    verifyAuth();
-  }, [checkAuth]);
+    setMounted(true);
+  }, []);
 
+  // Check auth on mount
   useEffect(() => {
-    if (!isChecking && !isLoading) {
+    if (mounted && !isInitialized) {
+      checkAuth();
+    }
+  }, [mounted, isInitialized, checkAuth]);
+
+  // Redirect logic - only after initialized
+  useEffect(() => {
+    if (mounted && isInitialized && !isLoading) {
       if (!isAuthenticated) {
         router.push('/login');
-      } else if (user?.role !== 'admin') {
+      } else if (user && user.role !== 'admin') {
         router.push('/');
       }
     }
-  }, [isChecking, isLoading, isAuthenticated, user, router]);
+  }, [mounted, isInitialized, isLoading, isAuthenticated, user, router]);
 
   const handleLogout = () => {
     logout();
@@ -66,7 +73,8 @@ export default function AdminLayout({ children }) {
     return pathname.startsWith(href);
   };
 
-  if (isChecking || isLoading) {
+  // Show loading while not mounted or not initialized
+  if (!mounted || !isInitialized || isLoading) {
     return (
       <div style={{ 
         position: 'fixed',
@@ -97,7 +105,8 @@ export default function AdminLayout({ children }) {
     );
   }
 
-  if (!isAuthenticated || user?.role !== 'admin') {
+  // Not authenticated or not admin
+  if (!isAuthenticated || !user || user.role !== 'admin') {
     return (
       <div style={{ 
         position: 'fixed',
@@ -114,7 +123,7 @@ export default function AdminLayout({ children }) {
 
   return (
     <>
-      {/* Full Page Admin Container - Fixed Position */}
+      {/* Full Page Admin Container */}
       <div style={{
         position: 'fixed',
         inset: 0,
@@ -133,61 +142,158 @@ export default function AdminLayout({ children }) {
               backgroundColor: 'rgba(0,0,0,0.5)',
               zIndex: 40
             }}
-            className="lg:hidden"
+            className="sidebar-mobile"
           />
         )}
 
-        {/* Sidebar */}
-        <aside style={{
-          position: 'fixed',
-          top: 0,
-          left: sidebarOpen ? 0 : -280,
-          width: 220,
-          height: '100vh',
-          backgroundColor: '#1f2937',
-          zIndex: 50,
-          transition: 'left 0.3s ease',
-          display: 'flex',
-          flexDirection: 'column'
-        }} className="sidebar-mobile">
-          
+        {/* Sidebar - Desktop */}
+        <aside 
+          className="desktop-sidebar"
+          style={{
+            width: 260,
+            backgroundColor: '#1f2937',
+            display: 'flex',
+            flexDirection: 'column',
+            borderRight: '1px solid #374151'
+          }}
+        >
           {/* Logo */}
           <div style={{
-            height: 64,
+            padding: '20px 24px',
+            borderBottom: '1px solid #374151'
+          }}>
+            <h1 style={{ 
+              fontSize: 20, 
+              fontWeight: 700, 
+              color: '#fff',
+              letterSpacing: 2
+            }}>
+              PRISMIN
+            </h1>
+            <p style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>Admin Panel</p>
+          </div>
+
+          {/* Menu */}
+          <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '12px 16px',
+                    marginBottom: 4,
+                    borderRadius: 8,
+                    color: active ? '#fff' : '#9ca3af',
+                    backgroundColor: active ? '#3b82f6' : 'transparent',
+                    textDecoration: 'none',
+                    fontSize: 14,
+                    fontWeight: active ? 600 : 400,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <Icon size={20} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* User & Logout */}
+          <div style={{
+            padding: '16px 12px',
+            borderTop: '1px solid #374151'
+          }}>
+            <div style={{ 
+              padding: '12px 16px', 
+              marginBottom: 8,
+              backgroundColor: '#374151',
+              borderRadius: 8
+            }}>
+              <p style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>{user?.name}</p>
+              <p style={{ fontSize: 12, color: '#9ca3af' }}>{user?.email}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                width: '100%',
+                padding: '12px 16px',
+                backgroundColor: 'transparent',
+                border: 'none',
+                borderRadius: 8,
+                color: '#ef4444',
+                fontSize: 14,
+                cursor: 'pointer',
+                transition: 'background 0.2s'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#374151'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              <LogOut size={20} />
+              Logout
+            </button>
+          </div>
+        </aside>
+
+        {/* Sidebar - Mobile */}
+        <aside 
+          className="sidebar-mobile"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: sidebarOpen ? 0 : -280,
+            width: 280,
+            height: '100%',
+            backgroundColor: '#1f2937',
+            zIndex: 50,
+            display: 'flex',
+            flexDirection: 'column',
+            transition: 'left 0.3s ease',
+            borderRight: '1px solid #374151'
+          }}
+        >
+          {/* Close Button */}
+          <div style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '0 20px',
+            padding: '20px 24px',
             borderBottom: '1px solid #374151'
           }}>
-            <span style={{ 
-              fontSize: 18, 
-              fontWeight: 700, 
-              color: '#fff',
-              letterSpacing: '0.05em'
-            }}>
-              PRISMIN ADMIN
-            </span>
-            <button 
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>PRISMIN</h1>
+            <button
               onClick={() => setSidebarOpen(false)}
-              style={{ color: '#9ca3af', display: 'none' }}
+              style={{
+                padding: 8,
+                color: '#9ca3af',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer'
+              }}
               className="mobile-close"
             >
-              <X size={20} />
+              <X size={24} />
             </button>
           </div>
 
-          {/* Navigation */}
-          <nav style={{ 
-            flex: 1, 
-            overflowY: 'auto',
-            padding: '16px 12px'
-          }}>
+          {/* Mobile Menu */}
+          <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
             {menuItems.map((item) => {
+              const Icon = item.icon;
               const active = isActive(item.href);
+              
               return (
                 <Link
-                  key={item.name}
+                  key={item.href}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   style={{
@@ -197,263 +303,39 @@ export default function AdminLayout({ children }) {
                     padding: '12px 16px',
                     marginBottom: 4,
                     borderRadius: 8,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    textDecoration: 'none',
-                    backgroundColor: active ? '#3b82f6' : 'transparent',
                     color: active ? '#fff' : '#9ca3af',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.backgroundColor = '#374151';
-                      e.currentTarget.style.color = '#fff';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = '#9ca3af';
-                    }
+                    backgroundColor: active ? '#3b82f6' : 'transparent',
+                    textDecoration: 'none',
+                    fontSize: 14
                   }}
                 >
-                  <item.icon size={20} />
-                  <span>{item.name}</span>
+                  <Icon size={20} />
+                  {item.name}
                 </Link>
               );
             })}
           </nav>
 
-          {/* User Section */}
-          <div style={{
-            padding: 16,
-            borderTop: '1px solid #374151'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              marginBottom: 12
-            }}>
-              <div style={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                backgroundColor: '#3b82f6',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontWeight: 600,
-                fontSize: 16
-              }}>
-                {user?.name?.charAt(0).toUpperCase() || 'A'}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ 
-                  fontSize: 14, 
-                  fontWeight: 500, 
-                  color: '#fff',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                  {user?.name || 'Admin'}
-                </p>
-                <p style={{ 
-                  fontSize: 12, 
-                  color: '#6b7280',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                  {user?.email}
-                </p>
-              </div>
-            </div>
+          {/* Mobile Logout */}
+          <div style={{ padding: '16px 12px', borderTop: '1px solid #374151' }}>
             <button
               onClick={handleLogout}
               style={{
-                width: '100%',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                padding: '10px 16px',
-                borderRadius: 8,
+                gap: 12,
+                width: '100%',
+                padding: '12px 16px',
+                backgroundColor: 'transparent',
                 border: 'none',
-                backgroundColor: '#374151',
-                color: '#9ca3af',
+                borderRadius: 8,
+                color: '#ef4444',
                 fontSize: 14,
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#4b5563';
-                e.currentTarget.style.color = '#fff';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#374151';
-                e.currentTarget.style.color = '#9ca3af';
+                cursor: 'pointer'
               }}
             >
-              <LogOut size={18} />
-              <span>Logout</span>
-            </button>
-          </div>
-        </aside>
-
-        {/* Desktop Sidebar - Always Visible */}
-        <aside style={{
-          width: 220,
-          height: '100vh',
-          backgroundColor: '#1f2937',
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column'
-        }} className="desktop-sidebar">
-          
-          {/* Logo */}
-          <div style={{
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 20px',
-            borderBottom: '1px solid #374151'
-          }}>
-            <span style={{ 
-              fontSize: 18, 
-              fontWeight: 700, 
-              color: '#fff',
-              letterSpacing: '0.05em'
-            }}>
-              PRISMIN ADMIN
-            </span>
-          </div>
-
-          {/* Navigation */}
-          <nav style={{ 
-            flex: 1, 
-            overflowY: 'auto',
-            padding: '16px 12px'
-          }}>
-            {menuItems.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '12px 16px',
-                    marginBottom: 4,
-                    borderRadius: 8,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    textDecoration: 'none',
-                    backgroundColor: active ? '#3b82f6' : 'transparent',
-                    color: active ? '#fff' : '#9ca3af',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.backgroundColor = '#374151';
-                      e.currentTarget.style.color = '#fff';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!active) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = '#9ca3af';
-                    }
-                  }}
-                >
-                  <item.icon size={20} />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* User Section */}
-          <div style={{
-            padding: 16,
-            borderTop: '1px solid #374151'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              marginBottom: 12
-            }}>
-              <div style={{
-                width: 40,
-                height: 40,
-                borderRadius: '50%',
-                backgroundColor: '#3b82f6',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontWeight: 600,
-                fontSize: 16
-              }}>
-                {user?.name?.charAt(0).toUpperCase() || 'A'}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ 
-                  fontSize: 14, 
-                  fontWeight: 500, 
-                  color: '#fff',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                  {user?.name || 'Admin'}
-                </p>
-                <p style={{ 
-                  fontSize: 12, 
-                  color: '#6b7280',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap'
-                }}>
-                  {user?.email}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
-                padding: '10px 16px',
-                borderRadius: 8,
-                border: 'none',
-                backgroundColor: '#374151',
-                color: '#9ca3af',
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'all 0.2s'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#4b5563';
-                e.currentTarget.style.color = '#fff';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#374151';
-                e.currentTarget.style.color = '#9ca3af';
-              }}
-            >
-              <LogOut size={18} />
-              <span>Logout</span>
+              <LogOut size={20} />
+              Logout
             </button>
           </div>
         </aside>
@@ -465,14 +347,17 @@ export default function AdminLayout({ children }) {
           backgroundColor: '#111827'
         }}>
           {/* Mobile Header */}
-          <div style={{
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0 24px',
-            backgroundColor: '#1f2937',
-            borderBottom: '1px solid #374151'
-          }} className="mobile-header">
+          <div 
+            className="mobile-header"
+            style={{
+              height: 64,
+              display: 'flex',
+              alignItems: 'center',
+              padding: '0 24px',
+              backgroundColor: '#1f2937',
+              borderBottom: '1px solid #374151'
+            }}
+          >
             <button 
               onClick={() => setSidebarOpen(true)}
               style={{
