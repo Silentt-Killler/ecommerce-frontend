@@ -13,12 +13,18 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const itemCount = getItemCount();
 
+  // Fix hydration issue
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => {
-      // Very sensitive - just 20px scroll shows logo in navbar
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
@@ -30,6 +36,12 @@ export default function Header() {
     if (searchQuery.trim()) {
       window.location.href = `/shop?search=${encodeURIComponent(searchQuery)}`;
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setShowDropdown(false);
+    window.location.href = '/';
   };
 
   return (
@@ -116,7 +128,7 @@ export default function Header() {
                 }}
               >
                 <ShoppingBag size={20} strokeWidth={1.5} />
-                {itemCount > 0 && (
+                {mounted && itemCount > 0 && (
                   <span style={{
                     position: 'absolute',
                     top: -6,
@@ -137,71 +149,142 @@ export default function Header() {
                 )}
               </Link>
 
-              {/* User */}
-              {isAuthenticated ? (
-                <div style={{ position: 'relative' }} className="user-dropdown">
+              {/* User - with proper dropdown */}
+              {mounted && isAuthenticated ? (
+                <div 
+                  style={{ position: 'relative' }}
+                  onMouseEnter={() => setShowDropdown(true)}
+                  onMouseLeave={() => setShowDropdown(false)}
+                >
                   <button style={{ 
                     background: 'none', 
                     border: 'none', 
                     cursor: 'pointer',
                     color: isScrolled ? '#0C0C0C' : '#FFFFFF',
                     transition: 'color 0.3s',
-                    padding: 0
+                    padding: 4,
+                    display: 'flex',
+                    alignItems: 'center'
                   }}>
                     <User size={20} strokeWidth={1.5} />
                   </button>
-                  <div className="dropdown-menu" style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: '100%',
-                    marginTop: 10,
-                    width: 180,
-                    backgroundColor: '#FFFFFF',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                    opacity: 0,
-                    visibility: 'hidden',
-                    transition: 'all 0.2s'
-                  }}>
-                    <div style={{ padding: '8px 0' }}>
-                      <p style={{ padding: '8px 16px', fontSize: 12, color: '#888', borderBottom: '1px solid #E0E0E0' }}>
-                        {user?.name}
-                      </p>
-                      <Link href="/account" style={{ display: 'block', padding: '10px 16px', fontSize: 12, color: '#0C0C0C', textDecoration: 'none' }}>
-                        My Account
-                      </Link>
-                      <Link href="/orders" style={{ display: 'block', padding: '10px 16px', fontSize: 12, color: '#0C0C0C', textDecoration: 'none' }}>
-                        My Orders
-                      </Link>
-                      {user?.role === 'admin' && (
-                        <Link href="/admin" style={{ display: 'block', padding: '10px 16px', fontSize: 12, color: '#0C0C0C', textDecoration: 'none' }}>
-                          Admin Panel
+                  
+                  {/* Dropdown Menu */}
+                  {showDropdown && (
+                    <div style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: '100%',
+                      marginTop: 8,
+                      width: 200,
+                      backgroundColor: '#FFFFFF',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                      borderRadius: 8,
+                      overflow: 'hidden',
+                      zIndex: 100
+                    }}>
+                      {/* User Info */}
+                      <div style={{ 
+                        padding: '14px 16px', 
+                        borderBottom: '1px solid #E8E8E8',
+                        backgroundColor: '#FAFAFA'
+                      }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', margin: 0 }}>
+                          {user?.name || 'User'}
+                        </p>
+                        <p style={{ fontSize: 12, color: '#919191', margin: '4px 0 0 0' }}>
+                          {user?.email}
+                        </p>
+                      </div>
+                      
+                      {/* Menu Items */}
+                      <div style={{ padding: '8px 0' }}>
+                        <Link 
+                          href="/account" 
+                          style={{ 
+                            display: 'block', 
+                            padding: '10px 16px', 
+                            fontSize: 14, 
+                            color: '#0C0C0C', 
+                            textDecoration: 'none',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'}
+                          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                        >
+                          My Account
                         </Link>
-                      )}
-                      <button
-                        onClick={() => logout()}
-                        style={{ 
-                          display: 'block', 
-                          width: '100%', 
-                          textAlign: 'left',
-                          padding: '10px 16px', 
-                          fontSize: 12, 
-                          color: '#B00020',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Logout
-                      </button>
+                        <Link 
+                          href="/orders" 
+                          style={{ 
+                            display: 'block', 
+                            padding: '10px 16px', 
+                            fontSize: 14, 
+                            color: '#0C0C0C', 
+                            textDecoration: 'none',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'}
+                          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                        >
+                          My Orders
+                        </Link>
+                        
+                        {/* Admin Link - Only for admins */}
+                        {user?.role === 'admin' && (
+                          <Link 
+                            href="/admin" 
+                            style={{ 
+                              display: 'block', 
+                              padding: '10px 16px', 
+                              fontSize: 14, 
+                              color: '#B08B5C', 
+                              fontWeight: 500,
+                              textDecoration: 'none',
+                              transition: 'background 0.2s'
+                            }}
+                            onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'}
+                            onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                          >
+                            Admin Panel
+                          </Link>
+                        )}
+                        
+                        {/* Divider */}
+                        <div style={{ height: 1, backgroundColor: '#E8E8E8', margin: '8px 0' }} />
+                        
+                        {/* Logout */}
+                        <button
+                          onClick={handleLogout}
+                          style={{ 
+                            display: 'block', 
+                            width: '100%', 
+                            textAlign: 'left',
+                            padding: '10px 16px', 
+                            fontSize: 14, 
+                            color: '#DC2626',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseOver={(e) => e.target.style.backgroundColor = '#FEF2F2'}
+                          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                        >
+                          Logout
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ) : (
                 <Link 
                   href="/login" 
                   style={{ 
                     color: isScrolled ? '#0C0C0C' : '#FFFFFF',
-                    transition: 'color 0.3s'
+                    transition: 'color 0.3s',
+                    display: 'flex',
+                    alignItems: 'center'
                   }}
                 >
                   <User size={20} strokeWidth={1.5} />
@@ -217,7 +300,9 @@ export default function Header() {
                   cursor: 'pointer',
                   color: isScrolled ? '#0C0C0C' : '#FFFFFF',
                   transition: 'color 0.3s',
-                  padding: 0
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center'
                 }}
               >
                 <Search size={20} strokeWidth={1.5} />
@@ -355,13 +440,6 @@ export default function Header() {
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        .user-dropdown:hover .dropdown-menu {
-          opacity: 1 !important;
-          visibility: visible !important;
-        }
-      `}</style>
     </>
   );
 }
