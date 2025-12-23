@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   LogOut,
-  FolderOpen
+  FolderOpen,
+  UserPlus
 } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 
@@ -26,6 +27,7 @@ const menuItems = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+  { name: 'Leads', href: '/admin/leads', icon: UserPlus },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Brands', href: '/admin/brands', icon: Tag },
   { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
