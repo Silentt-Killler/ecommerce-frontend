@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronDown, Check, Truck, CreditCard, Banknote } from 'lucide-react';
+import { Check, Truck, CreditCard, Banknote } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 import useAuthStore from '@/store/authStore';
 import api from '@/lib/api';
@@ -16,12 +16,26 @@ const deliveryOptions = [
   { id: 'outside_dhaka', label: 'Outside Dhaka', price: 130 }
 ];
 
+// Debounce function
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items, getItemCount } = useCartStore();
-  const { user, isAuthenticated, isInitialized } = useAuthStore();
+  const { items, getItemCount, clearCart } = useCartStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [leadCaptured, setLeadCaptured] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -57,8 +71,45 @@ export default function CheckoutPage() {
 
   const formatPrice = (price) => '৳' + price?.toLocaleString('en-BD');
 
+  // Lead capture function - called when user fills form
+  const captureLead = useCallback(
+    debounce(async (data) => {
+      // Only capture if we have phone number and at least name or address
+      if (!data.phone || data.phone.length < 10) return;
+      if (!data.fullName && !data.address) return;
+
+      try {
+        await api.post('/orders/leads/capture', {
+          name: data.fullName,
+          phone: data.phone,
+          email: data.email,
+          address: data.address,
+          delivery_zone: data.deliveryZone,
+          cart_items: items.map(item => ({
+            product_id: item.productId,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity
+          })),
+          cart_total: subtotal,
+          source: 'checkout'
+        });
+        setLeadCaptured(true);
+        console.log('Lead captured successfully');
+      } catch (error) {
+        console.log('Lead capture failed:', error);
+      }
+    }, 2000), // 2 second debounce
+    [items, subtotal]
+  );
+
+  // Handle form change with lead capture
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const newData = { ...formData, [e.target.name]: e.target.value };
+    setFormData(newData);
+    
+    // Capture lead when user fills form
+    captureLead(newData);
   };
 
   const handleSubmit = async (e) => {
@@ -71,6 +122,11 @@ export default function CheckoutPage() {
 
     if (!formData.fullName || !formData.phone || !formData.address) {
       toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (formData.phone.length < 10) {
+      toast.error('Please enter a valid phone number');
       return;
     }
 
@@ -107,6 +163,9 @@ export default function CheckoutPage() {
       const response = await api.post('/orders/guest', orderData);
       
       // Clear cart after successful order
+      if (clearCart) {
+        clearCart();
+      }
       localStorage.removeItem('cart-storage');
       
       toast.success('Order placed successfully!');
