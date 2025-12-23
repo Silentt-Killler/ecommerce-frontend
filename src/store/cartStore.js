@@ -1,81 +1,70 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import api from '@/lib/api';
-import toast from 'react-hot-toast';
 
 const useCartStore = create(
   persist(
     (set, get) => ({
       items: [],
-      subtotal: 0,
-      isLoading: false,
+      
+      // Add item to cart
+      addItem: (item) => {
+        const items = get().items;
+        const existingIndex = items.findIndex(
+          (i) => i.productId === item.productId && 
+                 JSON.stringify(i.variant) === JSON.stringify(item.variant)
+        );
 
-      fetchCart: async () => {
-        try {
-          const response = await api.get('/cart');
-          set({ 
-            items: response.data.items, 
-            subtotal: response.data.subtotal 
-          });
-        } catch (error) {
-          console.error('Failed to fetch cart:', error);
+        if (existingIndex > -1) {
+          // Update quantity if item exists
+          const newItems = [...items];
+          newItems[existingIndex].quantity += item.quantity || 1;
+          set({ items: newItems });
+        } else {
+          // Add new item
+          set({ items: [...items, { ...item, quantity: item.quantity || 1 }] });
         }
       },
 
-      addToCart: async (productId, quantity = 1) => {
-        set({ isLoading: true });
-        try {
-          await api.post('/cart/items', { 
-            product_id: productId, 
-            quantity 
-          });
-          await get().fetchCart();
-          toast.success('Added to cart');
-          set({ isLoading: false });
-        } catch (error) {
-          toast.error(error.response?.data?.detail || 'Failed to add item');
-          set({ isLoading: false });
-        }
+      // Update item quantity
+      updateQuantity: (productId, quantity, variant = null) => {
+        const items = get().items;
+        const newItems = items.map((item) => {
+          if (item.productId === productId && JSON.stringify(item.variant) === JSON.stringify(variant)) {
+            return { ...item, quantity };
+          }
+          return item;
+        });
+        set({ items: newItems });
       },
 
-      updateQuantity: async (productId, quantity) => {
-        try {
-          await api.put(`/cart/items/${productId}`, { quantity });
-          await get().fetchCart();
-        } catch (error) {
-          toast.error(error.response?.data?.detail || 'Failed to update');
-        }
+      // Remove item from cart
+      removeItem: (productId, variant = null) => {
+        const items = get().items;
+        const newItems = items.filter(
+          (item) => !(item.productId === productId && JSON.stringify(item.variant) === JSON.stringify(variant))
+        );
+        set({ items: newItems });
       },
 
-      removeFromCart: async (productId) => {
-        try {
-          await api.delete(`/cart/items/${productId}`);
-          await get().fetchCart();
-          toast.success('Item removed');
-        } catch (error) {
-          toast.error('Failed to remove item');
-        }
+      // Clear cart
+      clearCart: () => {
+        set({ items: [] });
       },
 
-      clearCart: async () => {
-        try {
-          await api.delete('/cart');
-          set({ items: [], subtotal: 0 });
-        } catch (error) {
-          console.error('Failed to clear cart:', error);
-        }
-      },
-
+      // Get total item count
       getItemCount: () => {
         return get().items.reduce((total, item) => total + item.quantity, 0);
       },
+
+      // Get subtotal
+      getSubtotal: () => {
+        return get().items.reduce((total, item) => total + (item.price * item.quantity), 0);
+      }
     }),
     {
       name: 'cart-storage',
-      partialize: (state) => ({ 
-        items: state.items, 
-        subtotal: state.subtotal 
-      }),
+      // Only persist items
+      partialize: (state) => ({ items: state.items })
     }
   )
 );
