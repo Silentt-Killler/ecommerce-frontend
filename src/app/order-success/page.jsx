@@ -1,11 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, Package, Truck, Phone, Mail, MapPin, ArrowRight } from 'lucide-react';
+import { CheckCircle, Package, Truck, Phone, Mail, ArrowRight } from 'lucide-react';
 
-export default function OrderSuccessPage() {
+// Loading component
+function LoadingSpinner() {
+  return (
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 40, height: 40, border: '3px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+// Main content component that uses useSearchParams
+function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get('order');
   const [mounted, setMounted] = useState(false);
@@ -19,12 +30,7 @@ export default function OrderSuccessPage() {
   }, []);
 
   if (!mounted) {
-    return (
-      <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 40, height: 40, border: '3px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-        <style jsx>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -289,5 +295,14 @@ export default function OrderSuccessPage() {
 
       </div>
     </div>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <OrderSuccessContent />
+    </Suspense>
   );
 }
