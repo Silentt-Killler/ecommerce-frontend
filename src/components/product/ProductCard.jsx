@@ -44,7 +44,7 @@ export default function ProductCard({ product }) {
   return (
     <Link 
       href={`/product/${product.slug}`} 
-      className="block"
+      className="block group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -57,25 +57,25 @@ export default function ProductCard({ product }) {
               alt={product.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
-              className={`object-cover transition-transform duration-400 ${isHovered ? 'scale-105' : 'scale-100'} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              className={`object-cover transition-transform duration-500 group-hover:scale-105 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               onLoad={() => setImageLoaded(true)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-[#CCC]">
+            <div className="w-full h-full flex items-center justify-center text-gray-400">
               No Image
             </div>
           )}
 
-          {/* Discount Badge New */}
+          {/* Discount Badge */}
           {discount > 0 && (
-            <div className="absolute top-3 left-3 bg-[#B08B5C] text-white px-2.5 py-1.5 text-[11px] font-semibold tracking-wide">
+            <div className="absolute top-3 left-3 bg-gold text-white px-2.5 py-1.5 text-[11px] font-semibold tracking-wide">
               -{discount}%
             </div>
           )}
 
           {/* Out of Stock Badge */}
           {product.stock === 0 && (
-            <div className="absolute top-3 right-3 bg-[#919191] text-white px-2.5 py-1.5 text-[11px] font-semibold">
+            <div className="absolute top-3 right-3 bg-gray-500 text-white px-2.5 py-1.5 text-[11px] font-semibold">
               Out of Stock
             </div>
           )}
@@ -87,7 +87,7 @@ export default function ProductCard({ product }) {
             <button
               onClick={handleBuyNow}
               disabled={product.stock === 0}
-              className={`w-full py-3.5 px-5 text-white text-[13px] font-semibold tracking-[1.5px] uppercase transition-colors ${product.stock === 0 ? 'bg-[#919191] cursor-not-allowed' : 'bg-[#0C0C0C] hover:bg-[#333]'}`}
+              className={`w-full py-3.5 px-5 text-white text-[13px] font-semibold tracking-[1.5px] uppercase transition-colors ${product.stock === 0 ? 'bg-gray-500 cursor-not-allowed' : 'bg-focus hover:bg-gray-800'}`}
             >
               {product.stock === 0 ? 'Sold Out' : 'Buy Now'}
             </button>
@@ -98,24 +98,24 @@ export default function ProductCard({ product }) {
         <div className="pt-4">
           {/* Brand - Only show for Watch category */}
           {product.brand?.name && product.category === 'watch' && (
-            <p className="text-[11px] font-medium text-[#919191] uppercase tracking-[1px] mb-1.5">
+            <p className="text-[11px] font-medium text-muted uppercase tracking-[1px] mb-1.5">
               {product.brand.name}
             </p>
           )}
 
           {/* Product Name */}
-          <h3 className="text-sm font-medium text-[#0C0C0C] mb-2 leading-snug line-clamp-2">
+          <h3 className="text-sm font-medium text-focus mb-2 leading-snug line-clamp-2">
             {product.name}
           </h3>
 
           {/* Price */}
           <div className="flex items-center gap-2.5">
-            <span className="text-[15px] font-semibold text-[#0C0C0C]">
+            <span className="text-[15px] font-semibold text-focus">
               {formatPrice(product.price)}
             </span>
             
             {product.compare_price > product.price && (
-              <span className="text-[13px] text-[#919191] line-through">
+              <span className="text-[13px] text-muted line-through">
                 {formatPrice(product.compare_price)}
               </span>
             )}
