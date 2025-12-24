@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import ProductGrid from '@/components/product/ProductGrid';
+import ProductGridServer from '@/components/product/ProductGridServer';
 
 async function getHomeData() {
   try {
@@ -47,66 +47,32 @@ export default async function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <section style={{ position: 'relative', height: '90vh', backgroundColor: '#E8E8E8' }}>
+      <section className="relative h-[90vh] bg-[#E8E8E8]">
         {heroSlide?.image_url ? (
           <Image
             src={heroSlide.image_url}
             alt="Hero"
             fill
-            style={{ objectFit: 'cover' }}
+            className="object-cover"
             priority
           />
         ) : (
-          <div style={{ 
-            position: 'absolute', 
-            inset: 0, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            backgroundColor: '#E8E8E8'
-          }}>
-            <p style={{ color: '#919191' }}>Upload hero image from Admin Panel</p>
+          <div className="absolute inset-0 flex items-center justify-center bg-[#E8E8E8]">
+            <p className="text-[#919191]">Upload hero image from Admin Panel</p>
           </div>
         )}
         
         {/* Hero Buttons */}
-        <div style={{
-          position: 'absolute',
-          bottom: 80,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          gap: 16
-        }}>
+        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-4">
           <Link 
             href="/shop?category=womenswear"
-            style={{
-              padding: '16px 40px',
-              backgroundColor: '#FFFFFF',
-              color: '#0C0C0C',
-              fontSize: 12,
-              fontWeight: 500,
-              letterSpacing: 3,
-              textDecoration: 'none',
-              textTransform: 'uppercase',
-              transition: 'all 0.3s ease'
-            }}
+            className="px-10 py-4 bg-white text-[#0C0C0C] text-xs font-medium tracking-[3px] uppercase hover:bg-[#0C0C0C] hover:text-white transition-colors"
           >
             For Her
           </Link>
           <Link 
             href="/shop?category=menswear"
-            style={{
-              padding: '16px 40px',
-              backgroundColor: '#FFFFFF',
-              color: '#0C0C0C',
-              fontSize: 12,
-              fontWeight: 500,
-              letterSpacing: 3,
-              textDecoration: 'none',
-              textTransform: 'uppercase',
-              transition: 'all 0.3s ease'
-            }}
+            className="px-10 py-4 bg-white text-[#0C0C0C] text-xs font-medium tracking-[3px] uppercase hover:bg-[#0C0C0C] hover:text-white transition-colors"
           >
             For Him
           </Link>
@@ -114,86 +80,46 @@ export default async function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section style={{ padding: '80px 0' }}>
-        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
-          <h2 style={{
-            fontSize: 24,
-            fontWeight: 400,
-            letterSpacing: 4,
-            textAlign: 'center',
-            marginBottom: 48,
-            color: '#0C0C0C',
-            textTransform: 'uppercase'
-          }}>
+      <section className="py-20">
+        <div className="max-w-[1280px] mx-auto px-6">
+          <h2 className="text-2xl font-normal tracking-[4px] text-center mb-12 text-[#0C0C0C] uppercase">
             Shop by Category
           </h2>
           
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 24
-          }}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {categories.slice(0, 4).map((category) => (
               <Link 
                 key={category._id} 
                 href={`/shop?category=${category.slug}`}
-                style={{ textDecoration: 'none', textAlign: 'center' }}
+                className="text-center group"
               >
-                <div style={{ 
-                  position: 'relative', 
-                  aspectRatio: '3/4', 
-                  backgroundColor: '#F5F5F5',
-                  overflow: 'hidden',
-                  marginBottom: 16
-                }}>
+                <div className="relative aspect-[3/4] bg-[#F5F5F5] overflow-hidden mb-4">
                   {category.image ? (
                     <Image
                       src={category.image}
                       alt={category.name}
                       fill
-                      style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div style={{
-                      position: 'absolute',
-                      inset: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#919191'
-                    }}>
+                    <div className="absolute inset-0 flex items-center justify-center text-[#919191]">
                       No Image
                     </div>
                   )}
                 </div>
-                <h3 style={{
-                  fontSize: 13,
-                  fontWeight: 500,
-                  letterSpacing: 2,
-                  color: '#0C0C0C',
-                  textTransform: 'uppercase'
-                }}>
+                <h3 className="text-[13px] font-medium tracking-[2px] text-[#0C0C0C] uppercase">
                   {category.name}
                 </h3>
               </Link>
             ))}
           </div>
         </div>
-
-        {/* Responsive Styles for Categories */}
-        <style jsx>{`
-          @media (max-width: 1024px) {
-            div > div:last-child {
-              grid-template-columns: repeat(2, 1fr) !important;
-            }
-          }
-        `}</style>
       </section>
 
       {/* Watch Collection */}
       {watchProducts.length > 0 && (
-        <section style={{ padding: '60px 0' }}>
-          <ProductGrid 
+        <section className="py-16">
+          <ProductGridServer 
             products={watchProducts.slice(0, 4)} 
             title="Watch Collection" 
             viewAllLink="/watch" 
@@ -203,8 +129,8 @@ export default async function HomePage() {
 
       {/* Menswear - Alternate Background */}
       {menswearProducts.length > 0 && (
-        <section style={{ padding: '60px 0', backgroundColor: '#FAFAFA' }}>
-          <ProductGrid 
+        <section className="py-16 bg-[#FAFAFA]">
+          <ProductGridServer 
             products={menswearProducts.slice(0, 4)} 
             title="Menswear" 
             viewAllLink="/menswear" 
@@ -214,8 +140,8 @@ export default async function HomePage() {
 
       {/* Womenswear */}
       {womenswearProducts.length > 0 && (
-        <section style={{ padding: '60px 0' }}>
-          <ProductGrid 
+        <section className="py-16">
+          <ProductGridServer 
             products={womenswearProducts.slice(0, 4)} 
             title="Womenswear" 
             viewAllLink="/womenswear" 
@@ -224,57 +150,24 @@ export default async function HomePage() {
       )}
 
       {/* Newsletter Section */}
-      <section style={{ 
-        padding: '80px 24px', 
-        backgroundColor: '#0C0C0C',
-        textAlign: 'center'
-      }}>
-        <div style={{ maxWidth: 600, margin: '0 auto' }}>
-          <h2 style={{
-            fontSize: 24,
-            fontWeight: 400,
-            letterSpacing: 4,
-            color: '#FFFFFF',
-            marginBottom: 16,
-            textTransform: 'uppercase'
-          }}>
+      <section className="py-20 px-6 bg-[#0C0C0C] text-center">
+        <div className="max-w-[600px] mx-auto">
+          <h2 className="text-2xl font-normal tracking-[4px] text-white mb-4 uppercase">
             Stay Updated
           </h2>
-          <p style={{ 
-            fontSize: 14, 
-            color: '#919191',
-            marginBottom: 32
-          }}>
+          <p className="text-sm text-[#919191] mb-8">
             Subscribe to receive updates on new arrivals and special offers
           </p>
           
-          <form style={{ display: 'flex', gap: 12, maxWidth: 450, margin: '0 auto' }}>
+          <form className="flex gap-3 max-w-[450px] mx-auto">
             <input
               type="email"
               placeholder="Enter your email"
-              style={{
-                flex: 1,
-                padding: '16px 20px',
-                backgroundColor: 'transparent',
-                border: '1px solid #333',
-                color: '#FFFFFF',
-                fontSize: 14,
-                outline: 'none'
-              }}
+              className="flex-1 px-5 py-4 bg-transparent border border-[#333] text-white text-sm outline-none focus:border-white"
             />
             <button
               type="submit"
-              style={{
-                padding: '16px 32px',
-                backgroundColor: '#FFFFFF',
-                color: '#0C0C0C',
-                border: 'none',
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: 2,
-                textTransform: 'uppercase',
-                cursor: 'pointer'
-              }}
+              className="px-8 py-4 bg-white text-[#0C0C0C] text-xs font-semibold tracking-[2px] uppercase hover:bg-[#B08B5C] hover:text-white transition-colors"
             >
               Subscribe
             </button>
