@@ -44,106 +44,50 @@ export default function ProductCard({ product }) {
   return (
     <Link 
       href={`/product/${product.slug}`} 
-      style={{ textDecoration: 'none', display: 'block' }}
+      className="block"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div style={{ position: 'relative' }}>
+      <div className="relative">
         {/* Image Container - 3:4 Aspect Ratio */}
-        <div style={{ 
-          position: 'relative',
-          aspectRatio: '3/4',
-          backgroundColor: '#F5F5F5',
-          borderRadius: 8,
-          overflow: 'hidden'
-        }}>
+        <div className="relative aspect-[3/4] bg-[#F5F5F5] rounded-lg overflow-hidden">
           {primaryImage ? (
             <Image
               src={primaryImage}
               alt={product.name}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
-              style={{ 
-                objectFit: 'cover',
-                transition: 'transform 0.4s ease',
-                transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-                opacity: imageLoaded ? 1 : 0
-              }}
+              className={`object-cover transition-transform duration-400 ${isHovered ? 'scale-105' : 'scale-100'} ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               onLoad={() => setImageLoaded(true)}
             />
           ) : (
-            <div style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#CCC'
-            }}>
+            <div className="w-full h-full flex items-center justify-center text-[#CCC]">
               No Image
             </div>
           )}
 
           {/* Discount Badge */}
           {discount > 0 && (
-            <div style={{
-              position: 'absolute',
-              top: 12,
-              left: 12,
-              backgroundColor: '#B08B5C',
-              color: '#FFFFFF',
-              padding: '6px 10px',
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: 0.5
-            }}>
+            <div className="absolute top-3 left-3 bg-[#B08B5C] text-white px-2.5 py-1.5 text-[11px] font-semibold tracking-wide">
               -{discount}%
             </div>
           )}
 
           {/* Out of Stock Badge */}
           {product.stock === 0 && (
-            <div style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              backgroundColor: '#919191',
-              color: '#FFFFFF',
-              padding: '6px 10px',
-              fontSize: 11,
-              fontWeight: 600
-            }}>
+            <div className="absolute top-3 right-3 bg-[#919191] text-white px-2.5 py-1.5 text-[11px] font-semibold">
               Out of Stock
             </div>
           )}
 
           {/* Buy Now Button - Shows on Hover */}
-          <div style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: 16,
-            opacity: isHovered ? 1 : 0,
-            transform: isHovered ? 'translateY(0)' : 'translateY(10px)',
-            transition: 'all 0.3s ease'
-          }}>
+          <div 
+            className={`absolute bottom-0 left-0 right-0 p-4 transition-all duration-300 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}
+          >
             <button
               onClick={handleBuyNow}
               disabled={product.stock === 0}
-              style={{
-                width: '100%',
-                padding: '14px 20px',
-                backgroundColor: product.stock === 0 ? '#919191' : '#0C0C0C',
-                color: '#FFFFFF',
-                border: 'none',
-                fontSize: 13,
-                fontWeight: 600,
-                letterSpacing: 1.5,
-                textTransform: 'uppercase',
-                cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
-                transition: 'background-color 0.2s'
-              }}
+              className={`w-full py-3.5 px-5 text-white text-[13px] font-semibold tracking-[1.5px] uppercase transition-colors ${product.stock === 0 ? 'bg-[#919191] cursor-not-allowed' : 'bg-[#0C0C0C] hover:bg-[#333]'}`}
             >
               {product.stock === 0 ? 'Sold Out' : 'Buy Now'}
             </button>
@@ -151,53 +95,27 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* Product Info */}
-        <div style={{ paddingTop: 16 }}>
+        <div className="pt-4">
           {/* Brand - Only show for Watch category */}
           {product.brand?.name && product.category === 'watch' && (
-            <p style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: '#919191',
-              textTransform: 'uppercase',
-              letterSpacing: 1,
-              marginBottom: 6
-            }}>
+            <p className="text-[11px] font-medium text-[#919191] uppercase tracking-[1px] mb-1.5">
               {product.brand.name}
             </p>
           )}
 
           {/* Product Name */}
-          <h3 style={{
-            fontSize: 14,
-            fontWeight: 500,
-            color: '#0C0C0C',
-            marginBottom: 8,
-            lineHeight: 1.4,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical'
-          }}>
+          <h3 className="text-sm font-medium text-[#0C0C0C] mb-2 leading-snug line-clamp-2">
             {product.name}
           </h3>
 
           {/* Price */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{
-              fontSize: 15,
-              fontWeight: 600,
-              color: '#0C0C0C'
-            }}>
+          <div className="flex items-center gap-2.5">
+            <span className="text-[15px] font-semibold text-[#0C0C0C]">
               {formatPrice(product.price)}
             </span>
             
             {product.compare_price > product.price && (
-              <span style={{
-                fontSize: 13,
-                color: '#919191',
-                textDecoration: 'line-through'
-              }}>
+              <span className="text-[13px] text-[#919191] line-through">
                 {formatPrice(product.compare_price)}
               </span>
             )}
