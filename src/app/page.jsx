@@ -46,7 +46,7 @@ export default async function HomePage() {
 
   return (
     <div>
-      {/* Hero Section */}
+      {/* Hero Section code */}
       <section className="relative h-[90vh] bg-[#E8E8E8]">
         {heroSlide?.image_url ? (
           <Image
