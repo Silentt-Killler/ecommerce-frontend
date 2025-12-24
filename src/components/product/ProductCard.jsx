@@ -66,7 +66,7 @@ export default function ProductCard({ product }) {
             </div>
           )}
 
-          {/* Discount Badge */}
+          {/* Discount Badge New */}
           {discount > 0 && (
             <div className="absolute top-3 left-3 bg-[#B08B5C] text-white px-2.5 py-1.5 text-[11px] font-semibold tracking-wide">
               -{discount}%
