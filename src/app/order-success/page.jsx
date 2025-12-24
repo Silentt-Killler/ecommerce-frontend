@@ -9,7 +9,7 @@ import { CheckCircle, Package, Truck, Phone, Mail, ArrowRight } from 'lucide-rea
 function LoadingSpinner() {
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <div className="w-10 h-10 border-3 border-[#B08B5C] border-t-transparent rounded-full animate-spin" />
+      <div className="w-10 h-10 border-[3px] border-gold border-t-transparent rounded-full animate-spin" />
     </div>
   );
 }
@@ -33,54 +33,54 @@ function OrderSuccessContent() {
   }
 
   return (
-    <div className="bg-[#F7F7F7] min-h-screen pt-16 pb-20">
+    <div className="bg-primary-100 min-h-screen pt-16 pb-20">
       <div className="max-w-[650px] mx-auto px-6">
         
         {/* Success Icon */}
         <div className="text-center mb-8">
-          <div className="w-24 h-24 bg-[#D1FAE5] rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle size={50} className="text-[#059669]" />
+          <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle size={50} className="text-green-600" />
           </div>
           
-          <h1 className="text-3xl font-semibold text-[#0C0C0C] mb-3">
+          <h1 className="text-3xl font-semibold text-focus mb-3">
             Order Placed Successfully!
           </h1>
           
-          <p className="text-base text-[#666] leading-relaxed">
+          <p className="text-base text-muted leading-relaxed">
             Thank you for your order. We've received your order and will process it shortly.
           </p>
         </div>
 
         {/* Order Number Card */}
         <div className="bg-white p-8 text-center mb-6 shadow-sm">
-          <p className="text-sm text-[#919191] mb-2 uppercase tracking-wider">
+          <p className="text-sm text-muted mb-2 uppercase tracking-wider">
             Order Number
           </p>
-          <p className="text-3xl font-bold text-[#0C0C0C] tracking-wider font-mono">
+          <p className="text-3xl font-bold text-focus tracking-wider font-mono">
             {orderNumber || 'N/A'}
           </p>
-          <p className="text-[13px] text-[#919191] mt-3">
+          <p className="text-[13px] text-muted mt-3">
             Please save this number for tracking your order
           </p>
         </div>
 
         {/* Order Timeline */}
         <div className="bg-white p-8 mb-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#0C0C0C] mb-6">
+          <h2 className="text-lg font-semibold text-focus mb-6">
             What happens next?
           </h2>
           
           <div className="flex flex-col gap-6">
             {/* Step 1 */}
             <div className="flex gap-4">
-              <div className="w-11 h-11 bg-[#D1FAE5] rounded-full flex items-center justify-center flex-shrink-0">
-                <CheckCircle size={22} className="text-[#059669]" />
+              <div className="w-11 h-11 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <CheckCircle size={22} className="text-green-600" />
               </div>
               <div>
-                <h3 className="text-[15px] font-semibold text-[#0C0C0C] mb-1">
+                <h3 className="text-[15px] font-semibold text-focus mb-1">
                   Order Confirmed
                 </h3>
-                <p className="text-sm text-[#666]">
+                <p className="text-sm text-muted">
                   Your order has been received and confirmed
                 </p>
               </div>
@@ -88,14 +88,14 @@ function OrderSuccessContent() {
 
             {/* Step 2 */}
             <div className="flex gap-4">
-              <div className="w-11 h-11 bg-[#FEF3C7] rounded-full flex items-center justify-center flex-shrink-0">
-                <Package size={22} className="text-[#D97706]" />
+              <div className="w-11 h-11 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Package size={22} className="text-yellow-600" />
               </div>
               <div>
-                <h3 className="text-[15px] font-semibold text-[#0C0C0C] mb-1">
+                <h3 className="text-[15px] font-semibold text-focus mb-1">
                   Processing
                 </h3>
-                <p className="text-sm text-[#666]">
+                <p className="text-sm text-muted">
                   We are preparing your order for shipment
                 </p>
               </div>
@@ -103,14 +103,14 @@ function OrderSuccessContent() {
 
             {/* Step 3 */}
             <div className="flex gap-4">
-              <div className="w-11 h-11 bg-[#E0E7FF] rounded-full flex items-center justify-center flex-shrink-0">
-                <Truck size={22} className="text-[#4F46E5]" />
+              <div className="w-11 h-11 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Truck size={22} className="text-indigo-600" />
               </div>
               <div>
-                <h3 className="text-[15px] font-semibold text-[#0C0C0C] mb-1">
+                <h3 className="text-[15px] font-semibold text-focus mb-1">
                   Out for Delivery
                 </h3>
-                <p className="text-sm text-[#666]">
+                <p className="text-sm text-muted">
                   Your order will be delivered within 2-5 business days
                 </p>
               </div>
@@ -120,24 +120,24 @@ function OrderSuccessContent() {
 
         {/* Contact Info */}
         <div className="bg-white p-8 mb-8 shadow-sm">
-          <h2 className="text-lg font-semibold text-[#0C0C0C] mb-5">
+          <h2 className="text-lg font-semibold text-focus mb-5">
             Need Help?
           </h2>
           
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-3">
-              <Phone size={18} className="text-[#B08B5C]" />
+              <Phone size={18} className="text-gold" />
               <div>
-                <p className="text-sm text-[#666]">Call us at</p>
-                <p className="text-[15px] font-semibold text-[#0C0C0C]">+880 1XXX-XXXXXX</p>
+                <p className="text-sm text-muted">Call us at</p>
+                <p className="text-[15px] font-semibold text-focus">+880 1XXX-XXXXXX</p>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              <Mail size={18} className="text-[#B08B5C]" />
+              <Mail size={18} className="text-gold" />
               <div>
-                <p className="text-sm text-[#666]">Email us at</p>
-                <p className="text-[15px] font-semibold text-[#0C0C0C]">support@prismin.com</p>
+                <p className="text-sm text-muted">Email us at</p>
+                <p className="text-[15px] font-semibold text-focus">support@prismin.com</p>
               </div>
             </div>
           </div>
@@ -147,14 +147,14 @@ function OrderSuccessContent() {
         <div className="flex gap-4">
           <Link
             href="/shop"
-            className="flex-1 flex items-center justify-center gap-2 py-4 px-6 bg-white text-[#0C0C0C] border border-[#0C0C0C] text-sm font-semibold tracking-wide hover:bg-[#0C0C0C] hover:text-white transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-4 px-6 bg-white text-focus border border-focus text-sm font-semibold tracking-wide hover:bg-focus hover:text-white transition-colors"
           >
             Continue Shopping
           </Link>
           
           <Link
             href="/"
-            className="flex-1 flex items-center justify-center gap-2 py-4 px-6 bg-[#0C0C0C] text-white text-sm font-semibold tracking-wide hover:bg-[#333] transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 py-4 px-6 bg-focus text-white text-sm font-semibold tracking-wide hover:bg-gray-800 transition-colors"
           >
             Back to Home
             <ArrowRight size={18} />
@@ -162,8 +162,8 @@ function OrderSuccessContent() {
         </div>
 
         {/* WhatsApp Support */}
-        <div className="mt-8 p-6 bg-[#D1FAE5] rounded-xl text-center">
-          <p className="text-sm text-[#065F46] mb-3">
+        <div className="mt-8 p-6 bg-green-100 rounded-xl text-center">
+          <p className="text-sm text-green-800 mb-3">
             💬 Questions about your order?
           </p>
           <a
