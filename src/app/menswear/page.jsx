@@ -70,8 +70,8 @@ function SubcategoryItem({ subcategory, isActive, onClick }) {
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-[#F0F4FF] flex items-center justify-center">
-            <Package size={24} className="text-gray-400" />
+          <div className="w-full h-full bg-[#FDF2F8] flex items-center justify-center">
+            <Package size={24} className="text-pink-300" />
           </div>
         )}
       </div>
@@ -85,7 +85,7 @@ function SubcategoryItem({ subcategory, isActive, onClick }) {
 }
 
 // Main Content Component
-function MenswearContent() {
+function WomenswearContent() {
   const searchParams = useSearchParams();
   const [products, setProducts] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
@@ -103,9 +103,9 @@ function MenswearContent() {
   const [openFilter, setOpenFilter] = useState('');
 
   // Filter options
-  const sizeOptions = ['S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL'];
-  const colorOptions = ['Black', 'White', 'Blue', 'Red', 'Green', 'Gray', 'Navy', 'Brown', 'Beige'];
-  const priceOptions = ['Under ৳1000', '৳1000 - ৳2000', '৳2000 - ৳5000', 'Above ৳5000'];
+  const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size'];
+  const colorOptions = ['Black', 'White', 'Red', 'Pink', 'Blue', 'Green', 'Yellow', 'Purple', 'Orange', 'Beige', 'Brown'];
+  const priceOptions = ['Under ৳1000', '৳1000 - ৳2000', '৳2000 - ৳5000', '৳5000 - ৳10000', 'Above ৳10000'];
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'price_low', label: 'Price: Low to High' },
@@ -123,7 +123,7 @@ function MenswearContent() {
 
   const fetchSubcategories = async () => {
     try {
-      const res = await api.get('/subcategories?parent=menswear&is_active=true');
+      const res = await api.get('/subcategories?parent=womenswear&is_active=true');
       setSubcategories(res.data.subcategories || []);
     } catch (error) {
       console.error('Failed to fetch subcategories:', error);
@@ -133,7 +133,7 @@ function MenswearContent() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      let url = '/products?category=menswear&limit=20';
+      let url = '/products?category=womenswear&limit=20';
       
       if (selectedSubcategory) url += `&subcategory=${selectedSubcategory}`;
       if (selectedSize) url += `&size=${selectedSize}`;
@@ -145,7 +145,8 @@ function MenswearContent() {
         if (selectedPrice === 'Under ৳1000') url += '&max_price=1000';
         else if (selectedPrice === '৳1000 - ৳2000') url += '&min_price=1000&max_price=2000';
         else if (selectedPrice === '৳2000 - ৳5000') url += '&min_price=2000&max_price=5000';
-        else if (selectedPrice === 'Above ৳5000') url += '&min_price=5000';
+        else if (selectedPrice === '৳5000 - ৳10000') url += '&min_price=5000&max_price=10000';
+        else if (selectedPrice === 'Above ৳10000') url += '&min_price=10000';
       }
 
       const res = await api.get(url);
@@ -176,7 +177,7 @@ function MenswearContent() {
           <div className="flex items-center gap-2 text-sm">
             <Link href="/" className="text-gray-500 hover:text-gray-700">Home</Link>
             <span className="text-gray-300">/</span>
-            <span className="text-[#0C0C0C] font-medium">Menswear</span>
+            <span className="text-[#0C0C0C] font-medium">Womenswear</span>
           </div>
         </div>
       </div>
@@ -185,7 +186,7 @@ function MenswearContent() {
       <div className="bg-white">
         <div className="max-w-[1400px] mx-auto px-6 py-8">
           <h1 className="text-3xl md:text-4xl font-light tracking-[0.2em] text-[#0C0C0C]">
-            MENSWEAR
+            WOMENSWEAR
           </h1>
         </div>
       </div>
@@ -326,10 +327,10 @@ function LoadingFallback() {
 }
 
 // Main Page Export
-export default function MenswearPage() {
+export default function WomenswearPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
-      <MenswearContent />
+      <WomenswearContent />
     </Suspense>
   );
 }
