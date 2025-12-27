@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingBag, User, Search, Menu, X } from 'lucide-react';
+import { ShoppingBag, User, Search, Menu, X, ChevronRight } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 import useAuthStore from '@/store/authStore';
 
@@ -43,7 +43,6 @@ export default function Header() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showUserDropdown]);
 
-  // Prevent body scroll when menu/search is open
   useEffect(() => {
     if (showMenu || showSearch) {
       document.body.style.overflow = 'hidden';
@@ -79,7 +78,6 @@ export default function Header() {
     }
   };
 
-  // Menu Items
   const menuItems = [
     { name: 'Menswear', href: '/menswear' },
     { name: 'Womenswear', href: '/womenswear' },
@@ -92,17 +90,18 @@ export default function Header() {
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
     { name: 'FAQ', href: '/faq' },
+    { name: 'Shipping', href: '/shipping' },
   ];
 
   return (
     <>
       {/* Main Header */}
       <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${headerBg}`}>
-        <div className="max-w-[1400px] mx-auto px-6">
+        <div className="max-w-[1280px] mx-auto px-6">
           <div className="flex items-center justify-between h-16 md:h-20">
             
             {/* Left - Contact (Desktop) */}
-            <div className="hidden md:flex items-center">
+            <div className="hidden md:flex items-center w-[200px]">
               <Link href="/contact" className={`text-sm tracking-wide hover:opacity-70 transition-opacity ${textColor}`}>
                 + Contact Us
               </Link>
@@ -111,13 +110,13 @@ export default function Header() {
             {/* Center - Logo */}
             <Link 
               href="/" 
-              className={`absolute left-1/2 transform -translate-x-1/2 text-xl md:text-2xl tracking-[0.4em] font-light transition-colors ${textColor}`}
+              className={`text-xl md:text-2xl tracking-[0.4em] font-light transition-colors ${textColor}`}
             >
               PRISMIN
             </Link>
 
             {/* Right - Icons */}
-            <div className="flex items-center gap-1 md:gap-2 ml-auto">
+            <div className="flex items-center justify-end gap-1 md:gap-2 w-[200px]">
               {/* Cart */}
               <Link
                 href="/cart"
@@ -193,12 +192,11 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Search Overlay - Full Screen */}
+      {/* Search Overlay */}
       {showSearch && (
         <div className="fixed inset-0 z-50 bg-white">
-          {/* Search Header */}
           <div className="border-b border-gray-200">
-            <div className="max-w-[1400px] mx-auto px-6">
+            <div className="max-w-[1280px] mx-auto px-6">
               <form onSubmit={handleSearch} className="flex items-center h-16 md:h-20 gap-4">
                 <Search size={22} className="text-gray-400 flex-shrink-0" />
                 <input
@@ -216,8 +214,7 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Trending Searches */}
-          <div className="max-w-[1400px] mx-auto px-6 py-10">
+          <div className="max-w-[1280px] mx-auto px-6 py-10">
             <div className="flex items-center gap-2 mb-6">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Trending Searches</span>
             </div>
@@ -239,67 +236,79 @@ export default function Header() {
         </div>
       )}
 
-      {/* Menu Overlay - Right Side (Gucci Style) */}
+      {/* Menu Overlay - Gucci Style Right Panel */}
       {showMenu && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop with blur */}
           <div 
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity"
             onClick={() => setShowMenu(false)}
           />
           
           {/* Menu Panel */}
           <div 
-            className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-md bg-white shadow-2xl overflow-y-auto"
+            className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-[420px] bg-white shadow-2xl flex flex-col"
             style={{ animation: 'slideInRight 0.3s ease' }}
           >
-            {/* Close Button */}
-            <button
-              onClick={() => setShowMenu(false)}
-              className="absolute top-4 right-4 p-3 hover:bg-gray-100 rounded-full transition-colors z-10"
-            >
-              <X size={24} />
-            </button>
+            {/* Header with Close */}
+            <div className="flex items-center justify-end p-4 border-b border-gray-100">
+              <button
+                onClick={() => setShowMenu(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={28} strokeWidth={1.5} />
+              </button>
+            </div>
 
             {/* Menu Content */}
-            <div className="pt-20 pb-10 px-8">
-              {/* Main Menu */}
-              <nav className="mb-12">
+            <div className="flex-1 overflow-y-auto">
+              {/* Main Navigation */}
+              <nav className="py-6">
                 {menuItems.map((item, index) => (
                   <Link
                     key={item.name}
                     href={item.href}
                     onClick={() => setShowMenu(false)}
-                    className="block py-4 text-xl md:text-2xl font-light text-[#0C0C0C] hover:text-[#B08B5C] transition-colors border-b border-gray-100"
-                    style={{ animationDelay: `${index * 50}ms` }}
+                    className="flex items-center justify-between px-8 py-5 text-[22px] font-light text-[#0C0C0C] hover:bg-gray-50 transition-colors group"
                   >
-                    {item.name}
+                    <span className="group-hover:text-[#B08B5C] transition-colors">{item.name}</span>
+                    <ChevronRight size={20} className="text-gray-300 group-hover:text-[#B08B5C] group-hover:translate-x-1 transition-all" />
                   </Link>
                 ))}
               </nav>
 
+              {/* Divider */}
+              <div className="mx-8 border-t border-gray-200" />
+
               {/* Secondary Links */}
-              <div className="mb-12">
+              <div className="py-6">
                 {secondaryLinks.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
                     onClick={() => setShowMenu(false)}
-                    className="block py-3 text-base text-gray-600 hover:text-[#0C0C0C] transition-colors"
+                    className="block px-8 py-3 text-[15px] text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors"
                   >
                     {link.name}
                   </Link>
                 ))}
               </div>
 
+              {/* Divider */}
+              <div className="mx-8 border-t border-gray-200" />
+
               {/* Account Section */}
-              <div className="pt-6 border-t border-gray-200">
+              <div className="py-6">
                 {isAuthenticated ? (
                   <>
+                    <div className="px-8 py-3">
+                      <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Account</p>
+                      <p className="text-sm font-medium text-[#0C0C0C]">{user?.name || 'User'}</p>
+                    </div>
                     <Link
                       href="/orders"
                       onClick={() => setShowMenu(false)}
-                      className="block py-3 text-base text-gray-600 hover:text-[#0C0C0C] transition-colors"
+                      className="block px-8 py-3 text-[15px] text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors"
                     >
                       My Orders
                     </Link>
@@ -307,14 +316,14 @@ export default function Header() {
                       <Link
                         href="/admin"
                         onClick={() => setShowMenu(false)}
-                        className="block py-3 text-base text-gray-600 hover:text-[#0C0C0C] transition-colors"
+                        className="block px-8 py-3 text-[15px] text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors"
                       >
                         Admin Panel
                       </Link>
                     )}
                     <button
                       onClick={() => { handleLogout(); setShowMenu(false); }}
-                      className="block py-3 text-base text-red-600 hover:text-red-700 transition-colors"
+                      className="block w-full text-left px-8 py-3 text-[15px] text-red-600 hover:bg-red-50 transition-colors"
                     >
                       Sign Out
                     </button>
@@ -324,14 +333,14 @@ export default function Header() {
                     <Link
                       href="/login"
                       onClick={() => setShowMenu(false)}
-                      className="block py-3 text-base font-medium text-[#0C0C0C] hover:text-[#B08B5C] transition-colors"
+                      className="block px-8 py-3 text-[15px] font-medium text-[#0C0C0C] hover:bg-gray-50 transition-colors"
                     >
                       Sign In
                     </Link>
                     <Link
                       href="/register"
                       onClick={() => setShowMenu(false)}
-                      className="block py-3 text-base text-gray-600 hover:text-[#0C0C0C] transition-colors"
+                      className="block px-8 py-3 text-[15px] text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors"
                     >
                       Create Account
                     </Link>
@@ -339,19 +348,21 @@ export default function Header() {
                 )}
               </div>
             </div>
+
+            {/* Footer */}
+            <div className="border-t border-gray-100 p-6">
+              <p className="text-xs text-gray-400 text-center">
+                © 2024 PRISMIN. All rights reserved.
+              </p>
+            </div>
           </div>
         </>
       )}
 
-      {/* CSS Animation */}
       <style jsx global>{`
         @keyframes slideInRight {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
         }
       `}</style>
     </>
