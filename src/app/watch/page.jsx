@@ -142,10 +142,10 @@ function WatchContent() {
   const hasActiveFilters = selectedBrand || selectedPrice;
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7]">
+    <div className="min-h-screen bg-[#F7F7F7] pt-20">
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-[1400px] mx-auto px-6 py-4">
+        <div className="max-w-[1280px] mx-auto px-6 py-4">
           <div className="flex items-center gap-2 text-sm">
             <Link href="/" className="text-gray-500 hover:text-gray-700">Home</Link>
             <span className="text-gray-300">/</span>
@@ -156,7 +156,7 @@ function WatchContent() {
 
       {/* Page Title */}
       <div className="bg-white">
-        <div className="max-w-[1400px] mx-auto px-6 py-8">
+        <div className="max-w-[1280px] mx-auto px-6 py-8">
           <h1 className="text-3xl md:text-4xl font-light tracking-[0.2em] text-[#0C0C0C]">
             WATCHES
           </h1>
@@ -166,7 +166,7 @@ function WatchContent() {
       {/* Brands Bar */}
       {brands.length > 0 && (
         <div className="bg-white border-b border-gray-100">
-          <div className="max-w-[1400px] mx-auto px-6 py-5">
+          <div className="max-w-[1280px] mx-auto px-6 py-5">
             <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {/* All Option */}
               <BrandPill
@@ -190,8 +190,8 @@ function WatchContent() {
       )}
 
       {/* Filters Bar */}
-      <div className="bg-white border-b border-gray-100 sticky top-20 z-30">
-        <div className="max-w-[1400px] mx-auto px-6 py-4">
+      <div className="bg-white border-b border-gray-100 sticky top-16 md:top-20 z-30">
+        <div className="max-w-[1280px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Left - Filters */}
             <div className="flex items-center gap-3 overflow-x-auto pb-1">
@@ -240,7 +240,7 @@ function WatchContent() {
       </div>
 
       {/* Products Grid */}
-      <div className="max-w-[1400px] mx-auto px-6 py-10">
+      <div className="max-w-[1280px] mx-auto px-6 py-10">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-10 h-10 border-2 border-[#B08B5C] border-t-transparent rounded-full animate-spin" />
