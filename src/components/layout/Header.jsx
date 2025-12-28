@@ -2,26 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingBag, User, Search, Menu, X, ChevronRight } from 'lucide-react';
-import useCartStore from '@/store/cartStore';
+import { ShoppingBag, User, Search, Menu, X, Plus } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
+import useCartStore from '@/store/cartStore';
 
 export default function Header() {
-  const pathname = usePathname();
-  const router = useRouter();
+  const { isAuthenticated, user, logout } = useAuthStore();
   const { getItemCount } = useCartStore();
-  const { user, isAuthenticated, logout, isInitialized } = useAuthStore();
-  
-  const [mounted, setMounted] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const isHomePage = pathname === '/';
-  const isAdminPage = pathname?.startsWith('/admin');
+  const itemCount = getItemCount();
 
   useEffect(() => {
     setMounted(true);
@@ -29,313 +24,405 @@ export default function Header() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Prevent body scroll when menu is open
   useEffect(() => {
-    const handleClickOutside = () => setShowUserDropdown(false);
-    if (showUserDropdown) {
-      document.addEventListener('click', handleClickOutside);
-    }
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [showUserDropdown]);
-
-  useEffect(() => {
-    if (showMenu || showSearch) {
+    if (isMenuOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [showMenu, showSearch]);
-
-  if (isAdminPage) return null;
-
-  const cartCount = mounted ? getItemCount() : 0;
-
-  const headerBg = isHomePage && !isScrolled 
-    ? 'bg-transparent' 
-    : 'bg-white/95 backdrop-blur-sm border-b border-gray-100';
-  
-  const textColor = isHomePage && !isScrolled ? 'text-white' : 'text-[#0C0C0C]';
-  const iconColor = isHomePage && !isScrolled ? 'text-white' : 'text-[#0C0C0C]';
-
-  const handleLogout = () => {
-    logout();
-    setShowUserDropdown(false);
-    router.push('/');
-  };
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMenuOpen]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/shop?search=${encodeURIComponent(searchQuery)}`);
-      setShowSearch(false);
-      setSearchQuery('');
+      window.location.href = `/shop?search=${encodeURIComponent(searchQuery)}`;
+      setIsSearchOpen(false);
     }
   };
 
-  const menuItems = [
-    { name: 'Menswear', href: '/menswear' },
-    { name: 'Womenswear', href: '/womenswear' },
-    { name: 'Watches', href: '/watch' },
-    { name: 'Beauty & Care', href: '/beauty' },
-    { name: 'All Products', href: '/shop' },
-  ];
-
-  const secondaryLinks = [
-    { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
-    { name: 'FAQ', href: '/faq' },
-    { name: 'Shipping', href: '/shipping' },
-  ];
+  const handleLogout = () => {
+    logout();
+    setShowDropdown(false);
+    window.location.href = '/';
+  };
 
   return (
     <>
-      {/* Main Header */}
-      <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${headerBg}`}>
-        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
+      {/* Fixed Header */}
+      <header 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          transition: 'all 0.3s ease',
+          backgroundColor: isScrolled ? '#FFFFFF' : 'transparent',
+          borderBottom: isScrolled ? '1px solid #E0E0E0' : 'none'
+        }}
+      >
+        {/* Container - Gucci style: centered with max-width and padding */}
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            height: 60
+          }}>
             
-            {/* Left - Contact (Desktop) */}
-            <div className="hidden md:flex items-center flex-1">
-              <Link href="/contact" className={`text-sm tracking-wide hover:opacity-70 transition-opacity ${textColor}`}>
-                + Contact Us
+            {/* Left - Contact Us */}
+            <div style={{ flex: 1 }}>
+              <Link 
+                href="/contact" 
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 12,
+                  letterSpacing: 1,
+                  color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                  textDecoration: 'none',
+                  transition: 'color 0.3s'
+                }}
+              >
+                <Plus size={12} />
+                <span>Contact Us</span>
               </Link>
             </div>
 
             {/* Center - Logo */}
-            <div className="flex-1 flex justify-center md:flex-none">
-              <Link 
-                href="/" 
-                className={`text-xl md:text-2xl tracking-[0.3em] font-light transition-colors ${textColor}`}
-              >
+            <Link 
+              href="/"
+              style={{
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)'
+              }}
+            >
+              <h1 style={{ 
+                fontSize: 22, 
+                fontWeight: 300, 
+                letterSpacing: 6,
+                color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                margin: 0,
+                transition: 'color 0.3s'
+              }}>
                 PRISMIN
-              </Link>
-            </div>
+              </h1>
+            </Link>
 
-            {/* Right - Icons */}
-            <div className="flex items-center justify-end flex-1 gap-0.5 sm:gap-1">
+            {/* Right - Icons + MENU */}
+            <div style={{ 
+              flex: 1, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'flex-end',
+              gap: 16 
+            }}>
               {/* Cart */}
-              <Link
-                href="/cart"
-                className={`p-2 sm:p-3 rounded-full transition-opacity hover:opacity-70 relative ${iconColor}`}
+              <Link 
+                href="/cart" 
+                style={{ 
+                  position: 'relative',
+                  color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                  transition: 'color 0.3s'
+                }}
               >
                 <ShoppingBag size={20} strokeWidth={1.5} />
-                {cartCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 sm:top-0 sm:right-0 w-4 h-4 bg-[#B08B5C] text-white text-[10px] font-medium rounded-full flex items-center justify-center">
-                    {cartCount > 9 ? '9+' : cartCount}
+                {mounted && itemCount > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -6,
+                    width: 16,
+                    height: 16,
+                    backgroundColor: '#B08B5C',
+                    color: '#FFFFFF',
+                    fontSize: 9,
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: '50%'
+                  }}>
+                    {itemCount > 9 ? '9+' : itemCount}
                   </span>
                 )}
               </Link>
 
               {/* User */}
-              <div className="relative">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!mounted || !isInitialized) return;
-                    if (isAuthenticated) {
-                      setShowUserDropdown(!showUserDropdown);
-                    } else {
-                      router.push('/login');
-                    }
+              {mounted && isAuthenticated ? (
+                <div 
+                  style={{ position: 'relative' }}
+                  onMouseEnter={() => setShowDropdown(true)}
+                  onMouseLeave={() => setShowDropdown(false)}
+                >
+                  <button style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    cursor: 'pointer',
+                    color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                    transition: 'color 0.3s',
+                    padding: 4,
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    <User size={20} strokeWidth={1.5} />
+                  </button>
+                  
+                  {/* User Dropdown */}
+                  {showDropdown && (
+                    <div style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: '100%',
+                      marginTop: 8,
+                      width: 200,
+                      backgroundColor: '#FFFFFF',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                      borderRadius: 8,
+                      overflow: 'hidden',
+                      zIndex: 100
+                    }}>
+                      <div style={{ 
+                        padding: '14px 16px', 
+                        borderBottom: '1px solid #E8E8E8',
+                        backgroundColor: '#FAFAFA'
+                      }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', margin: 0 }}>
+                          {user?.name || 'User'}
+                        </p>
+                        <p style={{ fontSize: 12, color: '#919191', margin: '4px 0 0 0' }}>
+                          {user?.email}
+                        </p>
+                      </div>
+                      
+                      <div style={{ padding: '8px 0' }}>
+                        <Link 
+                          href="/orders" 
+                          style={{ 
+                            display: 'block', 
+                            padding: '10px 16px', 
+                            fontSize: 14, 
+                            color: '#0C0C0C', 
+                            textDecoration: 'none'
+                          }}
+                        >
+                          My Orders
+                        </Link>
+                        
+                        {user?.role === 'admin' && (
+                          <Link 
+                            href="/admin" 
+                            style={{ 
+                              display: 'block', 
+                              padding: '10px 16px', 
+                              fontSize: 14, 
+                              color: '#B08B5C', 
+                              fontWeight: 500,
+                              textDecoration: 'none'
+                            }}
+                          >
+                            Admin Panel
+                          </Link>
+                        )}
+                        
+                        <div style={{ height: 1, backgroundColor: '#E8E8E8', margin: '8px 0' }} />
+                        
+                        <button
+                          onClick={handleLogout}
+                          style={{ 
+                            display: 'block', 
+                            width: '100%', 
+                            textAlign: 'left',
+                            padding: '10px 16px', 
+                            fontSize: 14, 
+                            color: '#DC2626',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link 
+                  href="/login" 
+                  style={{ 
+                    color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                    transition: 'color 0.3s',
+                    display: 'flex',
+                    alignItems: 'center'
                   }}
-                  className={`p-2 sm:p-3 rounded-full transition-opacity hover:opacity-70 ${iconColor}`}
                 >
                   <User size={20} strokeWidth={1.5} />
-                </button>
-
-                {showUserDropdown && isAuthenticated && (
-                  <div 
-                    className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900 truncate">{user?.name || 'User'}</p>
-                      <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-                    </div>
-                    {user?.role === 'admin' && (
-                      <Link href="/admin" onClick={() => setShowUserDropdown(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                        Admin Panel
-                      </Link>
-                    )}
-                    <Link href="/orders" onClick={() => setShowUserDropdown(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                      My Orders
-                    </Link>
-                    <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
+                </Link>
+              )}
 
               {/* Search */}
-              <button
-                onClick={() => setShowSearch(true)}
-                className={`p-2 sm:p-3 rounded-full transition-opacity hover:opacity-70 ${iconColor}`}
+              <button 
+                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                  transition: 'color 0.3s',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
               >
                 <Search size={20} strokeWidth={1.5} />
               </button>
 
-              {/* Menu */}
-              <button
-                onClick={() => setShowMenu(true)}
-                className={`p-2 sm:p-3 rounded-full transition-opacity hover:opacity-70 flex items-center gap-1.5 ${iconColor}`}
+              {/* Menu Toggle - Gucci style with icon + MENU text */}
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  color: isScrolled ? '#0C0C0C' : '#FFFFFF',
+                  transition: 'color 0.3s',
+                  padding: 0
+                }}
               >
                 <Menu size={20} strokeWidth={1.5} />
-                <span className={`text-sm tracking-wide hidden sm:inline ${textColor}`}>MENU</span>
+                <span style={{ fontSize: 12, letterSpacing: 1 }}>MENU</span>
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div style={{
+          overflow: 'hidden',
+          maxHeight: isSearchOpen ? 60 : 0,
+          transition: 'max-height 0.3s ease',
+          backgroundColor: '#FFFFFF',
+          borderTop: isSearchOpen ? '1px solid #E0E0E0' : 'none'
+        }}>
+          <div style={{ maxWidth: 1600, margin: '0 auto', padding: '12px 40px' }}>
+            <form onSubmit={handleSearch} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus={isSearchOpen}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: '1px solid #E0E0E0',
+                  padding: '8px 0',
+                  fontSize: 13,
+                  outline: 'none'
+                }}
+              />
+              <button type="submit" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                <Search size={18} />
+              </button>
+              <button type="button" onClick={() => setIsSearchOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                <X size={18} />
+              </button>
+            </form>
           </div>
         </div>
       </header>
 
-      {/* Search Overlay */}
-      {showSearch && (
-        <div className="fixed inset-0 z-50 bg-white">
-          <div className="border-b border-gray-200">
-            <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
-              <form onSubmit={handleSearch} className="flex items-center h-16 md:h-20 gap-4">
-                <Search size={22} className="text-gray-400 flex-shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for products..."
-                  autoFocus
-                  className="flex-1 text-lg md:text-xl font-light outline-none placeholder:text-gray-300"
-                />
-                <button type="button" onClick={() => setShowSearch(false)} className="p-2 hover:bg-gray-100 rounded-full">
-                  <X size={24} className="text-gray-800" />
-                </button>
-              </form>
-            </div>
+      {/* Full Screen Menu */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 60,
+        backgroundColor: '#FFFFFF',
+        transform: isMenuOpen ? 'translateX(0)' : 'translateX(100%)',
+        transition: 'transform 0.5s ease'
+      }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {/* Menu Header */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            height: 60,
+            borderBottom: '1px solid #E0E0E0'
+          }}>
+            <Link href="/" onClick={() => setIsMenuOpen(false)}>
+              <h1 style={{ fontSize: 22, fontWeight: 300, letterSpacing: 6, color: '#0C0C0C', margin: 0 }}>
+                PRISMIN
+              </h1>
+            </Link>
+            <button 
+              onClick={() => setIsMenuOpen(false)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <X size={24} strokeWidth={1.5} />
+            </button>
           </div>
 
-          <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <div className="flex items-center gap-2 mb-6">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Trending Searches</span>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {['Watch', 'Formal Shirt', 'Saree', 'Sneakers', 'Perfume'].map((term) => (
-                <button
-                  key={term}
-                  onClick={() => {
-                    router.push(`/shop?search=${encodeURIComponent(term)}`);
-                    setShowSearch(false);
-                  }}
-                  className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-full transition-colors"
-                >
-                  {term}
-                </button>
+          {/* Menu Content */}
+          <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {[
+                { name: 'MENSWEAR', href: '/menswear' },
+                { name: 'WOMENSWEAR', href: '/womenswear' },
+                { name: 'WATCHES', href: '/watch' },
+                { name: 'BEAUTY & CARE', href: '/beauty' },
+                { name: 'ALL PRODUCTS', href: '/shop' }
+              ].map((item, index) => (
+                <li key={index} style={{ marginBottom: 20 }}>
+                  <Link 
+                    href={item.href}
+                    onClick={() => setIsMenuOpen(false)}
+                    style={{
+                      fontSize: 38,
+                      fontWeight: 300,
+                      letterSpacing: 3,
+                      color: '#0C0C0C',
+                      textDecoration: 'none',
+                      transition: 'opacity 0.3s'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.opacity = '0.5'}
+                    onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+                  >
+                    {item.name}
+                  </Link>
+                </li>
               ))}
+            </ul>
+          </nav>
+
+          {/* Menu Footer */}
+          <div style={{ borderTop: '1px solid #E0E0E0', padding: '20px 0' }}>
+            <div style={{ display: 'flex', gap: 20, fontSize: 12, letterSpacing: 1 }}>
+              <Link href="/about" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>About</Link>
+              <Link href="/contact" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>Contact</Link>
+              <Link href="/faq" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>FAQ</Link>
+              <Link href="/shipping" onClick={() => setIsMenuOpen(false)} style={{ color: '#0C0C0C', textDecoration: 'none' }}>Shipping</Link>
             </div>
           </div>
         </div>
-      )}
-
-      {/* Menu Overlay */}
-      {showMenu && (
-        <>
-          <div 
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity"
-            onClick={() => setShowMenu(false)}
-          />
-          
-          <div 
-            className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-[400px] bg-white shadow-2xl flex flex-col"
-            style={{ animation: 'slideInRight 0.3s ease' }}
-          >
-            <div className="flex items-center justify-end p-4 border-b border-gray-100">
-              <button
-                onClick={() => setShowMenu(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X size={28} strokeWidth={1.5} />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              <nav className="py-4">
-                {menuItems.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setShowMenu(false)}
-                    className="flex items-center justify-between px-6 py-4 text-lg font-light text-[#0C0C0C] hover:bg-gray-50 transition-colors group"
-                  >
-                    <span className="group-hover:text-[#B08B5C] transition-colors">{item.name}</span>
-                    <ChevronRight size={18} className="text-gray-300 group-hover:text-[#B08B5C] group-hover:translate-x-1 transition-all" />
-                  </Link>
-                ))}
-              </nav>
-
-              <div className="mx-6 border-t border-gray-200" />
-
-              <div className="py-4">
-                {secondaryLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setShowMenu(false)}
-                    className="block px-6 py-3 text-sm text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors"
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
-
-              <div className="mx-6 border-t border-gray-200" />
-
-              <div className="py-4">
-                {isAuthenticated ? (
-                  <>
-                    <div className="px-6 py-3">
-                      <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Account</p>
-                      <p className="text-sm font-medium text-[#0C0C0C]">{user?.name || 'User'}</p>
-                    </div>
-                    <Link href="/orders" onClick={() => setShowMenu(false)} className="block px-6 py-3 text-sm text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors">
-                      My Orders
-                    </Link>
-                    {user?.role === 'admin' && (
-                      <Link href="/admin" onClick={() => setShowMenu(false)} className="block px-6 py-3 text-sm text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors">
-                        Admin Panel
-                      </Link>
-                    )}
-                    <button onClick={() => { handleLogout(); setShowMenu(false); }} className="block w-full text-left px-6 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                      Sign Out
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/login" onClick={() => setShowMenu(false)} className="block px-6 py-3 text-sm font-medium text-[#0C0C0C] hover:bg-gray-50 transition-colors">
-                      Sign In
-                    </Link>
-                    <Link href="/register" onClick={() => setShowMenu(false)} className="block px-6 py-3 text-sm text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors">
-                      Create Account
-                    </Link>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="border-t border-gray-100 p-4">
-              <p className="text-xs text-gray-400 text-center">© 2024 PRISMIN</p>
-            </div>
-          </div>
-        </>
-      )}
-
-      <style jsx global>{`
-        @keyframes slideInRight {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-      `}</style>
+      </div>
     </>
   );
 }
