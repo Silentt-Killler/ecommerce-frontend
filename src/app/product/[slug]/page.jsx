@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, ChevronDown, Minus, Plus, Heart, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, Minus, Plus, MessageCircle } from 'lucide-react';
 import api from '@/lib/api';
 import useCartStore from '@/store/cartStore';
 import ProductCard from '@/components/product/ProductCard';
@@ -99,8 +99,16 @@ export default function ProductDetailPage() {
     window.open(`https://wa.me/8801XXXXXXXXX?text=${message}`, '_blank');
   };
 
-  const handleImageHover = (e) => {
-    if (!isZoomed) return;
+  // Auto zoom on hover - no click needed
+  const handleMouseEnter = () => {
+    setIsZoomed(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsZoomed(false);
+  };
+
+  const handleMouseMove = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
@@ -191,7 +199,7 @@ export default function ProductDetailPage() {
           
           {/* Left - Images */}
           <div>
-            {/* Main Image - 4:5 Aspect Ratio */}
+            {/* Main Image - Auto zoom on hover */}
             <div 
               style={{ 
                 position: 'relative', 
@@ -199,11 +207,11 @@ export default function ProductDetailPage() {
                 backgroundColor: '#F9FAFB', 
                 borderRadius: 4,
                 overflow: 'hidden',
-                cursor: isZoomed ? 'zoom-out' : 'zoom-in'
+                cursor: 'crosshair'
               }}
-              onClick={() => setIsZoomed(!isZoomed)}
-              onMouseMove={handleImageHover}
-              onMouseLeave={() => setIsZoomed(false)}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              onMouseMove={handleMouseMove}
             >
               {product.images?.[selectedImage]?.url ? (
                 <Image
@@ -227,7 +235,7 @@ export default function ProductDetailPage() {
               {product.images?.length > 1 && (
                 <>
                   <button
-                    onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                    onClick={prevImage}
                     style={{
                       position: 'absolute',
                       left: 16,
@@ -242,13 +250,14 @@ export default function ProductDetailPage() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      zIndex: 10
                     }}
                   >
                     <ChevronLeft size={20} color="#0C0C0C" />
                   </button>
                   <button
-                    onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                    onClick={nextImage}
                     style={{
                       position: 'absolute',
                       right: 16,
@@ -263,7 +272,8 @@ export default function ProductDetailPage() {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      zIndex: 10
                     }}
                   >
                     <ChevronRight size={20} color="#0C0C0C" />
@@ -391,9 +401,9 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            {/* Quantity + Add to Cart */}
-            <div style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 10 }}>
-              {/* Quantity Selector */}
+            {/* Quantity + Add to Cart - No Love Icon */}
+            <div style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 12 }}>
+              {/* Quantity Selector - Bigger */}
               <div style={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -403,8 +413,8 @@ export default function ProductDetailPage() {
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   style={{
-                    width: 40,
-                    height: 55,
+                    width: 44,
+                    height: 50,
                     border: 'none',
                     backgroundColor: 'transparent',
                     cursor: 'pointer',
@@ -413,16 +423,16 @@ export default function ProductDetailPage() {
                     justifyContent: 'center'
                   }}
                 >
-                  <Minus size={16} color="#374151" />
+                  <Minus size={18} color="#374151" />
                 </button>
                 <span style={{ 
-                  width: 40, 
-                  height: 55, 
+                  width: 50, 
+                  height: 50, 
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
-                  fontSize: 15,
-                  fontWeight: 500,
+                  fontSize: 16,
+                  fontWeight: 600,
                   color: '#0C0C0C',
                   borderLeft: '1px solid #E5E7EB',
                   borderRight: '1px solid #E5E7EB'
@@ -432,8 +442,8 @@ export default function ProductDetailPage() {
                 <button
                   onClick={() => setQuantity(quantity + 1)}
                   style={{
-                    width: 40,
-                    height: 55,
+                    width: 44,
+                    height: 50,
                     border: 'none',
                     backgroundColor: 'transparent',
                     cursor: 'pointer',
@@ -442,17 +452,17 @@ export default function ProductDetailPage() {
                     justifyContent: 'center'
                   }}
                 >
-                  <Plus size={16} color="#374151" />
+                  <Plus size={18} color="#374151" />
                 </button>
               </div>
 
-              {/* Add to Cart Button - 330px × 55px */}
+              {/* Add to Cart Button - 50px height, takes remaining space */}
               <button
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
                 style={{
-                  width: 330,
-                  height: 55,
+                  flex: 1,
+                  height: 50,
                   backgroundColor: 'transparent',
                   color: product.stock > 0 ? '#0C0C0C' : '#9CA3AF',
                   fontSize: 13,
@@ -481,39 +491,15 @@ export default function ProductDetailPage() {
               >
                 Add to Cart
               </button>
-
-              {/* Wishlist Button */}
-              <button
-                style={{
-                  width: 55,
-                  height: 55,
-                  border: '1px solid #E5E7EB',
-                  borderRadius: 4,
-                  backgroundColor: 'transparent',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.borderColor = '#B08B5C';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.borderColor = '#E5E7EB';
-                }}
-              >
-                <Heart size={20} color="#374151" />
-              </button>
             </div>
 
-            {/* Buy Now Button - 465px × 55px */}
+            {/* Buy Now Button */}
             <button
               onClick={handleBuyNow}
               disabled={product.stock === 0}
               style={{
-                width: 465,
-                height: 55,
+                width: '100%',
+                height: 50,
                 marginTop: 10,
                 backgroundColor: product.stock > 0 ? '#0C0C0C' : '#E5E7EB',
                 color: product.stock > 0 ? '#FFFFFF' : '#9CA3AF',
@@ -540,12 +526,12 @@ export default function ProductDetailPage() {
               Buy Now
             </button>
 
-            {/* WhatsApp Button - 465px × 55px */}
+            {/* WhatsApp Button */}
             <button
               onClick={handleWhatsApp}
               style={{
-                width: 465,
-                height: 55,
+                width: '100%',
+                height: 50,
                 marginTop: 10,
                 backgroundColor: '#25D366',
                 color: '#FFFFFF',
@@ -574,7 +560,7 @@ export default function ProductDetailPage() {
             </button>
 
             {/* Accordion Sections */}
-            <div style={{ marginTop: 32, borderTop: '1px solid #F3F4F6', width: 465 }}>
+            <div style={{ marginTop: 32, borderTop: '1px solid #F3F4F6' }}>
               {/* Product Description */}
               <div style={{ borderBottom: '1px solid #F3F4F6' }}>
                 <button
