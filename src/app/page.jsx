@@ -9,41 +9,33 @@ import ProductCard from '@/components/product/ProductCard';
 export default function HomePage() {
   const [settings, setSettings] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [watchProducts, setWatchProducts] = useState([]);
-  const [menswearProducts, setMenswearProducts] = useState([]);
-  const [womenswearProducts, setWomenswearProducts] = useState([]);
-  const [accessoriesProducts, setAccessoriesProducts] = useState([]);
+  const [categoryProducts, setCategoryProducts] = useState({});
   const [loading, setLoading] = useState(true);
   const [showLogo, setShowLogo] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch settings (hero slider)
         const settingsRes = await api.get('/settings');
         setSettings(settingsRes.data);
 
+        // Fetch categories from API
         const catRes = await api.get('/categories');
-        setCategories(catRes.data || []);
+        const cats = catRes.data || [];
+        setCategories(cats);
 
-        try {
-          const watchRes = await api.get('/products?category=watch&limit=4');
-          setWatchProducts(watchRes.data.products || []);
-        } catch (e) { setWatchProducts([]); }
-
-        try {
-          const menswearRes = await api.get('/products?category=menswear&limit=4');
-          setMenswearProducts(menswearRes.data.products || []);
-        } catch (e) { setMenswearProducts([]); }
-
-        try {
-          const womenswearRes = await api.get('/products?category=womenswear&limit=4');
-          setWomenswearProducts(womenswearRes.data.products || []);
-        } catch (e) { setWomenswearProducts([]); }
-
-        try {
-          const accessoriesRes = await api.get('/products?category=accessories&limit=4');
-          setAccessoriesProducts(accessoriesRes.data.products || []);
-        } catch (e) { setAccessoriesProducts([]); }
+        // Fetch products for each category dynamically
+        const productsMap = {};
+        for (const cat of cats.slice(0, 4)) {
+          try {
+            const prodRes = await api.get(`/products?category=${cat.slug}&limit=4`);
+            productsMap[cat.slug] = prodRes.data.products || [];
+          } catch (e) {
+            productsMap[cat.slug] = [];
+          }
+        }
+        setCategoryProducts(productsMap);
 
       } catch (error) {
         console.error('Failed to fetch data:', error);
@@ -63,12 +55,16 @@ export default function HomePage() {
 
   const heroSlide = settings?.hero_slides?.[0];
 
-  const categoryData = [
-    { name: 'Watches', slug: 'watch', link: '/watch' },
-    { name: 'Menswear', slug: 'menswear', link: '/menswear' },
-    { name: 'Womenswear', slug: 'womenswear', link: '/womenswear' },
-    { name: 'Accessories', slug: 'accessories', link: '/shop?category=accessories' }
-  ];
+  // Helper function to get category link based on slug
+  const getCategoryLink = (slug) => {
+    const linkMap = {
+      'watch': '/watch',
+      'menswear': '/menswear',
+      'womenswear': '/womenswear',
+      'beauty': '/beauty',
+    };
+    return linkMap[slug] || `/shop?category=${slug}`;
+  };
 
   // Featured Section Component - Standard gap
   const FeaturedSection = ({ title, products, viewAllLink }) => {
@@ -143,7 +139,7 @@ export default function HomePage() {
         {heroSlide?.image_url ? (
           <Image
             src={heroSlide.image_url}
-            alt="Hero"
+            alt="PRISMIN"
             fill
             style={{ objectFit: 'cover' }}
             priority
@@ -152,114 +148,76 @@ export default function HomePage() {
           <div style={{ 
             position: 'absolute', 
             inset: 0, 
-            backgroundColor: '#C8C8C8',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)'
           }}>
-            <p style={{ color: '#777', fontSize: 14, letterSpacing: 2 }}>
-              Upload hero image from Admin Panel
-            </p>
+            <p style={{ color: '#666', fontSize: 14 }}>Upload hero image from Admin Panel</p>
           </div>
         )}
         
-        {/* Logo */}
+        {/* Hero Buttons */}
         <div style={{
           position: 'absolute',
-          top: '12%',
+          bottom: 80,
           left: '50%',
           transform: 'translateX(-50%)',
-          opacity: showLogo ? 1 : 0,
-          transition: 'opacity 0.4s ease',
-          pointerEvents: 'none',
-          width: '100%',
-          textAlign: 'center'
+          display: 'flex',
+          gap: 16
         }}>
-          <h1 style={{
-            fontSize: 'clamp(60px, 12vw, 180px)',
-            fontWeight: 300,
-            letterSpacing: '0.15em',
-            color: '#FFFFFF',
-            margin: 0,
-            lineHeight: 0.9
-          }}>
-            PRISMIN
-          </h1>
-        </div>
-        
-        {/* Hero Buttons */}
-        <div style={{ 
-          position: 'absolute', 
-          bottom: 80, 
-          left: '50%', 
-          transform: 'translateX(-50%)',
-          textAlign: 'center'
-        }}>
-          <p style={{
-            fontSize: 18,
-            fontWeight: 300,
-            letterSpacing: 2,
-            color: '#FFFFFF',
-            marginBottom: 20,
-            fontStyle: 'italic'
-          }}>
-            Premium Collection
-          </p>
-          
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <Link 
-              href="/womenswear"
-              style={{
-                padding: '14px 36px',
-                backgroundColor: '#FFFFFF',
-                color: '#0C0C0C',
-                fontSize: 12,
-                fontWeight: 400,
-                letterSpacing: 2,
-                textTransform: 'uppercase',
-                textDecoration: 'none',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#0C0C0C';
-                e.currentTarget.style.color = '#FFFFFF';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.color = '#0C0C0C';
-              }}
-            >
-              For Her
-            </Link>
-            <Link 
-              href="/menswear"
-              style={{
-                padding: '14px 36px',
-                backgroundColor: '#FFFFFF',
-                color: '#0C0C0C',
-                fontSize: 12,
-                fontWeight: 400,
-                letterSpacing: 2,
-                textTransform: 'uppercase',
-                textDecoration: 'none',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#0C0C0C';
-                e.currentTarget.style.color = '#FFFFFF';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.color = '#0C0C0C';
-              }}
-            >
-              For Him
-            </Link>
-          </div>
+          <Link 
+            href="/womenswear"
+            style={{
+              padding: '14px 36px',
+              backgroundColor: '#FFFFFF',
+              color: '#0C0C0C',
+              fontSize: 12,
+              fontWeight: 400,
+              letterSpacing: 2,
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#0C0C0C';
+              e.currentTarget.style.color = '#FFFFFF';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#FFFFFF';
+              e.currentTarget.style.color = '#0C0C0C';
+            }}
+          >
+            For Her
+          </Link>
+          <Link 
+            href="/menswear"
+            style={{
+              padding: '14px 36px',
+              backgroundColor: '#FFFFFF',
+              color: '#0C0C0C',
+              fontSize: 12,
+              fontWeight: 400,
+              letterSpacing: 2,
+              textTransform: 'uppercase',
+              textDecoration: 'none',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#0C0C0C';
+              e.currentTarget.style.color = '#FFFFFF';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#FFFFFF';
+              e.currentTarget.style.color = '#0C0C0C';
+            }}
+          >
+            For Him
+          </Link>
         </div>
       </section>
 
-      {/* Category Section */}
+      {/* Category Section - DYNAMIC FROM API */}
       <section style={{ backgroundColor: '#FFFFFF', paddingTop: 70, paddingBottom: 50 }}>
         <h2 style={{ 
           fontSize: 32, 
@@ -279,89 +237,72 @@ export default function HomePage() {
           justifyContent: 'center',
           gap: 50
         }}>
-          {categoryData.map((cat) => {
-            const categoryInfo = categories.find(c => c.slug === cat.slug);
-            return (
-              <Link 
-                key={cat.slug} 
-                href={cat.link}
-                style={{ textDecoration: 'none', display: 'block' }}
+          {/* Map through first 4 categories from API */}
+          {categories.slice(0, 4).map((cat) => (
+            <Link 
+              key={cat._id} 
+              href={getCategoryLink(cat.slug)}
+              style={{ textDecoration: 'none', display: 'block' }}
+            >
+              <div 
+                style={{ 
+                  position: 'relative', 
+                  width: 405,
+                  height: 545,
+                  backgroundColor: '#E8E8E8', 
+                  overflow: 'hidden',
+                  marginBottom: 16
+                }}
+                className="category-image"
               >
-                <div 
-                  style={{ 
-                    position: 'relative', 
-                    width: 405,
-                    height: 545,
-                    backgroundColor: '#E8E8E8', 
-                    overflow: 'hidden',
-                    marginBottom: 16
-                  }}
-                  className="category-image"
-                >
-                  {categoryInfo?.image ? (
-                    <Image
-                      src={categoryInfo.image}
-                      alt={cat.name}
-                      fill
-                      style={{ 
-                        objectFit: 'cover',
-                        transition: 'transform 0.6s ease'
-                      }}
-                    />
-                  ) : (
-                    <div style={{ 
-                      position: 'absolute', 
-                      inset: 0, 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      backgroundColor: '#E0E0E0'
-                    }}>
-                      <span style={{ color: '#999', fontSize: 13 }}>No Image</span>
-                    </div>
-                  )}
-                </div>
-                
-                <h3 style={{ 
-                  textAlign: 'center', 
-                  fontSize: 16, 
-                  fontWeight: 500, 
-                  lineHeight: '24px',
-                  color: '#0C0C0C',
-                  margin: 0
-                }}>
-                  {cat.name}
-                </h3>
-              </Link>
-            );
-          })}
+                {cat.image ? (
+                  <Image
+                    src={cat.image}
+                    alt={cat.name}
+                    fill
+                    style={{ 
+                      objectFit: 'cover',
+                      transition: 'transform 0.6s ease'
+                    }}
+                  />
+                ) : (
+                  <div style={{ 
+                    position: 'absolute', 
+                    inset: 0, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    backgroundColor: '#E0E0E0'
+                  }}>
+                    <span style={{ color: '#999', fontSize: 13 }}>No Image</span>
+                  </div>
+                )}
+              </div>
+              
+              <h3 style={{ 
+                textAlign: 'center', 
+                fontSize: 16, 
+                fontWeight: 500, 
+                lineHeight: '24px',
+                color: '#0C0C0C',
+                margin: 0
+              }}>
+                {cat.name}
+              </h3>
+            </Link>
+          ))}
         </div>
       </section>
 
-      {/* Featured Sections - Standard gap */}
-      <FeaturedSection 
-        title="Featured Watches" 
-        products={watchProducts} 
-        viewAllLink="/watch"
-      />
-
-      <FeaturedSection 
-        title="Featured Menswear" 
-        products={menswearProducts} 
-        viewAllLink="/menswear"
-      />
-
-      <FeaturedSection 
-        title="Featured Womenswear" 
-        products={womenswearProducts} 
-        viewAllLink="/womenswear"
-      />
-
-      <FeaturedSection 
-        title="Featured Accessories" 
-        products={accessoriesProducts} 
-        viewAllLink="/shop?category=accessories"
-      />
+      {/* Featured Sections - FULLY DYNAMIC FROM API */}
+      {categories.slice(0, 4).map((cat) => (
+        <FeaturedSection 
+          key={cat._id}
+          title={`Featured ${cat.name}`}
+          products={categoryProducts[cat.slug] || []}
+          viewAllLink={getCategoryLink(cat.slug)}
+        />
+      ))}
 
       {/* Newsletter */}
       <section style={{ backgroundColor: '#0C0C0C', padding: '70px 0' }}>
@@ -391,27 +332,25 @@ export default function HomePage() {
               placeholder="Enter your email"
               style={{
                 flex: 1,
-                padding: '15px 18px',
+                padding: '14px 20px',
                 backgroundColor: 'transparent',
                 border: '1px solid #444',
-                borderRight: 'none',
                 color: '#FFFFFF',
                 fontSize: 13,
-                letterSpacing: 1,
                 outline: 'none'
               }}
             />
             <button
               type="submit"
               style={{
-                padding: '15px 32px',
+                padding: '14px 30px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
-                border: 'none',
                 fontSize: 11,
-                fontWeight: 400,
+                fontWeight: 500,
                 letterSpacing: 2,
                 textTransform: 'uppercase',
+                border: 'none',
                 cursor: 'pointer',
                 transition: 'all 0.3s ease'
               }}
@@ -430,9 +369,10 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Hover Effect Styles */}
       <style jsx global>{`
         .category-image:hover img {
-          transform: scale(1.05) !important;
+          transform: scale(1.05);
         }
       `}</style>
     </div>
