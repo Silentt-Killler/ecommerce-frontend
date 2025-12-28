@@ -10,25 +10,59 @@ import ProductCard from '@/components/product/ProductCard';
 // Filter Dropdown Component
 function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
   return (
-    <div className="relative">
+    <div style={{ position: 'relative' }}>
       <button
         onClick={onToggle}
-        className={`flex items-center gap-2 px-4 py-2.5 border rounded-full text-sm font-medium transition-colors ${
-          value ? 'border-[#0C0C0C] bg-[#0C0C0C] text-white' : 'border-gray-300 text-gray-700 hover:border-gray-400'
-        }`}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 16px',
+          border: value ? '1px solid #0C0C0C' : '1px solid #D1D5DB',
+          borderRadius: 20,
+          fontSize: 13,
+          fontWeight: 500,
+          backgroundColor: value ? '#0C0C0C' : 'transparent',
+          color: value ? '#FFFFFF' : '#374151',
+          cursor: 'pointer',
+          transition: 'all 0.2s'
+        }}
       >
-        {label}
-        {value && `: ${value}`}
-        <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        {label}{value && `: ${value}`}
+        <ChevronDown size={14} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
       </button>
       
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-10" onClick={onToggle} />
-          <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-2 max-h-64 overflow-auto">
+          <div style={{ position: 'fixed', inset: 0, zIndex: 10 }} onClick={onToggle} />
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            marginTop: 8,
+            width: 180,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #E5E7EB',
+            borderRadius: 8,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            zIndex: 20,
+            padding: '8px 0',
+            maxHeight: 240,
+            overflowY: 'auto'
+          }}>
             <button
               onClick={() => { onChange(''); onToggle(); }}
-              className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${!value ? 'text-[#B08B5C] font-medium' : 'text-gray-700'}`}
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                padding: '10px 16px',
+                fontSize: 13,
+                color: !value ? '#B08B5C' : '#374151',
+                fontWeight: !value ? 600 : 400,
+                backgroundColor: 'transparent',
+                border: 'none',
+                cursor: 'pointer'
+              }}
             >
               All {label}
             </button>
@@ -36,7 +70,17 @@ function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
               <button
                 key={option}
                 onClick={() => { onChange(option); onToggle(); }}
-                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${value === option ? 'text-[#B08B5C] font-medium' : 'text-gray-700'}`}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '10px 16px',
+                  fontSize: 13,
+                  color: value === option ? '#B08B5C' : '#374151',
+                  fontWeight: value === option ? 600 : 400,
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
               >
                 {option}
               </button>
@@ -53,11 +97,19 @@ function BrandPill({ brand, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-        isActive
-          ? 'bg-[#0C0C0C] text-white'
-          : 'bg-white border border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
-      }`}
+      style={{
+        padding: '10px 20px',
+        borderRadius: 20,
+        fontSize: 13,
+        fontWeight: 500,
+        whiteSpace: 'nowrap',
+        border: 'none',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        backgroundColor: isActive ? '#0C0C0C' : '#FFFFFF',
+        color: isActive ? '#FFFFFF' : '#374151',
+        boxShadow: isActive ? 'none' : '0 0 0 1px #D1D5DB'
+      }}
     >
       {brand.name}
     </button>
@@ -72,15 +124,11 @@ function WatchContent() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   
-  // Filters
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedPrice, setSelectedPrice] = useState('');
   const [sortBy, setSortBy] = useState('newest');
-  
-  // Dropdown states
   const [openFilter, setOpenFilter] = useState('');
 
-  // Filter options
   const priceOptions = ['Under ৳5000', '৳5000 - ৳10000', '৳10000 - ৳25000', '৳25000 - ৳50000', 'Above ৳50000'];
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
@@ -114,7 +162,6 @@ function WatchContent() {
       if (selectedBrand) url += `&brand=${selectedBrand}`;
       if (sortBy) url += `&sort=${sortBy}`;
       
-      // Price filter
       if (selectedPrice) {
         if (selectedPrice === 'Under ৳5000') url += '&max_price=5000';
         else if (selectedPrice === '৳5000 - ৳10000') url += '&min_price=5000&max_price=10000';
@@ -142,61 +189,85 @@ function WatchContent() {
   const hasActiveFilters = selectedBrand || selectedPrice;
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7]">
+    <div style={{ minHeight: '100vh', backgroundColor: '#F7F7F7' }}>
       {/* Spacer for fixed header */}
-      <div className="h-16 md:h-20" />
+      <div style={{ height: 60 }} />
 
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/" className="text-gray-500 hover:text-gray-700">Home</Link>
-            <span className="text-gray-300">/</span>
-            <span className="text-[#0C0C0C] font-medium">Watches</span>
+      <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6' }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+            <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>Home</Link>
+            <span style={{ color: '#D1D5DB' }}>/</span>
+            <span style={{ color: '#0C0C0C', fontWeight: 500 }}>Watches</span>
           </div>
         </div>
       </div>
 
       {/* Page Title */}
-      <div className="bg-white">
-        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-[0.15em] text-[#0C0C0C]">
-            WATCHES
+      <div style={{ backgroundColor: '#FFFFFF' }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px' }}>
+          <h1 style={{ 
+            fontSize: 36, 
+            fontWeight: 300, 
+            letterSpacing: 6, 
+            color: '#0C0C0C', 
+            margin: 0,
+            textTransform: 'uppercase'
+          }}>
+            Watches
           </h1>
         </div>
       </div>
 
-      {/* Brands Bar */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {/* All Option */}
-            <BrandPill
-              brand={{ name: 'All Brands', slug: '' }}
-              isActive={!selectedBrand}
-              onClick={() => setSelectedBrand('')}
-            />
-            
-            {/* Brands from API */}
-            {brands.map((brand) => (
-              <BrandPill
-                key={brand._id}
-                brand={brand}
-                isActive={selectedBrand === brand.slug}
-                onClick={() => setSelectedBrand(brand.slug)}
-              />
-            ))}
+      {/* Brand Bar */}
+      {brands.length > 0 && (
+        <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6' }}>
+          <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
+            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
+              <button
+                onClick={() => setSelectedBrand('')}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: 20,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap',
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: !selectedBrand ? '#0C0C0C' : '#FFFFFF',
+                  color: !selectedBrand ? '#FFFFFF' : '#374151',
+                  boxShadow: !selectedBrand ? 'none' : '0 0 0 1px #D1D5DB'
+                }}
+              >
+                All Brands
+              </button>
+              {brands.map((brand) => (
+                <BrandPill
+                  key={brand._id}
+                  brand={brand}
+                  isActive={selectedBrand === brand.slug}
+                  onClick={() => setSelectedBrand(selectedBrand === brand.slug ? '' : brand.slug)}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Filters Bar */}
-      <div className="bg-white border-b border-gray-100 sticky top-16 md:top-20 z-30">
-        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between gap-4">
+      {/* Filter Bar */}
+      <div style={{ 
+        backgroundColor: '#FFFFFF', 
+        borderBottom: '1px solid #F3F4F6',
+        position: 'sticky',
+        top: 60,
+        zIndex: 20
+      }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
             {/* Left - Filters */}
-            <div className="flex items-center gap-3 overflow-x-auto">
-              <SlidersHorizontal size={18} className="text-gray-400 flex-shrink-0" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, overflowX: 'auto' }}>
+              <SlidersHorizontal size={18} style={{ color: '#9CA3AF', flexShrink: 0 }} />
               
               <FilterDropdown
                 label="Price"
@@ -210,7 +281,17 @@ function WatchContent() {
               {hasActiveFilters && (
                 <button
                   onClick={clearAllFilters}
-                  className="flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:text-red-700 whitespace-nowrap"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '8px 12px',
+                    fontSize: 13,
+                    color: '#DC2626',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
                 >
                   <X size={14} />
                   Clear
@@ -219,15 +300,25 @@ function WatchContent() {
             </div>
 
             {/* Right - Sort & Count */}
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <span className="text-sm text-gray-500 hidden sm:inline">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+              <span style={{ fontSize: 13, color: '#6B7280' }}>
                 {total} items
               </span>
               
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 bg-white focus:outline-none focus:border-gray-400 cursor-pointer"
+                style={{
+                  padding: '10px 16px',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: 20,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: '#374151',
+                  backgroundColor: '#FFFFFF',
+                  cursor: 'pointer',
+                  outline: 'none'
+                }}
               >
                 {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -241,33 +332,59 @@ function WatchContent() {
       </div>
 
       {/* Products Grid */}
-      <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '40px 40px 60px' }}>
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-2 border-[#B08B5C] border-t-transparent rounded-full animate-spin" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+            <div style={{ 
+              width: 40, 
+              height: 40, 
+              border: '2px solid #B08B5C', 
+              borderTopColor: 'transparent', 
+              borderRadius: '50%', 
+              animation: 'spin 1s linear infinite' 
+            }} />
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(4, 1fr)', 
+            gap: 30 
+          }}>
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <Watch size={48} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-800 mb-2">No watches found</h3>
-            <p className="text-gray-500 text-sm mb-6">
+          <div style={{ textAlign: 'center', padding: '80px 0' }}>
+            <Watch size={48} style={{ color: '#D1D5DB', marginBottom: 16 }} />
+            <h3 style={{ fontSize: 18, fontWeight: 500, color: '#1F2937', marginBottom: 8 }}>No watches found</h3>
+            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 24 }}>
               Try adjusting your filters or browse all watches
             </p>
             <button
               onClick={clearAllFilters}
-              className="px-6 py-3 bg-[#0C0C0C] text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors"
+              style={{
+                padding: '12px 24px',
+                backgroundColor: '#0C0C0C',
+                color: '#FFFFFF',
+                fontSize: 13,
+                fontWeight: 500,
+                borderRadius: 20,
+                border: 'none',
+                cursor: 'pointer'
+              }}
             >
               Clear All Filters
             </button>
           </div>
         )}
       </div>
+
+      <style jsx global>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -275,13 +392,12 @@ function WatchContent() {
 // Loading Fallback
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-[#F7F7F7] flex items-center justify-center">
-      <div className="w-10 h-10 border-2 border-[#B08B5C] border-t-transparent rounded-full animate-spin" />
+    <div style={{ minHeight: '100vh', backgroundColor: '#F7F7F7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
     </div>
   );
 }
 
-// Main Page Export
 export default function WatchPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
