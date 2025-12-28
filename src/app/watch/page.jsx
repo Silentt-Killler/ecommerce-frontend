@@ -56,7 +56,7 @@ function BrandPill({ brand, isActive, onClick }) {
       className={`px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
         isActive
           ? 'bg-[#0C0C0C] text-white'
-          : 'bg-white border border-gray-300 text-gray-700 hover:border-gray-400'
+          : 'bg-white border border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
       }`}
     >
       {brand.name}
@@ -142,10 +142,13 @@ function WatchContent() {
   const hasActiveFilters = selectedBrand || selectedPrice;
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7] pt-20">
+    <div className="min-h-screen bg-[#F7F7F7]">
+      {/* Spacer for fixed header */}
+      <div className="h-16 md:h-20" />
+
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-[1280px] mx-auto px-6 py-4">
+        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 text-sm">
             <Link href="/" className="text-gray-500 hover:text-gray-700">Home</Link>
             <span className="text-gray-300">/</span>
@@ -156,46 +159,44 @@ function WatchContent() {
 
       {/* Page Title */}
       <div className="bg-white">
-        <div className="max-w-[1280px] mx-auto px-6 py-8">
-          <h1 className="text-3xl md:text-4xl font-light tracking-[0.2em] text-[#0C0C0C]">
+        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-[0.15em] text-[#0C0C0C]">
             WATCHES
           </h1>
         </div>
       </div>
 
       {/* Brands Bar */}
-      {brands.length > 0 && (
-        <div className="bg-white border-b border-gray-100">
-          <div className="max-w-[1280px] mx-auto px-6 py-5">
-            <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {/* All Option */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {/* All Option */}
+            <BrandPill
+              brand={{ name: 'All Brands', slug: '' }}
+              isActive={!selectedBrand}
+              onClick={() => setSelectedBrand('')}
+            />
+            
+            {/* Brands from API */}
+            {brands.map((brand) => (
               <BrandPill
-                brand={{ name: 'All Brands', slug: '' }}
-                isActive={!selectedBrand}
-                onClick={() => setSelectedBrand('')}
+                key={brand._id}
+                brand={brand}
+                isActive={selectedBrand === brand.slug}
+                onClick={() => setSelectedBrand(brand.slug)}
               />
-              
-              {/* Brands */}
-              {brands.map((brand) => (
-                <BrandPill
-                  key={brand._id}
-                  brand={brand}
-                  isActive={selectedBrand === brand.slug}
-                  onClick={() => setSelectedBrand(brand.slug)}
-                />
-              ))}
-            </div>
+            ))}
           </div>
         </div>
-      )}
+      </div>
 
       {/* Filters Bar */}
       <div className="bg-white border-b border-gray-100 sticky top-16 md:top-20 z-30">
-        <div className="max-w-[1280px] mx-auto px-6 py-4">
+        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Left - Filters */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-1">
-              <SlidersHorizontal size={18} className="text-gray-500 flex-shrink-0" />
+            <div className="flex items-center gap-3 overflow-x-auto">
+              <SlidersHorizontal size={18} className="text-gray-400 flex-shrink-0" />
               
               <FilterDropdown
                 label="Price"
@@ -209,7 +210,7 @@ function WatchContent() {
               {hasActiveFilters && (
                 <button
                   onClick={clearAllFilters}
-                  className="flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:text-red-700"
+                  className="flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:text-red-700 whitespace-nowrap"
                 >
                   <X size={14} />
                   Clear
@@ -226,7 +227,7 @@ function WatchContent() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 bg-white focus:outline-none focus:border-gray-400"
+                className="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 bg-white focus:outline-none focus:border-gray-400 cursor-pointer"
               >
                 {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -240,13 +241,13 @@ function WatchContent() {
       </div>
 
       {/* Products Grid */}
-      <div className="max-w-[1280px] mx-auto px-6 py-10">
+      <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-10 h-10 border-2 border-[#B08B5C] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
