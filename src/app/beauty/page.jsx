@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronDown, X, Package, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { ChevronDown, X, Sparkles, SlidersHorizontal } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/product/ProductCard';
 
@@ -54,11 +54,11 @@ function SubcategoryItem({ subcategory, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 min-w-[80px] transition-all ${
+      className={`flex flex-col items-center gap-2 min-w-[70px] sm:min-w-[80px] transition-all ${
         isActive ? 'opacity-100' : 'opacity-70 hover:opacity-100'
       }`}
     >
-      <div className={`w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 transition-colors ${
+      <div className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 transition-colors ${
         isActive ? 'border-[#B08B5C]' : 'border-transparent'
       }`}>
         {subcategory.image_url ? (
@@ -71,11 +71,11 @@ function SubcategoryItem({ subcategory, isActive, onClick }) {
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
-            <Sparkles size={24} className="text-pink-400" />
+            <Sparkles size={20} className="text-pink-400 sm:w-6 sm:h-6" />
           </div>
         )}
       </div>
-      <span className={`text-xs md:text-sm font-medium text-center ${
+      <span className={`text-[11px] sm:text-xs md:text-sm font-medium text-center leading-tight ${
         isActive ? 'text-[#0C0C0C]' : 'text-gray-600'
       }`}>
         {subcategory.name}
@@ -166,10 +166,13 @@ function BeautyContent() {
   const hasActiveFilters = selectedSubcategory || selectedType || selectedPrice;
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7] pt-20">
+    <div className="min-h-screen bg-[#F7F7F7]">
+      {/* Spacer for fixed header */}
+      <div className="h-16 md:h-20" />
+
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-[1280px] mx-auto px-6 py-4">
+        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-2 text-sm">
             <Link href="/" className="text-gray-500 hover:text-gray-700">Home</Link>
             <span className="text-gray-300">/</span>
@@ -180,8 +183,8 @@ function BeautyContent() {
 
       {/* Page Title */}
       <div className="bg-white">
-        <div className="max-w-[1280px] mx-auto px-6 py-8">
-          <h1 className="text-3xl md:text-4xl font-light tracking-[0.2em] text-[#0C0C0C]">
+        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-[0.15em] text-[#0C0C0C]">
             BEAUTY & CARE
           </h1>
         </div>
@@ -190,8 +193,8 @@ function BeautyContent() {
       {/* Subcategories Bar */}
       {subcategories.length > 0 && (
         <div className="bg-white border-b border-gray-100">
-          <div className="max-w-[1280px] mx-auto px-6 py-6">
-            <div className="flex items-center gap-6 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-2 scrollbar-hide">
               {/* All Option */}
               <SubcategoryItem
                 subcategory={{ name: 'All', image_url: null }}
@@ -215,11 +218,11 @@ function BeautyContent() {
 
       {/* Filters Bar */}
       <div className="bg-white border-b border-gray-100 sticky top-16 md:top-20 z-30">
-        <div className="max-w-[1280px] mx-auto px-6 py-4">
+        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between gap-4">
             {/* Left - Filters */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-1">
-              <SlidersHorizontal size={18} className="text-gray-500 flex-shrink-0" />
+            <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto">
+              <SlidersHorizontal size={18} className="text-gray-400 flex-shrink-0" />
               
               <FilterDropdown
                 label="Price"
@@ -242,7 +245,7 @@ function BeautyContent() {
               {hasActiveFilters && (
                 <button
                   onClick={clearAllFilters}
-                  className="flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:text-red-700"
+                  className="flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:text-red-700 whitespace-nowrap"
                 >
                   <X size={14} />
                   Clear
@@ -259,7 +262,7 @@ function BeautyContent() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 bg-white focus:outline-none focus:border-gray-400"
+                className="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 bg-white focus:outline-none focus:border-gray-400 cursor-pointer"
               >
                 {sortOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -273,13 +276,13 @@ function BeautyContent() {
       </div>
 
       {/* Products Grid */}
-      <div className="max-w-[1280px] mx-auto px-6 py-10">
+      <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-10 h-10 border-2 border-[#B08B5C] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
