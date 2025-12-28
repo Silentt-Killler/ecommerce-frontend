@@ -185,8 +185,8 @@ function WomenswearContent() {
 
   const fetchSubcategories = async () => {
     try {
-      const res = await api.get('/subcategories?parent=womenswear');
-      setSubcategories(res.data || []);
+      const res = await api.get('/subcategories?parent=womenswear&is_active=true');
+      setSubcategories(res.data.subcategories || []);  // ✅ FIXED
     } catch (error) {
       console.error('Failed to fetch subcategories:', error);
     }
