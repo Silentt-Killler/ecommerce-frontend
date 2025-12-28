@@ -97,34 +97,36 @@ export default function Header() {
     <>
       {/* Main Header */}
       <header className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${headerBg}`}>
-        <div className="max-w-[1280px] mx-auto px-6">
+        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             
             {/* Left - Contact (Desktop) */}
-            <div className="hidden md:flex items-center w-[200px]">
+            <div className="hidden md:flex items-center flex-1">
               <Link href="/contact" className={`text-sm tracking-wide hover:opacity-70 transition-opacity ${textColor}`}>
                 + Contact Us
               </Link>
             </div>
 
             {/* Center - Logo */}
-            <Link 
-              href="/" 
-              className={`text-xl md:text-2xl tracking-[0.4em] font-light transition-colors ${textColor}`}
-            >
-              PRISMIN
-            </Link>
+            <div className="flex-1 flex justify-center md:flex-none">
+              <Link 
+                href="/" 
+                className={`text-xl md:text-2xl tracking-[0.3em] font-light transition-colors ${textColor}`}
+              >
+                PRISMIN
+              </Link>
+            </div>
 
             {/* Right - Icons */}
-            <div className="flex items-center justify-end gap-1 md:gap-2 w-[200px]">
+            <div className="flex items-center justify-end flex-1 gap-0.5 sm:gap-1">
               {/* Cart */}
               <Link
                 href="/cart"
-                className={`p-2 md:p-3 rounded-full transition-opacity hover:opacity-70 relative ${iconColor}`}
+                className={`p-2 sm:p-3 rounded-full transition-opacity hover:opacity-70 relative ${iconColor}`}
               >
                 <ShoppingBag size={20} strokeWidth={1.5} />
                 {cartCount > 0 && (
-                  <span className="absolute top-0 right-0 w-4 h-4 bg-[#B08B5C] text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+                  <span className="absolute top-0.5 right-0.5 sm:top-0 sm:right-0 w-4 h-4 bg-[#B08B5C] text-white text-[10px] font-medium rounded-full flex items-center justify-center">
                     {cartCount > 9 ? '9+' : cartCount}
                   </span>
                 )}
@@ -142,7 +144,7 @@ export default function Header() {
                       router.push('/login');
                     }
                   }}
-                  className={`p-2 md:p-3 rounded-full transition-opacity hover:opacity-70 ${iconColor}`}
+                  className={`p-2 sm:p-3 rounded-full transition-opacity hover:opacity-70 ${iconColor}`}
                 >
                   <User size={20} strokeWidth={1.5} />
                 </button>
@@ -174,7 +176,7 @@ export default function Header() {
               {/* Search */}
               <button
                 onClick={() => setShowSearch(true)}
-                className={`p-2 md:p-3 rounded-full transition-opacity hover:opacity-70 ${iconColor}`}
+                className={`p-2 sm:p-3 rounded-full transition-opacity hover:opacity-70 ${iconColor}`}
               >
                 <Search size={20} strokeWidth={1.5} />
               </button>
@@ -182,10 +184,10 @@ export default function Header() {
               {/* Menu */}
               <button
                 onClick={() => setShowMenu(true)}
-                className={`p-2 md:p-3 rounded-full transition-opacity hover:opacity-70 flex items-center gap-2 ${iconColor}`}
+                className={`p-2 sm:p-3 rounded-full transition-opacity hover:opacity-70 flex items-center gap-1.5 ${iconColor}`}
               >
                 <Menu size={20} strokeWidth={1.5} />
-                <span className={`text-sm tracking-wide hidden md:inline ${textColor}`}>MENU</span>
+                <span className={`text-sm tracking-wide hidden sm:inline ${textColor}`}>MENU</span>
               </button>
             </div>
           </div>
@@ -196,7 +198,7 @@ export default function Header() {
       {showSearch && (
         <div className="fixed inset-0 z-50 bg-white">
           <div className="border-b border-gray-200">
-            <div className="max-w-[1280px] mx-auto px-6">
+            <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
               <form onSubmit={handleSearch} className="flex items-center h-16 md:h-20 gap-4">
                 <Search size={22} className="text-gray-400 flex-shrink-0" />
                 <input
@@ -214,7 +216,7 @@ export default function Header() {
             </div>
           </div>
 
-          <div className="max-w-[1280px] mx-auto px-6 py-10">
+          <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div className="flex items-center gap-2 mb-6">
               <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Trending Searches</span>
             </div>
@@ -236,21 +238,18 @@ export default function Header() {
         </div>
       )}
 
-      {/* Menu Overlay - Gucci Style Right Panel */}
+      {/* Menu Overlay */}
       {showMenu && (
         <>
-          {/* Backdrop with blur */}
           <div 
             className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity"
             onClick={() => setShowMenu(false)}
           />
           
-          {/* Menu Panel */}
           <div 
-            className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-[420px] bg-white shadow-2xl flex flex-col"
+            className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-[400px] bg-white shadow-2xl flex flex-col"
             style={{ animation: 'slideInRight 0.3s ease' }}
           >
-            {/* Header with Close */}
             <div className="flex items-center justify-end p-4 border-b border-gray-100">
               <button
                 onClick={() => setShowMenu(false)}
@@ -260,88 +259,63 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Menu Content */}
             <div className="flex-1 overflow-y-auto">
-              {/* Main Navigation */}
-              <nav className="py-6">
-                {menuItems.map((item, index) => (
+              <nav className="py-4">
+                {menuItems.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
                     onClick={() => setShowMenu(false)}
-                    className="flex items-center justify-between px-8 py-5 text-[22px] font-light text-[#0C0C0C] hover:bg-gray-50 transition-colors group"
+                    className="flex items-center justify-between px-6 py-4 text-lg font-light text-[#0C0C0C] hover:bg-gray-50 transition-colors group"
                   >
                     <span className="group-hover:text-[#B08B5C] transition-colors">{item.name}</span>
-                    <ChevronRight size={20} className="text-gray-300 group-hover:text-[#B08B5C] group-hover:translate-x-1 transition-all" />
+                    <ChevronRight size={18} className="text-gray-300 group-hover:text-[#B08B5C] group-hover:translate-x-1 transition-all" />
                   </Link>
                 ))}
               </nav>
 
-              {/* Divider */}
-              <div className="mx-8 border-t border-gray-200" />
+              <div className="mx-6 border-t border-gray-200" />
 
-              {/* Secondary Links */}
-              <div className="py-6">
+              <div className="py-4">
                 {secondaryLinks.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
                     onClick={() => setShowMenu(false)}
-                    className="block px-8 py-3 text-[15px] text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors"
+                    className="block px-6 py-3 text-sm text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors"
                   >
                     {link.name}
                   </Link>
                 ))}
               </div>
 
-              {/* Divider */}
-              <div className="mx-8 border-t border-gray-200" />
+              <div className="mx-6 border-t border-gray-200" />
 
-              {/* Account Section */}
-              <div className="py-6">
+              <div className="py-4">
                 {isAuthenticated ? (
                   <>
-                    <div className="px-8 py-3">
+                    <div className="px-6 py-3">
                       <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Account</p>
                       <p className="text-sm font-medium text-[#0C0C0C]">{user?.name || 'User'}</p>
                     </div>
-                    <Link
-                      href="/orders"
-                      onClick={() => setShowMenu(false)}
-                      className="block px-8 py-3 text-[15px] text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors"
-                    >
+                    <Link href="/orders" onClick={() => setShowMenu(false)} className="block px-6 py-3 text-sm text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors">
                       My Orders
                     </Link>
                     {user?.role === 'admin' && (
-                      <Link
-                        href="/admin"
-                        onClick={() => setShowMenu(false)}
-                        className="block px-8 py-3 text-[15px] text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors"
-                      >
+                      <Link href="/admin" onClick={() => setShowMenu(false)} className="block px-6 py-3 text-sm text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors">
                         Admin Panel
                       </Link>
                     )}
-                    <button
-                      onClick={() => { handleLogout(); setShowMenu(false); }}
-                      className="block w-full text-left px-8 py-3 text-[15px] text-red-600 hover:bg-red-50 transition-colors"
-                    >
+                    <button onClick={() => { handleLogout(); setShowMenu(false); }} className="block w-full text-left px-6 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
                       Sign Out
                     </button>
                   </>
                 ) : (
                   <>
-                    <Link
-                      href="/login"
-                      onClick={() => setShowMenu(false)}
-                      className="block px-8 py-3 text-[15px] font-medium text-[#0C0C0C] hover:bg-gray-50 transition-colors"
-                    >
+                    <Link href="/login" onClick={() => setShowMenu(false)} className="block px-6 py-3 text-sm font-medium text-[#0C0C0C] hover:bg-gray-50 transition-colors">
                       Sign In
                     </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setShowMenu(false)}
-                      className="block px-8 py-3 text-[15px] text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors"
-                    >
+                    <Link href="/register" onClick={() => setShowMenu(false)} className="block px-6 py-3 text-sm text-gray-600 hover:text-[#0C0C0C] hover:bg-gray-50 transition-colors">
                       Create Account
                     </Link>
                   </>
@@ -349,11 +323,8 @@ export default function Header() {
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="border-t border-gray-100 p-6">
-              <p className="text-xs text-gray-400 text-center">
-                © 2024 PRISMIN. All rights reserved.
-              </p>
+            <div className="border-t border-gray-100 p-4">
+              <p className="text-xs text-gray-400 text-center">© 2024 PRISMIN</p>
             </div>
           </div>
         </>
