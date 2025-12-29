@@ -166,7 +166,7 @@ function BeautyContent() {
   const hasActiveFilters = selectedSubcategory || selectedType || selectedPrice;
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7]">
+    <div className="min-h-screen bg-[#FFFFFF]">
       {/* Spacer for fixed header */}
       <div className="h-16 md:h-20" />
 
@@ -310,7 +310,7 @@ function BeautyContent() {
 // Loading Fallback
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-[#F7F7F7] flex items-center justify-center">
+    <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center">
       <div className="w-10 h-10 border-2 border-[#B08B5C] border-t-transparent rounded-full animate-spin" />
     </div>
   );
