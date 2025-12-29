@@ -106,7 +106,7 @@ const getProductLink = () => {
         </div>
 
         {/* Product Info */}
-        <div className="pt-5">
+        <div className="pt-6">
           {/* Brand - Only show for Watch category */}
           {product.brand?.name && product.category === 'watch' && (
             <p className="text-[11px] font-medium text-muted uppercase tracking-[1px] mb-1.5">
@@ -115,7 +115,7 @@ const getProductLink = () => {
           )}
 
           {/* Product Name */}
-          <h3 className="text-sm font-medium text-focus mb-2 leading-snug line-clamp-2">
+          <h3 className="text-[14px] font-medium text-[#0C0C0C] mb-2 leading-snug line-clamp-2">
             {product.name}
           </h3>
 
