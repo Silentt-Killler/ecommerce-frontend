@@ -23,6 +23,15 @@ export default function ProductCard({ product }) {
 
   const formatPrice = (price) => '৳' + (price || 0).toLocaleString('en-BD');
 
+  // Category-based product link
+  const getProductLink = () => {
+    if (product.category === 'beauty') {
+      return `/beauty/${product.slug}`;
+    }
+    // For watch, menswear, womenswear - use /product/slug
+    return `/product/${product.slug}`;
+  };
+
   const handleBuyNow = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -43,7 +52,7 @@ export default function ProductCard({ product }) {
 
   return (
     <Link 
-      href={`/product/${product.slug}`} 
+      href={getProductLink()} 
       className="block group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
