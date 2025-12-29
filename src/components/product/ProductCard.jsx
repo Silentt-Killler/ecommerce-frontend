@@ -115,12 +115,13 @@ const getProductLink = () => {
           )}
 
           {/* Product Name */}
-         <h3 style={{ 
-  fontSize: '18px', 
-  fontWeight: '700', 
-  color: 'red',
-  marginTop: '30px',
-  marginBottom: '10px'
+ <h3 style={{ 
+  fontSize: '15px', 
+  fontWeight: '500', 
+  color: '#0C0C0C',
+  marginTop: '24px',
+  marginBottom: '8px',
+  lineHeight: '1.4'
 }}>
   {product.name}
 </h3>
