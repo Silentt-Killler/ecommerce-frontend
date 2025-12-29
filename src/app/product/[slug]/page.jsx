@@ -751,7 +751,7 @@ export default function ProductDetailPage() {
 
       {/* Related Products */}
       {relatedProducts.length > 0 && (
-        <div style={{ backgroundColor: '#F7F7F7', padding: '50px 0' }}>
+        <div style={{ backgroundColor: '#FFFFFF', padding: '50px 0' }}>
           <div style={{ maxWidth: 1300, margin: '0 auto', padding: '0 40px' }}>
             <h2 style={{ 
               fontSize: 20, 
