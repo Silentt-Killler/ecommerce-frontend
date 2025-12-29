@@ -59,7 +59,7 @@ export default function ProductCard({ product }) {
     >
       <div className="relative">
         {/* Image Container - 3:4 Aspect Ratio */}
-        <div className="relative aspect-[3/4] bg-[#FFFFFF] rounded-lg overflow-hidden">
+       <div className="relative aspect-[3/4] bg-[#F5F5F5] overflow-hidden">
           {primaryImage ? (
             <Image
               src={primaryImage}
@@ -96,7 +96,7 @@ export default function ProductCard({ product }) {
             <button
               onClick={handleBuyNow}
               disabled={product.stock === 0}
-              className={`w-full py-3.5 px-5 text-white text-[13px] font-semibold tracking-[1.5px] uppercase transition-colors ${product.stock === 0 ? 'bg-gray-500 cursor-not-allowed' : 'bg-focus hover:bg-gray-800'}`}
+              className={`w-full py-4 px-5 text-white text-[14px] font-semibold tracking-[1.5px] uppercase transition-colors ${product.stock === 0 ? 'bg-gray-500 cursor-not-allowed' : 'bg-focus hover:bg-gray-800'}`}
             >
               {product.stock === 0 ? 'Sold Out' : 'Buy Now'}
             </button>
@@ -104,7 +104,7 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* Product Info */}
-        <div className="pt-4">
+        <div className="pt-5">
           {/* Brand - Only show for Watch category */}
           {product.brand?.name && product.category === 'watch' && (
             <p className="text-[11px] font-medium text-muted uppercase tracking-[1px] mb-1.5">
