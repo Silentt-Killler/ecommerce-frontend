@@ -59,7 +59,7 @@ export default function ProductCard({ product }) {
     >
       <div className="relative">
         {/* Image Container - 3:4 Aspect Ratio */}
-        <div className="relative aspect-[3/4] bg-[#F5F5F5] rounded-lg overflow-hidden">
+        <div className="relative aspect-[3/4] bg-[#FFFFFF] rounded-lg overflow-hidden">
           {primaryImage ? (
             <Image
               src={primaryImage}
