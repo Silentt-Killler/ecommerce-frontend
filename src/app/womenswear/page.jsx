@@ -231,7 +231,7 @@ function WomenswearContent() {
   const hasActiveFilters = selectedSubcategory || selectedSize || selectedColor || selectedPrice;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F7F7F7' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
       {/* Spacer */}
       <div style={{ height: 60 }} />
 
