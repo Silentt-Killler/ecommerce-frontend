@@ -119,7 +119,7 @@ const getProductLink = () => {
   fontSize: '15px', 
   fontWeight: '500', 
   color: '#0C0C0C',
-  marginTop: '24px',
+  marginTop: '20px',
   marginBottom: '8px',
   lineHeight: '1.4'
 }}>
