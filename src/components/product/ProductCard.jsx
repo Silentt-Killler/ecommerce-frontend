@@ -115,9 +115,15 @@ const getProductLink = () => {
           )}
 
           {/* Product Name */}
-          <h3 className="text-[14px] font-medium text-[#0C0C0C] mb-2 leading-snug line-clamp-2">
-            {product.name}
-          </h3>
+         <h3 style={{ 
+  fontSize: '18px', 
+  fontWeight: '700', 
+  color: 'red',
+  marginTop: '30px',
+  marginBottom: '10px'
+}}>
+  {product.name}
+</h3>
 
           {/* Price */}
           <div className="flex items-center gap-2.5">
