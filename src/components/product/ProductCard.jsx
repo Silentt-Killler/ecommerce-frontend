@@ -23,14 +23,16 @@ export default function ProductCard({ product }) {
 
   const formatPrice = (price) => '৳' + (price || 0).toLocaleString('en-BD');
 
-  // Category-based product link
-  const getProductLink = () => {
-    if (product.category === 'beauty') {
-      return `/beauty/${product.slug}`;
-    }
-    // For watch, menswear, womenswear - use /product/slug
-    return `/product/${product.slug}`;
-  };
+ // getProductLink function এ
+const getProductLink = () => {
+  if (product.category === 'beauty') {
+    return `/beauty/${product.slug}`;
+  }
+  if (product.category === 'watch') {
+    return `/watch/${product.slug}`;
+  }
+  return `/product/${product.slug}`;
+};
 
   const handleBuyNow = (e) => {
     e.preventDefault();
