@@ -125,14 +125,14 @@ export default function ProductFormPage() {
     }
   };
 
-  const fetchSubcategories = async (category) => {
-    try {
-      const res = await api.get(`/subcategories?parent=${category}`);
-      setSubcategories(res.data || []);
-    } catch (error) {
-      setSubcategories([]);
-    }
-  };
+const fetchSubcategories = async (category) => {
+  try {
+    const res = await api.get(`/subcategories?parent=${category}`);
+    setSubcategories(res.data.subcategories || []);
+  } catch (error) {
+    setSubcategories([]);
+  }
+};
 
   const fetchProduct = async () => {
     try {
