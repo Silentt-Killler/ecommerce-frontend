@@ -588,8 +588,10 @@ export default function BeautyProductDetailPage() {
                   />
                 </button>
                 {openAccordion === 'howtouse' && (
-                  <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8 }}>
-                    {product.how_to_use || (
+                  <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
+                    {product.how_to_use ? (
+                      product.how_to_use
+                    ) : (
                       <ul style={{ margin: 0, paddingLeft: 18 }}>
                         <li style={{ marginBottom: 6 }}>Cleanse your face thoroughly before application</li>
                         <li style={{ marginBottom: 6 }}>Take a small amount on your fingertips</li>
