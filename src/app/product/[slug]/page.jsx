@@ -66,7 +66,7 @@ export default function ProductDetailPage() {
       quantity: quantity,
       variant: {
         size: selectedSize,
-        color: product.color
+        color: product.color?.name || null
       }
     });
     
@@ -87,7 +87,7 @@ export default function ProductDetailPage() {
       quantity: quantity,
       variant: {
         size: selectedSize,
-        color: product.color
+        color: product.color?.name || null
       }
     });
     
@@ -354,18 +354,18 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {/* Color - Only show if product has color */}
-            {product.color && (
+           {/* Color - Only show if product has color */}
+            {product.color?.name && (
               <div style={{ marginTop: 24 }}>
                 <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 10 }}>
-                  Color: <span style={{ color: '#0C0C0C', fontWeight: 500 }}>{product.color}</span>
+                  Color: <span style={{ color: '#0C0C0C', fontWeight: 500 }}>{product.color.name}</span>
                 </div>
                 <div 
                   style={{ 
                     width: 30, 
                     height: 30, 
                     borderRadius: '50%', 
-                    backgroundColor: product.color_code || '#0C0C0C',
+                    backgroundColor: product.color.code || '#0C0C0C',
                     border: '2px solid #E5E7EB',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
                   }} 
