@@ -127,7 +127,7 @@ export default function ProductFormPage() {
 
   const fetchSubcategories = async (category) => {
     try {
-      const res = await api.get(`/subcategories?category=${category}`);
+      const res = await api.get(`/subcategories?parent=${category}`);
       setSubcategories(res.data || []);
     } catch (error) {
       setSubcategories([]);
