@@ -689,17 +689,21 @@ export default function ProductDetailPage() {
                     }} 
                   />
                 </button>
-                {openAccordion === 'washguide' && (
-                  <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8 }}>
-                    <ul style={{ margin: 0, paddingLeft: 18 }}>
-                      <li style={{ marginBottom: 6 }}>Machine wash cold with similar colors</li>
-                      <li style={{ marginBottom: 6 }}>Do not bleach</li>
-                      <li style={{ marginBottom: 6 }}>Tumble dry low</li>
-                      <li style={{ marginBottom: 6 }}>Iron on low heat if needed</li>
-                      <li>Do not dry clean</li>
-                    </ul>
-                  </div>
-                )}
+                  {openAccordion === 'washguide' && (
+                    <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
+                      {product.wash_guide ? (
+                        product.wash_guide
+                      ) : (
+                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                          <li style={{ marginBottom: 6 }}>Machine wash cold with similar colors</li>
+                          <li style={{ marginBottom: 6 }}>Do not bleach</li>
+                          <li style={{ marginBottom: 6 }}>Tumble dry low</li>
+                          <li style={{ marginBottom: 6 }}>Iron on low heat if needed</li>
+                          <li>Do not dry clean</li>
+                        </ul>
+                      )}
+                    </div>
+                  )}
               </div>
 
               {/* Delivery & Return */}
@@ -727,22 +731,28 @@ export default function ProductDetailPage() {
                     }} 
                   />
                 </button>
-                {openAccordion === 'delivery' && (
-                  <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8 }}>
-                    <p style={{ margin: '0 0 12px 0', fontWeight: 500, color: '#0C0C0C' }}>Delivery:</p>
-                    <ul style={{ margin: '0 0 16px 0', paddingLeft: 18 }}>
-                      <li style={{ marginBottom: 6 }}>Dhaka City: 1-2 business days</li>
-                      <li style={{ marginBottom: 6 }}>Outside Dhaka: 3-5 business days</li>
-                      <li>Delivery charge: ৳70 (Dhaka) / ৳120 (Outside)</li>
-                    </ul>
-                    <p style={{ margin: '0 0 12px 0', fontWeight: 500, color: '#0C0C0C' }}>Return Policy:</p>
-                    <ul style={{ margin: 0, paddingLeft: 18 }}>
-                      <li style={{ marginBottom: 6 }}>7 days easy return</li>
-                      <li style={{ marginBottom: 6 }}>Product must be unused with tags</li>
-                      <li>Exchange available for size issues</li>
-                    </ul>
-                  </div>
-                )}
+                       {openAccordion === 'delivery' && (
+                    <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
+                      {product.delivery_return ? (
+                        product.delivery_return
+                      ) : (
+                        <>
+                          <p style={{ margin: '0 0 12px 0', fontWeight: 500, color: '#0C0C0C' }}>Delivery:</p>
+                          <ul style={{ margin: '0 0 16px 0', paddingLeft: 18 }}>
+                            <li style={{ marginBottom: 6 }}>Dhaka City: 1-2 business days</li>
+                            <li style={{ marginBottom: 6 }}>Outside Dhaka: 3-5 business days</li>
+                            <li>Delivery charge: ৳70 (Dhaka) / ৳120 (Outside)</li>
+                          </ul>
+                          <p style={{ margin: '0 0 12px 0', fontWeight: 500, color: '#0C0C0C' }}>Return Policy:</p>
+                          <ul style={{ margin: 0, paddingLeft: 18 }}>
+                            <li style={{ marginBottom: 6 }}>7 days easy return</li>
+                            <li style={{ marginBottom: 6 }}>Product must be unused with tags</li>
+                            <li>Exchange available for size issues</li>
+                          </ul>
+                        </>
+                      )}
+                    </div>
+                  )}
               </div>
             </div>
           </div>
