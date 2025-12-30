@@ -128,7 +128,7 @@ const getProductLink = () => {
 
           {/* Price */}
           <div className="flex items-center gap-2.5">
-            <span className="text-[15px] font-semibold text-focus">
+            <span className="text-[16px] font-semibold text-focus">
               {formatPrice(product.price)}
             </span>
             
