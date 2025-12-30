@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Upload, X, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Upload, X, Plus, Trash2, Star } from 'lucide-react';
 import Link from 'next/link';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -34,12 +34,18 @@ export default function ProductFormPage() {
     sku: '',
     tags: '',
     status: 'active',
+    is_featured: false,
     images: [],
+    // Content fields
+    wash_guide: '',
+    delivery_return: '',
+    size_chart: '',
+    how_to_use: '',
     // Category specific
     specs: {},
     variants: [],
     available_sizes: [],
-    available_colors: [],
+    color: null, // Single color object {name, code, image}
     skin_type: ''
   });
 
@@ -57,16 +63,15 @@ export default function ProductFormPage() {
   // Beauty specs  
   const [beautySpecs, setBeautySpecs] = useState({
     skin_type: '',
-    sizes: [] // ['100ml', '200ml']
+    sizes: []
   });
   const [newBeautySize, setNewBeautySize] = useState('');
 
-  // Menswear/Womenswear variants
+  // Menswear/Womenswear data
   const [clothingData, setClothingData] = useState({
-    available_sizes: [],
-    colors: [] // [{name: 'Red', code: '#FF0000', image: '', stocks: {M: 10, L: 15}}]
+    sizes: {}, // {M: 10, L: 15, XL: 0}
+    color: { name: '', code: '#000000', image: '' }
   });
-  const [newColor, setNewColor] = useState({ name: '', code: '#000000', image: '' });
 
   // Dropdown options
   const movementOptions = ['Quartz', 'Automatic', 'Mechanical', 'Solar', 'Kinetic'];
@@ -148,11 +153,16 @@ export default function ProductFormPage() {
         sku: product.sku || '',
         tags: product.tags?.join(', ') || '',
         status: product.status || 'active',
+        is_featured: product.is_featured || false,
         images: product.images || [],
+        wash_guide: product.wash_guide || '',
+        delivery_return: product.delivery_return || '',
+        size_chart: product.size_chart || '',
+        how_to_use: product.how_to_use || '',
         specs: product.specs || {},
         variants: product.variants || [],
         available_sizes: product.available_sizes || [],
-        available_colors: product.available_colors || [],
+        color: product.color || null,
         skin_type: product.skin_type || ''
       });
 
@@ -177,11 +187,19 @@ export default function ProductFormPage() {
       }
 
       if (product.category === 'menswear' || product.category === 'womenswear') {
+        // Extract size-wise stock from variants
+        const sizeStock = {};
+        if (product.variants?.length > 0) {
+          product.variants.forEach(v => {
+            if (v.size) {
+              sizeStock[v.size] = v.stock || 0;
+            }
+          });
+        }
+        
         setClothingData({
-          available_sizes: product.available_sizes || [],
-          colors: product.variants?.length > 0 
-            ? extractColorsFromVariants(product.variants)
-            : []
+          sizes: sizeStock,
+          color: product.color || { name: '', code: '#000000', image: '' }
         });
       }
 
@@ -191,25 +209,6 @@ export default function ProductFormPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Extract unique colors from variants
-  const extractColorsFromVariants = (variants) => {
-    const colorMap = {};
-    variants.forEach(v => {
-      if (v.color && !colorMap[v.color]) {
-        colorMap[v.color] = {
-          name: v.color,
-          code: v.color_code || '#000000',
-          image: v.color_image || '',
-          stocks: {}
-        };
-      }
-      if (v.color && v.size) {
-        colorMap[v.color].stocks[v.size] = v.stock || 0;
-      }
-    });
-    return Object.values(colorMap);
   };
 
   const generateSlug = (name) => {
@@ -268,70 +267,47 @@ export default function ProductFormPage() {
     setBeautySpecs({ ...beautySpecs, sizes: newSizes });
   };
 
-  // Clothing size handling
+  // Clothing size handling - toggle size and set stock
   const toggleClothingSize = (size) => {
-    const sizes = clothingData.available_sizes.includes(size)
-      ? clothingData.available_sizes.filter(s => s !== size)
-      : [...clothingData.available_sizes, size];
-    setClothingData({ ...clothingData, available_sizes: sizes });
+    const newSizes = { ...clothingData.sizes };
+    if (newSizes.hasOwnProperty(size)) {
+      delete newSizes[size];
+    } else {
+      newSizes[size] = 0;
+    }
+    setClothingData({ ...clothingData, sizes: newSizes });
   };
 
-  // Clothing color handling
-  const addColor = () => {
-    if (!newColor.name.trim()) return;
-    const stocks = {};
-    clothingData.available_sizes.forEach(size => {
-      stocks[size] = 0;
-    });
+  const updateSizeStock = (size, stock) => {
     setClothingData({
       ...clothingData,
-      colors: [...clothingData.colors, { ...newColor, stocks }]
+      sizes: {
+        ...clothingData.sizes,
+        [size]: parseInt(stock) || 0
+      }
     });
-    setNewColor({ name: '', code: '#000000', image: '' });
   };
 
-  const removeColor = (index) => {
-    const newColors = [...clothingData.colors];
-    newColors.splice(index, 1);
-    setClothingData({ ...clothingData, colors: newColors });
-  };
-
-  const updateColorStock = (colorIndex, size, stock) => {
-    const newColors = [...clothingData.colors];
-    newColors[colorIndex].stocks[size] = parseInt(stock) || 0;
-    setClothingData({ ...clothingData, colors: newColors });
-  };
-
-  const updateColorImage = (colorIndex, imageUrl) => {
-    const newColors = [...clothingData.colors];
-    newColors[colorIndex].image = imageUrl;
-    setClothingData({ ...clothingData, colors: newColors });
-  };
-
-  // Build variants from colors and sizes
+  // Build variants from sizes (for backend)
   const buildVariants = () => {
     const variants = [];
-    clothingData.colors.forEach(color => {
-      clothingData.available_sizes.forEach(size => {
-        variants.push({
-          size: size,
-          color: color.name,
-          color_code: color.code,
-          color_image: color.image,
-          stock: color.stocks[size] || 0,
-          is_active: true
-        });
+    Object.entries(clothingData.sizes).forEach(([size, stock]) => {
+      variants.push({
+        size: size,
+        color: clothingData.color?.name || null,
+        color_code: clothingData.color?.code || null,
+        color_image: clothingData.color?.image || null,
+        stock: stock,
+        is_active: true
       });
     });
     return variants;
   };
 
-  // Calculate total stock from variants
+  // Calculate total stock
   const calculateTotalStock = () => {
     if (formData.category === 'menswear' || formData.category === 'womenswear') {
-      return clothingData.colors.reduce((total, color) => {
-        return total + Object.values(color.stocks).reduce((sum, s) => sum + (parseInt(s) || 0), 0);
-      }, 0);
+      return Object.values(clothingData.sizes).reduce((sum, s) => sum + (parseInt(s) || 0), 0);
     }
     return parseInt(formData.stock) || 0;
   };
@@ -354,7 +330,9 @@ export default function ProductFormPage() {
         sku: formData.sku || null,
         tags: formData.tags ? formData.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         status: formData.status,
-        images: formData.images
+        is_featured: formData.is_featured,
+        images: formData.images,
+        delivery_return: formData.delivery_return || null
       };
 
       // Category specific data
@@ -363,21 +341,24 @@ export default function ProductFormPage() {
         data.stock = parseInt(formData.stock) || 0;
         data.variants = [];
         data.available_sizes = [];
-        data.available_colors = [];
+        data.color = null;
       } 
       else if (formData.category === 'beauty') {
         data.skin_type = beautySpecs.skin_type;
         data.available_sizes = beautySpecs.sizes;
         data.stock = parseInt(formData.stock) || 0;
+        data.how_to_use = formData.how_to_use || null;
         data.specs = {};
         data.variants = [];
-        data.available_colors = [];
+        data.color = null;
       }
       else if (formData.category === 'menswear' || formData.category === 'womenswear') {
-        data.available_sizes = clothingData.available_sizes;
-        data.available_colors = clothingData.colors.map(c => c.name);
+        data.available_sizes = Object.keys(clothingData.sizes);
         data.variants = buildVariants();
         data.stock = calculateTotalStock();
+        data.color = clothingData.color?.name ? clothingData.color : null;
+        data.wash_guide = formData.wash_guide || null;
+        data.size_chart = formData.size_chart || null;
         data.specs = {};
       }
       else {
@@ -445,20 +426,31 @@ export default function ProductFormPage() {
                     type="text"
                     value={formData.name}
                     onChange={handleNameChange}
-                    style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                    style={inputStyle}
                     required
                   />
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Slug *</label>
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
-                    required
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Slug *</label>
+                    <input
+                      type="text"
+                      value={formData.slug}
+                      onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                      style={inputStyle}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>SKU</label>
+                    <input
+                      type="text"
+                      value={formData.sku}
+                      onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                      style={inputStyle}
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -467,7 +459,7 @@ export default function ProductFormPage() {
                     type="text"
                     value={formData.short_description}
                     onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                    style={inputStyle}
                   />
                 </div>
 
@@ -477,7 +469,7 @@ export default function ProductFormPage() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={4}
-                    style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14, resize: 'vertical' }}
+                    style={{ ...inputStyle, resize: 'vertical' }}
                   />
                 </div>
               </div>
@@ -493,13 +485,9 @@ export default function ProductFormPage() {
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   placeholder="Enter image URL (Cloudinary)"
-                  style={{ flex: 1, padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                  style={{ ...inputStyle, flex: 1 }}
                 />
-                <button
-                  type="button"
-                  onClick={addImage}
-                  style={{ padding: '12px 16px', backgroundColor: '#3b82f6', color: '#fff', borderRadius: 8, border: 'none', cursor: 'pointer' }}
-                >
+                <button type="button" onClick={addImage} style={btnPrimary}>
                   <Plus size={20} />
                 </button>
               </div>
@@ -558,83 +546,53 @@ export default function ProductFormPage() {
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Model</label>
+                    <label style={labelStyle}>Model</label>
                     <input
                       type="text"
                       value={watchSpecs.model}
                       onChange={(e) => setWatchSpecs({ ...watchSpecs, model: e.target.value })}
                       placeholder="e.g., FS6054"
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                      style={inputStyle}
                     />
                   </div>
-
                   <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Movement</label>
-                    <select
-                      value={watchSpecs.movement}
-                      onChange={(e) => setWatchSpecs({ ...watchSpecs, movement: e.target.value })}
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
-                    >
+                    <label style={labelStyle}>Movement</label>
+                    <select value={watchSpecs.movement} onChange={(e) => setWatchSpecs({ ...watchSpecs, movement: e.target.value })} style={inputStyle}>
                       <option value="">Select Movement</option>
                       {movementOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
                   </div>
-
                   <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Case Size</label>
-                    <select
-                      value={watchSpecs.case_size}
-                      onChange={(e) => setWatchSpecs({ ...watchSpecs, case_size: e.target.value })}
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
-                    >
+                    <label style={labelStyle}>Case Size</label>
+                    <select value={watchSpecs.case_size} onChange={(e) => setWatchSpecs({ ...watchSpecs, case_size: e.target.value })} style={inputStyle}>
                       <option value="">Select Case Size</option>
                       {caseSizeOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
                   </div>
-
                   <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Case Material</label>
-                    <select
-                      value={watchSpecs.case_material}
-                      onChange={(e) => setWatchSpecs({ ...watchSpecs, case_material: e.target.value })}
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
-                    >
+                    <label style={labelStyle}>Case Material</label>
+                    <select value={watchSpecs.case_material} onChange={(e) => setWatchSpecs({ ...watchSpecs, case_material: e.target.value })} style={inputStyle}>
                       <option value="">Select Case Material</option>
                       {caseMaterialOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
                   </div>
-
                   <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Band Material</label>
-                    <select
-                      value={watchSpecs.band_material}
-                      onChange={(e) => setWatchSpecs({ ...watchSpecs, band_material: e.target.value })}
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
-                    >
+                    <label style={labelStyle}>Band Material</label>
+                    <select value={watchSpecs.band_material} onChange={(e) => setWatchSpecs({ ...watchSpecs, band_material: e.target.value })} style={inputStyle}>
                       <option value="">Select Band Material</option>
                       {bandMaterialOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
                   </div>
-
                   <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Water Resistance</label>
-                    <select
-                      value={watchSpecs.water_resistance}
-                      onChange={(e) => setWatchSpecs({ ...watchSpecs, water_resistance: e.target.value })}
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
-                    >
+                    <label style={labelStyle}>Water Resistance</label>
+                    <select value={watchSpecs.water_resistance} onChange={(e) => setWatchSpecs({ ...watchSpecs, water_resistance: e.target.value })} style={inputStyle}>
                       <option value="">Select Water Resistance</option>
                       {waterResistanceOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
                   </div>
-
                   <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Warranty</label>
-                    <select
-                      value={watchSpecs.warranty}
-                      onChange={(e) => setWatchSpecs({ ...watchSpecs, warranty: e.target.value })}
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
-                    >
+                    <label style={labelStyle}>Warranty</label>
+                    <select value={watchSpecs.warranty} onChange={(e) => setWatchSpecs({ ...watchSpecs, warranty: e.target.value })} style={inputStyle}>
                       <option value="">Select Warranty</option>
                       {warrantyOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
@@ -652,11 +610,11 @@ export default function ProductFormPage() {
                 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Skin Type</label>
+                    <label style={labelStyle}>Skin Type</label>
                     <select
                       value={beautySpecs.skin_type}
                       onChange={(e) => setBeautySpecs({ ...beautySpecs, skin_type: e.target.value })}
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                      style={inputStyle}
                     >
                       <option value="">Select Skin Type</option>
                       {skinTypeOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -664,20 +622,16 @@ export default function ProductFormPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Available Sizes (e.g., 100ml, 200ml)</label>
+                    <label style={labelStyle}>Available Sizes (e.g., 100ml, 200ml)</label>
                     <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
                       <input
                         type="text"
                         value={newBeautySize}
                         onChange={(e) => setNewBeautySize(e.target.value)}
                         placeholder="Enter size (e.g., 100ml)"
-                        style={{ flex: 1, padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                        style={{ ...inputStyle, flex: 1 }}
                       />
-                      <button
-                        type="button"
-                        onClick={addBeautySize}
-                        style={{ padding: '12px 16px', backgroundColor: '#3b82f6', color: '#fff', borderRadius: 8, border: 'none', cursor: 'pointer' }}
-                      >
+                      <button type="button" onClick={addBeautySize} style={btnPrimary}>
                         <Plus size={20} />
                       </button>
                     </div>
@@ -687,11 +641,7 @@ export default function ProductFormPage() {
                         {beautySpecs.sizes.map((size, index) => (
                           <span key={index} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', backgroundColor: '#374151', borderRadius: 6, color: '#fff', fontSize: 13 }}>
                             {size}
-                            <button
-                              type="button"
-                              onClick={() => removeBeautySize(index)}
-                              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}
-                            >
+                            <button type="button" onClick={() => removeBeautySize(index)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}>
                               <X size={14} />
                             </button>
                           </span>
@@ -699,130 +649,160 @@ export default function ProductFormPage() {
                       </div>
                     )}
                   </div>
+
+                  <div>
+                    <label style={labelStyle}>How to Use</label>
+                    <textarea
+                      value={formData.how_to_use}
+                      onChange={(e) => setFormData({ ...formData, how_to_use: e.target.value })}
+                      rows={4}
+                      placeholder="Enter how to use instructions..."
+                      style={{ ...inputStyle, resize: 'vertical' }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* ============ CLOTHING VARIANTS (Menswear/Womenswear) ============ */}
+            {/* ============ CLOTHING - SIZE & COLOR ============ */}
             {isClothing && (
               <div style={{ backgroundColor: '#1f2937', borderRadius: 12, padding: 24 }}>
                 <h2 style={{ fontSize: 16, fontWeight: 600, color: '#fff', marginBottom: 20 }}>
-                  👕 Size & Color Variants
+                  👕 Size & Stock
                 </h2>
                 
-                {/* Available Sizes */}
+                {/* Size Selection with Stock */}
                 <div style={{ marginBottom: 24 }}>
-                  <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 12 }}>Available Sizes</label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {clothingSizes.map(size => (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => toggleClothingSize(size)}
-                        style={{
-                          padding: '10px 16px',
-                          borderRadius: 8,
-                          border: clothingData.available_sizes.includes(size) ? '2px solid #3b82f6' : '1px solid #374151',
-                          backgroundColor: clothingData.available_sizes.includes(size) ? '#3b82f6' : '#111827',
-                          color: '#fff',
-                          fontSize: 13,
-                          fontWeight: 500,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {size}
-                      </button>
-                    ))}
+                  <label style={labelStyle}>Select Sizes & Enter Stock</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+                    {clothingSizes.map(size => {
+                      const isSelected = clothingData.sizes.hasOwnProperty(size);
+                      return (
+                        <div key={size} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                          <button
+                            type="button"
+                            onClick={() => toggleClothingSize(size)}
+                            style={{
+                              width: 100,
+                              padding: '12px 16px',
+                              borderRadius: 8,
+                              border: isSelected ? '2px solid #3b82f6' : '1px solid #374151',
+                              backgroundColor: isSelected ? '#3b82f6' : '#111827',
+                              color: '#fff',
+                              fontSize: 14,
+                              fontWeight: 500,
+                              cursor: 'pointer',
+                              textAlign: 'center'
+                            }}
+                          >
+                            {size}
+                          </button>
+                          
+                          {isSelected && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ color: '#9ca3af', fontSize: 14 }}>Stock:</span>
+                              <input
+                                type="number"
+                                value={clothingData.sizes[size] || 0}
+                                onChange={(e) => updateSizeStock(size, e.target.value)}
+                                min="0"
+                                style={{ width: 100, padding: '10px 12px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14, textAlign: 'center' }}
+                              />
+                              {clothingData.sizes[size] === 0 && (
+                                <span style={{ color: '#ef4444', fontSize: 12, fontWeight: 500 }}>Stock Out</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Add Color */}
+                {/* Single Color */}
                 <div style={{ marginBottom: 24 }}>
-                  <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 12 }}>Add Color Variant</label>
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <label style={labelStyle}>Product Color (Optional)</label>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 12 }}>
                     <input
                       type="text"
-                      value={newColor.name}
-                      onChange={(e) => setNewColor({ ...newColor, name: e.target.value })}
-                      placeholder="Color name (e.g., Red)"
-                      style={{ flex: 1, padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                      value={clothingData.color.name}
+                      onChange={(e) => setClothingData({ ...clothingData, color: { ...clothingData.color, name: e.target.value } })}
+                      placeholder="Color name (e.g., Navy Blue)"
+                      style={{ ...inputStyle, flex: 1 }}
                     />
                     <input
                       type="color"
-                      value={newColor.code}
-                      onChange={(e) => setNewColor({ ...newColor, code: e.target.value })}
+                      value={clothingData.color.code}
+                      onChange={(e) => setClothingData({ ...clothingData, color: { ...clothingData.color, code: e.target.value } })}
                       style={{ width: 50, height: 44, padding: 0, border: '1px solid #374151', borderRadius: 8, cursor: 'pointer' }}
                     />
-                    <button
-                      type="button"
-                      onClick={addColor}
-                      disabled={clothingData.available_sizes.length === 0}
-                      style={{ padding: '12px 16px', backgroundColor: clothingData.available_sizes.length > 0 ? '#3b82f6' : '#374151', color: '#fff', borderRadius: 8, border: 'none', cursor: clothingData.available_sizes.length > 0 ? 'pointer' : 'not-allowed' }}
-                    >
-                      <Plus size={20} />
-                    </button>
                   </div>
-                  {clothingData.available_sizes.length === 0 && (
-                    <p style={{ fontSize: 12, color: '#f59e0b', marginTop: 8 }}>⚠️ Select sizes first before adding colors</p>
-                  )}
+                  <input
+                    type="url"
+                    value={clothingData.color.image}
+                    onChange={(e) => setClothingData({ ...clothingData, color: { ...clothingData.color, image: e.target.value } })}
+                    placeholder="Color variant image URL (optional)"
+                    style={{ ...inputStyle, marginTop: 12 }}
+                  />
                 </div>
 
-                {/* Color List with Stock per Size */}
-                {clothingData.colors.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {clothingData.colors.map((color, colorIndex) => (
-                      <div key={colorIndex} style={{ backgroundColor: '#111827', borderRadius: 8, padding: 16 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: color.code, border: '2px solid #fff' }} />
-                            <span style={{ color: '#fff', fontWeight: 500 }}>{color.name}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeColor(colorIndex)}
-                            style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
+                {/* Total Stock Display */}
+                <div style={{ padding: 16, backgroundColor: calculateTotalStock() > 0 ? '#059669' : '#dc2626', borderRadius: 8, textAlign: 'center' }}>
+                  <span style={{ color: '#fff', fontWeight: 600 }}>
+                    Total Stock: {calculateTotalStock()} units
+                  </span>
+                </div>
+              </div>
+            )}
 
-                        {/* Color Image */}
-                        <div style={{ marginBottom: 12 }}>
-                          <input
-                            type="url"
-                            value={color.image}
-                            onChange={(e) => updateColorImage(colorIndex, e.target.value)}
-                            placeholder="Color variant image URL (optional)"
-                            style={{ width: '100%', padding: '10px 12px', backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 6, color: '#fff', fontSize: 13 }}
-                          />
-                        </div>
-
-                        {/* Stock per Size */}
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-                          {clothingData.available_sizes.map(size => (
-                            <div key={size} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: 13, color: '#9ca3af', width: 50 }}>{size}:</span>
-                              <input
-                                type="number"
-                                value={color.stocks[size] || 0}
-                                onChange={(e) => updateColorStock(colorIndex, size, e.target.value)}
-                                min="0"
-                                style={{ width: 70, padding: '8px 10px', backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 6, color: '#fff', fontSize: 13, textAlign: 'center' }}
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Total Stock Display */}
-                    <div style={{ padding: 16, backgroundColor: '#059669', borderRadius: 8, textAlign: 'center' }}>
-                      <span style={{ color: '#fff', fontWeight: 600 }}>
-                        Total Stock: {calculateTotalStock()} units
-                      </span>
+            {/* ============ CONTENT SECTIONS ============ */}
+            {(isClothing || isBeauty) && (
+              <div style={{ backgroundColor: '#1f2937', borderRadius: 12, padding: 24 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, color: '#fff', marginBottom: 20 }}>
+                  📝 Product Content
+                </h2>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Wash Guide - Only for Clothing */}
+                  {isClothing && (
+                    <div>
+                      <label style={labelStyle}>Wash Guide</label>
+                      <textarea
+                        value={formData.wash_guide}
+                        onChange={(e) => setFormData({ ...formData, wash_guide: e.target.value })}
+                        rows={3}
+                        placeholder="Enter wash instructions..."
+                        style={{ ...inputStyle, resize: 'vertical' }}
+                      />
                     </div>
+                  )}
+
+                  {/* Size Chart - Only for Clothing */}
+                  {isClothing && (
+                    <div>
+                      <label style={labelStyle}>Size Chart</label>
+                      <textarea
+                        value={formData.size_chart}
+                        onChange={(e) => setFormData({ ...formData, size_chart: e.target.value })}
+                        rows={3}
+                        placeholder="Enter size chart details..."
+                        style={{ ...inputStyle, resize: 'vertical' }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Delivery & Return */}
+                  <div>
+                    <label style={labelStyle}>Delivery & Return</label>
+                    <textarea
+                      value={formData.delivery_return}
+                      onChange={(e) => setFormData({ ...formData, delivery_return: e.target.value })}
+                      rows={3}
+                      placeholder="Enter delivery and return policy..."
+                      style={{ ...inputStyle, resize: 'vertical' }}
+                    />
                   </div>
-                )}
+                </div>
               </div>
             )}
           </div>
@@ -830,30 +810,82 @@ export default function ProductFormPage() {
           {/* Right Column - Sidebar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             
+            {/* Status & Featured */}
+            <div style={{ backgroundColor: '#1f2937', borderRadius: 12, padding: 24 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: '#fff', marginBottom: 20 }}>Status</h2>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={labelStyle}>Product Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    style={inputStyle}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="out_of_stock">Out of Stock</option>
+                  </select>
+                </div>
+
+                {/* Featured Checkbox */}
+                <div 
+                  onClick={() => setFormData({ ...formData, is_featured: !formData.is_featured })}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 12, 
+                    padding: 16, 
+                    backgroundColor: formData.is_featured ? '#1e3a5f' : '#111827', 
+                    border: formData.is_featured ? '2px solid #3b82f6' : '1px solid #374151',
+                    borderRadius: 8, 
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 6,
+                    border: formData.is_featured ? '2px solid #3b82f6' : '2px solid #6b7280',
+                    backgroundColor: formData.is_featured ? '#3b82f6' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {formData.is_featured && <Star size={14} fill="#fff" color="#fff" />}
+                  </div>
+                  <div>
+                    <p style={{ color: '#fff', fontWeight: 500, fontSize: 14 }}>Featured Product</p>
+                    <p style={{ color: '#6b7280', fontSize: 12 }}>Show on homepage</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Pricing */}
             <div style={{ backgroundColor: '#1f2937', borderRadius: 12, padding: 24 }}>
               <h2 style={{ fontSize: 16, fontWeight: 600, color: '#fff', marginBottom: 20 }}>Pricing</h2>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Price (৳) *</label>
+                  <label style={labelStyle}>Price (৳) *</label>
                   <input
                     type="number"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                    style={inputStyle}
                     required
                     min="0"
                   />
                 </div>
-
                 <div>
-                  <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Compare Price (৳)</label>
+                  <label style={labelStyle}>Compare Price (৳)</label>
                   <input
                     type="number"
                     value={formData.compare_price}
                     onChange={(e) => setFormData({ ...formData, compare_price: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                    style={inputStyle}
                     min="0"
                   />
                 </div>
@@ -866,11 +898,11 @@ export default function ProductFormPage() {
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Category *</label>
+                  <label style={labelStyle}>Category *</label>
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value, subcategory: '', brand: '' })}
-                    style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                    style={inputStyle}
                     required
                   >
                     <option value="">Select Category</option>
@@ -882,11 +914,11 @@ export default function ProductFormPage() {
 
                 {subcategories.length > 0 && (
                   <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Subcategory</label>
+                    <label style={labelStyle}>Subcategory</label>
                     <select
                       value={formData.subcategory}
                       onChange={(e) => setFormData({ ...formData, subcategory: e.target.value })}
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                      style={inputStyle}
                     >
                       <option value="">Select Subcategory</option>
                       {subcategories.map((sub) => (
@@ -897,13 +929,11 @@ export default function ProductFormPage() {
                 )}
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>
-                    Brand {isWatch && <span style={{ color: '#ef4444' }}>*</span>}
-                  </label>
+                  <label style={labelStyle}>Brand {isWatch && <span style={{ color: '#ef4444' }}>*</span>}</label>
                   <select
                     value={formData.brand}
                     onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                    style={inputStyle}
                     required={isWatch}
                   >
                     <option value="">Select Brand</option>
@@ -914,13 +944,13 @@ export default function ProductFormPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Tags (comma separated)</label>
+                  <label style={labelStyle}>Tags (comma separated)</label>
                   <input
                     type="text"
                     value={formData.tags}
                     onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
                     placeholder="new, featured, sale"
-                    style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
+                    style={inputStyle}
                   />
                 </div>
               </div>
@@ -931,46 +961,19 @@ export default function ProductFormPage() {
               <div style={{ backgroundColor: '#1f2937', borderRadius: 12, padding: 24 }}>
                 <h2 style={{ fontSize: 16, fontWeight: 600, color: '#fff', marginBottom: 20 }}>Inventory</h2>
                 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>Stock *</label>
-                    <input
-                      type="number"
-                      value={formData.stock}
-                      onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
-                      required
-                      min="0"
-                    />
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: 14, color: '#9ca3af', marginBottom: 8 }}>SKU</label>
-                    <input
-                      type="text"
-                      value={formData.sku}
-                      onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                      style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
-                    />
-                  </div>
+                <div>
+                  <label style={labelStyle}>Stock *</label>
+                  <input
+                    type="number"
+                    value={formData.stock}
+                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                    style={inputStyle}
+                    required
+                    min="0"
+                  />
                 </div>
               </div>
             )}
-
-            {/* Status */}
-            <div style={{ backgroundColor: '#1f2937', borderRadius: 12, padding: 24 }}>
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: '#fff', marginBottom: 20 }}>Status</h2>
-              
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                style={{ width: '100%', padding: '12px 16px', backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="out_of_stock">Out of Stock</option>
-              </select>
-            </div>
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: 12 }}>
@@ -998,3 +1001,31 @@ export default function ProductFormPage() {
     </div>
   );
 }
+
+// Styles
+const inputStyle = {
+  width: '100%',
+  padding: '12px 16px',
+  backgroundColor: '#111827',
+  border: '1px solid #374151',
+  borderRadius: 8,
+  color: '#fff',
+  fontSize: 14,
+  outline: 'none'
+};
+
+const labelStyle = {
+  display: 'block',
+  fontSize: 14,
+  color: '#9ca3af',
+  marginBottom: 8
+};
+
+const btnPrimary = {
+  padding: '12px 16px',
+  backgroundColor: '#3b82f6',
+  color: '#fff',
+  borderRadius: 8,
+  border: 'none',
+  cursor: 'pointer'
+};
