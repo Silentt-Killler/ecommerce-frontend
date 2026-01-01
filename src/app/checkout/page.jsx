@@ -349,16 +349,15 @@ export default function CheckoutPage() {
         })),
         subtotal: subtotal,
         total: total,
-        // Courier data (for backend to use)
+        // Courier data (for backend to use - Pathao Auto-Address)
         courier_data: {
           recipient_name: formData.fullName,
           recipient_phone: formData.phone,
           recipient_address: `${formData.address}, ${formData.area.name}, ${formData.district.name}`,
           cod_amount: codAmount,
           district: formData.district.name,
-          area: formData.area.name,
-          pathao_city_id: formData.district.pathao_city_id,
-          pathao_zone_id: formData.area.pathao_zone_id
+          area: formData.area.name
+          // Note: pathao_city_id and pathao_zone_id removed - Pathao now auto-detects from address
         }
       };
 
