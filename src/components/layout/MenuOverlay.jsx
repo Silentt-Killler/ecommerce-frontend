@@ -126,14 +126,14 @@ export default function MenuOverlay({ isOpen, onClose }) {
         style={{
           position: 'fixed',
           top: 0,
-          left: 0,
+          right: 0,
           bottom: 0,
           width: '100%',
           maxWidth: 420,
           zIndex: 51,
           backgroundColor: '#FFFFFF',
-          boxShadow: '4px 0 30px rgba(0, 0, 0, 0.15)',
-          animation: 'slideInLeft 0.4s ease',
+          boxShadow: '-4px 0 30px rgba(0, 0, 0, 0.15)',
+          animation: 'slideInRight 0.4s ease',
           display: 'flex',
           flexDirection: 'column'
         }}
@@ -214,7 +214,7 @@ export default function MenuOverlay({ isOpen, onClose }) {
                   onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   <span style={{
-                    fontSize: 15,
+                    fontSize: 18,
                     fontWeight: 400,
                     color: '#0C0C0C',
                     letterSpacing: 0.5
@@ -243,7 +243,7 @@ export default function MenuOverlay({ isOpen, onClose }) {
                   {/* Loading State */}
                   {loadingSubcategories[category.slug] && (
                     <div style={{ padding: '12px 28px 12px 44px' }}>
-                      <span style={{ fontSize: 13, color: '#919191' }}>Loading...</span>
+                      <span style={{ fontSize: 15, color: '#919191' }}>Loading...</span>
                     </div>
                   )}
 
@@ -269,7 +269,7 @@ export default function MenuOverlay({ isOpen, onClose }) {
                     >
                       <ChevronRight size={14} strokeWidth={1.5} style={{ color: '#B08B5C' }} />
                       <span style={{
-                        fontSize: 13,
+                        fontSize: 15,
                         color: '#4A4A4A',
                         fontWeight: 400
                       }}>
@@ -300,7 +300,7 @@ export default function MenuOverlay({ isOpen, onClose }) {
                       onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                       <span style={{
-                        fontSize: 13,
+                        fontSize: 15,
                         color: '#B08B5C',
                         fontWeight: 500,
                         letterSpacing: 0.5
@@ -438,16 +438,16 @@ export default function MenuOverlay({ isOpen, onClose }) {
           to { opacity: 1; }
         }
         
-        @keyframes slideInLeft {
-          from { 
-            transform: translateX(-100%);
-            opacity: 0;
+        @keyframes slideInRight {
+            from { 
+              transform: translateX(100%); /* ডান দিক (পজিটিভ ভ্যালু) */
+              opacity: 0;
+            }
+            to { 
+              transform: translateX(0);
+              opacity: 1;
+            }
           }
-          to { 
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
         
         @keyframes fadeInUp {
           from { 
