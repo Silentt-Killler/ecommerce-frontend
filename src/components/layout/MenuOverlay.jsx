@@ -7,41 +7,41 @@ import { X, ChevronDown, ChevronRight } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 import api from '@/lib/api';
 
-// Main categories with their routes
+// Main categories with their routes (Accessories removed)
 const CATEGORIES = [
   { 
     name: 'Menswear', 
     slug: 'menswear',
-    href: '/menswear'
+    href: '/menswear',
+    type: 'subcategory' // Fetch subcategories
   },
   { 
     name: 'Womenswear', 
     slug: 'womenswear',
-    href: '/womenswear'
+    href: '/womenswear',
+    type: 'subcategory'
   },
   { 
     name: 'Watches', 
     slug: 'watch',
-    href: '/watch'
-  },
-  { 
-    name: 'Accessories', 
-    slug: 'accessories',
-    href: '/accessories'
+    href: '/watch',
+    type: 'brand' // Fetch brands instead
   },
   { 
     name: 'Beauty & Care', 
     slug: 'beauty',
-    href: '/beauty'
+    href: '/beauty',
+    type: 'subcategory'
   }
 ];
 
 export default function MenuOverlay({ isOpen, onClose }) {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [subcategories, setSubcategories] = useState({});
-  const [loadingSubcategories, setLoadingSubcategories] = useState({});
+  const [brands, setBrands] = useState({});
+  const [loading, setLoading] = useState({});
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function MenuOverlay({ isOpen, onClose }) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
-      setExpandedCategory(null); // Reset expanded state on close
+      setExpandedCategory(null);
     }
     return () => {
       document.body.style.overflow = 'unset';
@@ -58,9 +58,9 @@ export default function MenuOverlay({ isOpen, onClose }) {
 
   // Fetch subcategories for a category
   const fetchSubcategories = async (categorySlug) => {
-    if (subcategories[categorySlug]) return; // Already fetched
+    if (subcategories[categorySlug]) return;
     
-    setLoadingSubcategories(prev => ({ ...prev, [categorySlug]: true }));
+    setLoading(prev => ({ ...prev, [categorySlug]: true }));
     try {
       const res = await api.get(`/subcategories?parent=${categorySlug}&is_active=true`);
       setSubcategories(prev => ({
@@ -71,7 +71,26 @@ export default function MenuOverlay({ isOpen, onClose }) {
       console.error('Failed to fetch subcategories:', error);
       setSubcategories(prev => ({ ...prev, [categorySlug]: [] }));
     } finally {
-      setLoadingSubcategories(prev => ({ ...prev, [categorySlug]: false }));
+      setLoading(prev => ({ ...prev, [categorySlug]: false }));
+    }
+  };
+
+  // Fetch brands for watch category
+  const fetchBrands = async (categorySlug) => {
+    if (brands[categorySlug]) return;
+    
+    setLoading(prev => ({ ...prev, [categorySlug]: true }));
+    try {
+      const res = await api.get(`/brands?category_slug=${categorySlug}&is_active=true`);
+      setBrands(prev => ({
+        ...prev,
+        [categorySlug]: res.data.brands || res.data || []
+      }));
+    } catch (error) {
+      console.error('Failed to fetch brands:', error);
+      setBrands(prev => ({ ...prev, [categorySlug]: [] }));
+    } finally {
+      setLoading(prev => ({ ...prev, [categorySlug]: false }));
     }
   };
 
@@ -81,7 +100,11 @@ export default function MenuOverlay({ isOpen, onClose }) {
       setExpandedCategory(null);
     } else {
       setExpandedCategory(category.slug);
-      fetchSubcategories(category.slug);
+      if (category.type === 'brand') {
+        fetchBrands(category.slug);
+      } else {
+        fetchSubcategories(category.slug);
+      }
     }
   };
 
@@ -95,6 +118,12 @@ export default function MenuOverlay({ isOpen, onClose }) {
   const handleSubcategoryClick = (category, subcategory) => {
     onClose();
     router.push(`${category.href}?subcategory=${subcategory.slug}`);
+  };
+
+  // Handle brand click (for watches)
+  const handleBrandClick = (category, brand) => {
+    onClose();
+    router.push(`${category.href}?brand=${brand.slug}`);
   };
 
   // Handle navigation
@@ -233,7 +262,7 @@ export default function MenuOverlay({ isOpen, onClose }) {
                   />
                 </button>
 
-                {/* Subcategories - Expandable */}
+                {/* Expandable Content - Subcategories or Brands */}
                 <div style={{
                   maxHeight: expandedCategory === category.slug ? 500 : 0,
                   overflow: 'hidden',
@@ -241,14 +270,45 @@ export default function MenuOverlay({ isOpen, onClose }) {
                   backgroundColor: '#FAFAFA'
                 }}>
                   {/* Loading State */}
-                  {loadingSubcategories[category.slug] && (
+                  {loading[category.slug] && (
                     <div style={{ padding: '12px 28px 12px 44px' }}>
                       <span style={{ fontSize: 15, color: '#919191' }}>Loading...</span>
                     </div>
                   )}
 
-                  {/* Subcategory List */}
-                  {subcategories[category.slug]?.map((sub) => (
+                  {/* For Watch - Show Brands */}
+                  {category.type === 'brand' && brands[category.slug]?.map((brand) => (
+                    <button
+                      key={brand.slug}
+                      onClick={() => handleBrandClick(category, brand)}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '12px 28px 12px 44px',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F0F0'}
+                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <ChevronRight size={14} strokeWidth={1.5} style={{ color: '#B08B5C' }} />
+                      <span style={{
+                        fontSize: 15,
+                        color: '#4A4A4A',
+                        fontWeight: 400
+                      }}>
+                        {brand.name}
+                      </span>
+                    </button>
+                  ))}
+
+                  {/* For Others - Show Subcategories */}
+                  {category.type === 'subcategory' && subcategories[category.slug]?.map((sub) => (
                     <button
                       key={sub.slug}
                       onClick={() => handleSubcategoryClick(category, sub)}
@@ -279,7 +339,7 @@ export default function MenuOverlay({ isOpen, onClose }) {
                   ))}
 
                   {/* View All Button */}
-                  {expandedCategory === category.slug && !loadingSubcategories[category.slug] && (
+                  {expandedCategory === category.slug && !loading[category.slug] && (
                     <button
                       onClick={() => handleViewAll(category)}
                       style={{
@@ -438,16 +498,16 @@ export default function MenuOverlay({ isOpen, onClose }) {
           to { opacity: 1; }
         }
         
-        @keyframes slideInRight {
-            from { 
-              transform: translateX(100%); /* ডান দিক (পজিটিভ ভ্যালু) */
-              opacity: 0;
-            }
-            to { 
-              transform: translateX(0);
-              opacity: 1;
-            }
+        @keyframes slideInLeft {
+          from { 
+            transform: translateX(-100%);
+            opacity: 0;
           }
+          to { 
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
         
         @keyframes fadeInUp {
           from { 
