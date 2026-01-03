@@ -1,25 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingBag, User, Search, Menu, Plus } from 'lucide-react';
-import useCartStore from '@/store/cartStore';
+import { ShoppingBag, User, Search, Menu, X, Plus } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
+import useCartStore from '@/store/cartStore';
 import MenuOverlay from './MenuOverlay';
 import SearchOverlay from './SearchOverlay';
 
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
+  const { isAuthenticated, user, logout } = useAuthStore();
   const { getItemCount } = useCartStore();
-  const { user, isAuthenticated, logout } = useAuthStore();
   
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  
+  const dropdownRef = useRef(null);
+  const dropdownTimeoutRef = useRef(null);
 
   const isHomePage = pathname === '/';
   const isAdminPage = pathname?.startsWith('/admin');
@@ -36,13 +39,14 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Cleanup timeout on unmount
   useEffect(() => {
-    const handleClickOutside = () => setShowUserDropdown(false);
-    if (showUserDropdown) {
-      document.addEventListener('click', handleClickOutside);
-    }
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [showUserDropdown]);
+    return () => {
+      if (dropdownTimeoutRef.current) {
+        clearTimeout(dropdownTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Hide header on admin pages
   if (isAdminPage) return null;
@@ -51,8 +55,28 @@ export default function Header() {
 
   const handleLogout = () => {
     logout();
-    setShowUserDropdown(false);
+    setShowDropdown(false);
     router.push('/');
+  };
+
+  // Dropdown hover handlers with delay
+  const handleDropdownEnter = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
+    setShowDropdown(true);
+  };
+
+  const handleDropdownLeave = () => {
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setShowDropdown(false);
+    }, 150); // Small delay to allow moving to dropdown
+  };
+
+  // Get text/icon color based on scroll state and page
+  const getColor = () => {
+    if (isHomePage && !isScrolled) return '#FFFFFF';
+    return '#0C0C0C';
   };
 
   return (
@@ -66,12 +90,12 @@ export default function Header() {
           right: 0,
           zIndex: 40,
           transition: 'all 0.3s ease',
-          backgroundColor: isHomePage && !isScrolled ? 'transparent' : 'rgba(255,255,255,0.95)',
-          backdropFilter: isScrolled ? 'blur(8px)' : 'none',
-          borderBottom: isScrolled ? '1px solid #E0E0E0' : 'none'
+          backgroundColor: isHomePage && !isScrolled ? 'transparent' : 'rgba(255,255,255,0.98)',
+          backdropFilter: isScrolled || !isHomePage ? 'blur(10px)' : 'none',
+          borderBottom: isScrolled || !isHomePage ? '1px solid #E0E0E0' : 'none'
         }}
       >
-        {/* Container - Gucci style 1600px with 40px padding */}
+        {/* Container */}
         <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
           <div style={{ 
             display: 'flex', 
@@ -81,17 +105,16 @@ export default function Header() {
           }}>
             
             {/* Left - Contact Us (Desktop only) */}
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1 }} className="hidden md:block">
               <Link 
                 href="/contact" 
-                className="hidden md:inline-flex"
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 4,
                   fontSize: 12,
                   letterSpacing: 1,
-                  color: isHomePage && !isScrolled ? '#FFFFFF' : '#0C0C0C',
+                  color: getColor(),
                   textDecoration: 'none',
                   transition: 'color 0.3s'
                 }}
@@ -101,7 +124,7 @@ export default function Header() {
               </Link>
             </div>
 
-            {/* Center - Logo (absolute positioned) */}
+            {/* Center - Logo */}
             <Link 
               href="/"
               style={{
@@ -111,7 +134,7 @@ export default function Header() {
                 fontSize: 22,
                 fontWeight: 300,
                 letterSpacing: 6,
-                color: isHomePage && !isScrolled ? '#FFFFFF' : '#0C0C0C',
+                color: getColor(),
                 textDecoration: 'none',
                 transition: 'color 0.3s'
               }}
@@ -125,15 +148,17 @@ export default function Header() {
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'flex-end',
-              gap: 16 
+              gap: 18 
             }}>
               {/* Cart */}
               <Link 
                 href="/cart" 
                 style={{ 
                   position: 'relative',
-                  color: isHomePage && !isScrolled ? '#FFFFFF' : '#0C0C0C',
-                  transition: 'color 0.3s'
+                  color: getColor(),
+                  transition: 'color 0.3s',
+                  display: 'flex',
+                  alignItems: 'center'
                 }}
               >
                 <ShoppingBag size={20} strokeWidth={1.5} />
@@ -153,45 +178,59 @@ export default function Header() {
                     justifyContent: 'center',
                     borderRadius: '50%'
                   }}>
-                    {cartCount > 9 ? '9+' : cartCount}
+                    {cartCount}
                   </span>
                 )}
               </Link>
 
-              {/* User */}
+              {/* User Icon with Dropdown */}
               {mounted && isAuthenticated ? (
                 <div 
+                  ref={dropdownRef}
                   style={{ position: 'relative' }}
-                  onMouseEnter={() => setShowUserDropdown(true)}
-                  onMouseLeave={() => setShowUserDropdown(false)}
+                  onMouseEnter={handleDropdownEnter}
+                  onMouseLeave={handleDropdownLeave}
                 >
-                  <button style={{ 
-                    background: 'none', 
-                    border: 'none', 
-                    cursor: 'pointer',
-                    color: isHomePage && !isScrolled ? '#FFFFFF' : '#0C0C0C',
-                    transition: 'color 0.3s',
-                    padding: 4,
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}>
+                  <button 
+                    style={{ 
+                      background: 'none', 
+                      border: 'none', 
+                      cursor: 'pointer',
+                      color: getColor(),
+                      transition: 'color 0.3s',
+                      padding: 4,
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
                     <User size={20} strokeWidth={1.5} />
                   </button>
                   
-                  {/* User Dropdown */}
-                  {showUserDropdown && (
-                    <div style={{
+                  {/* Dropdown Menu */}
+                  <div 
+                    style={{
                       position: 'absolute',
                       right: 0,
                       top: '100%',
-                      marginTop: 8,
+                      paddingTop: 8, // Gap for hover transition
+                      opacity: showDropdown ? 1 : 0,
+                      visibility: showDropdown ? 'visible' : 'hidden',
+                      transform: showDropdown ? 'translateY(0)' : 'translateY(-10px)',
+                      transition: 'all 0.2s ease',
+                      zIndex: 100
+                    }}
+                    onMouseEnter={handleDropdownEnter}
+                    onMouseLeave={handleDropdownLeave}
+                  >
+                    <div style={{
                       width: 200,
                       backgroundColor: '#FFFFFF',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
                       borderRadius: 8,
                       overflow: 'hidden',
-                      zIndex: 100
+                      border: '1px solid #E8E8E8'
                     }}>
+                      {/* User Info */}
                       <div style={{ 
                         padding: '14px 16px', 
                         borderBottom: '1px solid #E8E8E8',
@@ -205,20 +244,41 @@ export default function Header() {
                         </p>
                       </div>
                       
+                      {/* Menu Items */}
                       <div style={{ padding: '8px 0' }}>
                         <Link 
-                          href="/orders" 
+                          href="/account" 
                           style={{ 
                             display: 'block', 
                             padding: '10px 16px', 
                             fontSize: 14, 
                             color: '#0C0C0C', 
-                            textDecoration: 'none'
+                            textDecoration: 'none',
+                            transition: 'background 0.2s'
                           }}
+                          onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'}
+                          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                        >
+                          My Profile
+                        </Link>
+                        
+                        <Link 
+                          href="/account/orders" 
+                          style={{ 
+                            display: 'block', 
+                            padding: '10px 16px', 
+                            fontSize: 14, 
+                            color: '#0C0C0C', 
+                            textDecoration: 'none',
+                            transition: 'background 0.2s'
+                          }}
+                          onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'}
+                          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
                         >
                           My Orders
                         </Link>
                         
+                        {/* Admin Link - Only for admins */}
                         {user?.role === 'admin' && (
                           <Link 
                             href="/admin" 
@@ -228,15 +288,20 @@ export default function Header() {
                               fontSize: 14, 
                               color: '#B08B5C', 
                               fontWeight: 500,
-                              textDecoration: 'none'
+                              textDecoration: 'none',
+                              transition: 'background 0.2s'
                             }}
+                            onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'}
+                            onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
                           >
                             Admin Panel
                           </Link>
                         )}
                         
+                        {/* Divider */}
                         <div style={{ height: 1, backgroundColor: '#E8E8E8', margin: '8px 0' }} />
                         
+                        {/* Logout */}
                         <button
                           onClick={handleLogout}
                           style={{ 
@@ -248,20 +313,23 @@ export default function Header() {
                             color: '#DC2626',
                             background: 'none',
                             border: 'none',
-                            cursor: 'pointer'
+                            cursor: 'pointer',
+                            transition: 'background 0.2s'
                           }}
+                          onMouseOver={(e) => e.target.style.backgroundColor = '#FEF2F2'}
+                          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
                         >
                           Logout
                         </button>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               ) : (
                 <Link 
                   href="/login" 
                   style={{ 
-                    color: isHomePage && !isScrolled ? '#FFFFFF' : '#0C0C0C',
+                    color: getColor(),
                     transition: 'color 0.3s',
                     display: 'flex',
                     alignItems: 'center'
@@ -278,7 +346,7 @@ export default function Header() {
                   background: 'none', 
                   border: 'none', 
                   cursor: 'pointer',
-                  color: isHomePage && !isScrolled ? '#FFFFFF' : '#0C0C0C',
+                  color: getColor(),
                   transition: 'color 0.3s',
                   padding: 0,
                   display: 'flex',
@@ -288,23 +356,23 @@ export default function Header() {
                 <Search size={20} strokeWidth={1.5} />
               </button>
 
-              {/* Menu Toggle - Gucci style with icon + MENU text */}
+              {/* Menu Toggle - Desktop only */}
               <button 
                 onClick={() => setShowMenu(true)}
+                className="hidden md:flex"
                 style={{ 
-                  display: 'flex',
                   alignItems: 'center',
                   gap: 6,
                   background: 'none', 
                   border: 'none', 
                   cursor: 'pointer',
-                  color: isHomePage && !isScrolled ? '#FFFFFF' : '#0C0C0C',
+                  color: getColor(),
                   transition: 'color 0.3s',
                   padding: 0
                 }}
               >
                 <Menu size={20} strokeWidth={1.5} />
-                <span style={{ fontSize: 12, letterSpacing: 1 }} className="hidden sm:inline">MENU</span>
+                <span style={{ fontSize: 12, letterSpacing: 1 }}>MENU</span>
               </button>
             </div>
           </div>
