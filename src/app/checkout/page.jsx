@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Truck, CreditCard, Shield, ChevronDown, Package, CheckCircle } from 'lucide-react';
+import { Truck, CreditCard, Shield, ChevronDown, Package, CheckCircle, Tag, X } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 import useAuthStore from '@/store/authStore';
 import { districts } from '@/data/bangladesh-locations';
@@ -43,6 +43,12 @@ function CheckoutContent() {
   // Payment
   const [paymentType, setPaymentType] = useState('partial'); // partial or full
   const [paymentMethod, setPaymentMethod] = useState('bkash'); // bkash, nagad, upay
+  
+  // Coupon
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [discount, setDiscount] = useState(0);
   
   // Location
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
@@ -111,10 +117,59 @@ function CheckoutContent() {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  // Apply coupon
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Please enter a coupon code');
+      return;
+    }
+
+    setCouponLoading(true);
+    try {
+      // Try to validate coupon - adjust endpoint based on your backend
+      const res = await api.post('/coupons/validate', { 
+        code: couponCode.toUpperCase(),
+        subtotal: subtotal
+      });
+      
+      const coupon = res.data;
+      setAppliedCoupon(coupon);
+      
+      // Calculate discount
+      let discountAmount = 0;
+      if (coupon.type === 'percentage') {
+        discountAmount = (subtotal * coupon.value) / 100;
+        if (coupon.max_discount && discountAmount > coupon.max_discount) {
+          discountAmount = coupon.max_discount;
+        }
+      } else {
+        discountAmount = coupon.value;
+      }
+      
+      setDiscount(discountAmount);
+      toast.success(`Coupon applied! You saved ৳${discountAmount.toLocaleString()}`);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Invalid coupon code');
+      setAppliedCoupon(null);
+      setDiscount(0);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  // Remove coupon
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setDiscount(0);
+    toast.success('Coupon removed');
+  };
+
   const subtotal = getSubtotal();
-  const total = subtotal + deliveryCharge;
-  const advanceAmount = deliveryCharge;
-  const codAmount = subtotal;
+  const finalDeliveryCharge = paymentType === 'full' ? 0 : deliveryCharge;
+  const total = subtotal - discount + finalDeliveryCharge;
+  const advanceAmount = paymentType === 'full' ? (subtotal - discount) : deliveryCharge;
+  const codAmount = paymentType === 'full' ? 0 : (subtotal - discount);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -144,13 +199,16 @@ function CheckoutContent() {
           area: formData.area,
           address: formData.address
         },
+        customer_phone: formData.phone,
         subtotal,
-        delivery_charge: deliveryCharge,
+        discount,
+        coupon_code: appliedCoupon?.code || null,
+        delivery_charge: finalDeliveryCharge,
         total,
         payment_type: paymentType,
         payment_method: paymentMethod,
-        advance_paid: paymentType === 'full' ? total : advanceAmount,
-        cod_amount: paymentType === 'full' ? 0 : codAmount,
+        advance_paid: advanceAmount,
+        cod_amount: codAmount,
         notes: formData.note
       };
 
@@ -174,7 +232,7 @@ function CheckoutContent() {
 
   return (
     <div style={{ backgroundColor: '#F7F7F7', minHeight: '100vh', paddingTop: 90, paddingBottom: 40 }}>
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 20px' }}>
+      <div style={{ maxWidth: 1050, margin: '0 auto', padding: '0 20px' }}>
         
         {/* Title */}
         <h1 style={{ 
@@ -190,7 +248,7 @@ function CheckoutContent() {
         </h1>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 24, alignItems: 'start' }}>
             
             {/* Left Column */}
             <div>
@@ -216,7 +274,7 @@ function CheckoutContent() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    placeholder="Enter your name as it appears on your ID"
+                    placeholder="Enter your name"
                     required
                     style={{
                       width: '100%',
@@ -227,13 +285,10 @@ function CheckoutContent() {
                       outline: 'none'
                     }}
                   />
-                  <p style={{ fontSize: 11, color: '#919191', marginTop: 4 }}>
-                    Enter your name as it appears on your ID for accurate delivery
-                  </p>
                 </div>
 
                 {/* Phone & Email */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 0 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#0C0C0C', marginBottom: 6 }}>
                       Phone Number <span style={{ color: '#DC2626' }}>*</span>
@@ -254,9 +309,6 @@ function CheckoutContent() {
                         outline: 'none'
                       }}
                     />
-                    <p style={{ fontSize: 11, color: '#919191', marginTop: 4 }}>
-                      Delivery partner will contact you
-                    </p>
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#0C0C0C', marginBottom: 6 }}>
@@ -278,9 +330,6 @@ function CheckoutContent() {
                         outline: 'none'
                       }}
                     />
-                    <p style={{ fontSize: 11, color: '#919191', marginTop: 4 }}>
-                      We'll send order confirmation here
-                    </p>
                   </div>
                 </div>
               </div>
@@ -316,7 +365,7 @@ function CheckoutContent() {
                           setShowDistrictDropdown(true);
                         }}
                         onFocus={() => setShowDistrictDropdown(true)}
-                        placeholder="Type to search district..."
+                        placeholder="Search district..."
                         style={{
                           width: '100%',
                           padding: '10px 14px',
@@ -336,7 +385,7 @@ function CheckoutContent() {
                         top: '100%',
                         left: 0,
                         right: 0,
-                        maxHeight: 200,
+                        maxHeight: 180,
                         overflowY: 'auto',
                         backgroundColor: '#FFFFFF',
                         border: '1px solid #E0E0E0',
@@ -345,7 +394,7 @@ function CheckoutContent() {
                         zIndex: 20,
                         marginTop: 4
                       }}>
-                        {filteredDistricts.slice(0, 10).map((d) => (
+                        {filteredDistricts.slice(0, 8).map((d) => (
                           <button
                             type="button"
                             key={d.id}
@@ -366,9 +415,6 @@ function CheckoutContent() {
                         ))}
                       </div>
                     )}
-                    <p style={{ fontSize: 11, color: '#919191', marginTop: 4 }}>
-                      Select your district to calculate shipping fee
-                    </p>
                   </div>
 
                   {/* Area */}
@@ -407,7 +453,7 @@ function CheckoutContent() {
                         top: '100%',
                         left: 0,
                         right: 0,
-                        maxHeight: 200,
+                        maxHeight: 180,
                         overflowY: 'auto',
                         backgroundColor: '#FFFFFF',
                         border: '1px solid #E0E0E0',
@@ -437,9 +483,6 @@ function CheckoutContent() {
                         ))}
                       </div>
                     )}
-                    <p style={{ fontSize: 11, color: '#919191', marginTop: 4 }}>
-                      Choose your area for faster delivery
-                    </p>
                   </div>
                 </div>
 
@@ -453,7 +496,7 @@ function CheckoutContent() {
                     name="address"
                     value={formData.address}
                     onChange={handleInputChange}
-                    placeholder="House number, road name, building, landmark..."
+                    placeholder="House, road, building, landmark..."
                     required
                     style={{
                       width: '100%',
@@ -476,7 +519,7 @@ function CheckoutContent() {
                     name="note"
                     value={formData.note}
                     onChange={handleInputChange}
-                    placeholder="Any special instructions for delivery..."
+                    placeholder="Special instructions..."
                     style={{
                       width: '100%',
                       padding: '10px 14px',
@@ -489,7 +532,7 @@ function CheckoutContent() {
                 </div>
               </div>
 
-              {/* Payment Options */}
+              {/* Payment Type Selection */}
               <div style={{ 
                 backgroundColor: '#FFFFFF', 
                 borderRadius: 8, 
@@ -499,12 +542,11 @@ function CheckoutContent() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                   <CreditCard size={18} style={{ color: '#B08B5C' }} />
                   <h2 style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C' }}>
-                    Payment Options
+                    Payment Type
                   </h2>
                 </div>
 
-                {/* Payment Type Selection */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   {/* Partial Payment */}
                   <button
                     type="button"
@@ -518,15 +560,12 @@ function CheckoutContent() {
                       textAlign: 'left'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: '#0C0C0C' }}>Pay Advance (COD)</span>
                       {paymentType === 'partial' && <CheckCircle size={16} style={{ color: '#B08B5C' }} />}
                     </div>
-                    <p style={{ fontSize: 12, color: '#919191', marginBottom: 4 }}>
-                      Pay ৳{deliveryCharge} now, rest on delivery
-                    </p>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#B08B5C' }}>
-                      Pay Now: ৳{deliveryCharge}
+                    <p style={{ fontSize: 12, color: '#919191' }}>
+                      Pay ৳{deliveryCharge} now, ৳{(subtotal - discount).toLocaleString()} on delivery
                     </p>
                   </button>
 
@@ -544,7 +583,6 @@ function CheckoutContent() {
                       position: 'relative'
                     }}
                   >
-                    {/* Free Delivery Badge */}
                     <span style={{
                       position: 'absolute',
                       top: -8,
@@ -558,85 +596,14 @@ function CheckoutContent() {
                     }}>
                       FREE DELIVERY
                     </span>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: '#0C0C0C' }}>Full Payment</span>
                       {paymentType === 'full' && <CheckCircle size={16} style={{ color: '#B08B5C' }} />}
                     </div>
-                    <p style={{ fontSize: 12, color: '#919191', marginBottom: 4 }}>
-                      Pay full amount, free delivery
-                    </p>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#B08B5C' }}>
-                      Pay Now: ৳{subtotal}
+                    <p style={{ fontSize: 12, color: '#919191' }}>
+                      Pay ৳{(subtotal - discount).toLocaleString()} now, free delivery
                     </p>
                   </button>
-                </div>
-
-                {/* Payment Method */}
-                <div>
-                  <p style={{ fontSize: 12, fontWeight: 500, color: '#666', marginBottom: 10 }}>
-                    Select Payment Method
-                  </p>
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    {/* Bkash */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('bkash')}
-                      style={{
-                        flex: 1,
-                        padding: '12px',
-                        border: paymentMethod === 'bkash' ? '2px solid #E2136E' : '1px solid #E0E0E0',
-                        borderRadius: 8,
-                        backgroundColor: paymentMethod === 'bkash' ? '#FDF2F8' : '#FFFFFF',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 6
-                      }}
-                    >
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#E2136E' }}>bKash</span>
-                    </button>
-
-                    {/* Nagad */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('nagad')}
-                      style={{
-                        flex: 1,
-                        padding: '12px',
-                        border: paymentMethod === 'nagad' ? '2px solid #F6921E' : '1px solid #E0E0E0',
-                        borderRadius: 8,
-                        backgroundColor: paymentMethod === 'nagad' ? '#FFF7ED' : '#FFFFFF',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 6
-                      }}
-                    >
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#F6921E' }}>Nagad</span>
-                    </button>
-
-                    {/* Upay */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('upay')}
-                      style={{
-                        flex: 1,
-                        padding: '12px',
-                        border: paymentMethod === 'upay' ? '2px solid #00A651' : '1px solid #E0E0E0',
-                        borderRadius: 8,
-                        backgroundColor: paymentMethod === 'upay' ? '#F0FDF4' : '#FFFFFF',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 6
-                      }}
-                    >
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#00A651' }}>Upay</span>
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
@@ -645,7 +612,7 @@ function CheckoutContent() {
             <div style={{ 
               backgroundColor: '#FFFFFF', 
               borderRadius: 8, 
-              padding: 20,
+              padding: 24,
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
               position: 'sticky',
               top: 90
@@ -655,13 +622,13 @@ function CheckoutContent() {
               </h2>
 
               {/* Products */}
-              <div style={{ marginBottom: 16, maxHeight: 200, overflowY: 'auto' }}>
+              <div style={{ marginBottom: 16, maxHeight: 160, overflowY: 'auto' }}>
                 {items.map((item, index) => (
-                  <div key={index} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                  <div key={index} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
                     <div style={{ 
                       position: 'relative',
-                      width: 50, 
-                      height: 50, 
+                      width: 48, 
+                      height: 48, 
                       backgroundColor: '#F5F5F5', 
                       borderRadius: 6,
                       overflow: 'hidden',
@@ -671,18 +638,18 @@ function CheckoutContent() {
                         <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
                       ) : (
                         <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Package size={20} style={{ color: '#D0D0D0' }} />
+                          <Package size={18} style={{ color: '#D0D0D0' }} />
                         </div>
                       )}
                       <span style={{
                         position: 'absolute',
                         top: -4,
                         right: -4,
-                        width: 18,
-                        height: 18,
+                        width: 16,
+                        height: 16,
                         backgroundColor: '#B08B5C',
                         color: '#FFFFFF',
-                        fontSize: 10,
+                        fontSize: 9,
                         fontWeight: 600,
                         borderRadius: '50%',
                         display: 'flex',
@@ -692,94 +659,215 @@ function CheckoutContent() {
                         {item.quantity}
                       </span>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 13, fontWeight: 500, color: '#0C0C0C', marginBottom: 2 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: '#0C0C0C', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {item.name}
                       </p>
                       <p style={{ fontSize: 12, color: '#919191' }}>
-                        ৳{item.price.toLocaleString()}
+                        ৳{(item.price * item.quantity).toLocaleString()}
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div style={{ borderTop: '1px solid #E8E8E8', paddingTop: 12 }}>
-                {/* Subtotal */}
+              {/* Coupon Code */}
+              <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid #E8E8E8' }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>
+                  Have a coupon?
+                </label>
+                {appliedCoupon ? (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 12px',
+                    backgroundColor: '#F0FDF4',
+                    borderRadius: 6,
+                    border: '1px solid #BBF7D0'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Tag size={16} style={{ color: '#059669' }} />
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#059669' }}>{appliedCoupon.code}</span>
+                      <span style={{ fontSize: 12, color: '#666' }}>(-৳{discount.toLocaleString()})</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                    >
+                      <X size={16} style={{ color: '#DC2626' }} />
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Enter code"
+                      style={{
+                        flex: 1,
+                        padding: '10px 12px',
+                        border: '1px solid #E0E0E0',
+                        borderRadius: 6,
+                        fontSize: 13,
+                        outline: 'none',
+                        fontFamily: 'monospace'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading}
+                      style={{
+                        padding: '10px 16px',
+                        backgroundColor: '#0C0C0C',
+                        color: '#FFFFFF',
+                        fontSize: 12,
+                        fontWeight: 500,
+                        border: 'none',
+                        borderRadius: 6,
+                        cursor: couponLoading ? 'not-allowed' : 'pointer',
+                        opacity: couponLoading ? 0.7 : 1
+                      }}
+                    >
+                      {couponLoading ? '...' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Pricing */}
+              <div style={{ marginBottom: 16 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                   <span style={{ fontSize: 13, color: '#666' }}>Subtotal</span>
                   <span style={{ fontSize: 13, color: '#0C0C0C' }}>৳{subtotal.toLocaleString()}</span>
                 </div>
+                
+                {discount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontSize: 13, color: '#059669' }}>Discount</span>
+                    <span style={{ fontSize: 13, color: '#059669' }}>-৳{discount.toLocaleString()}</span>
+                  </div>
+                )}
 
-                {/* Delivery */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                   <span style={{ fontSize: 13, color: '#666' }}>Delivery</span>
-                  <span style={{ fontSize: 13, color: paymentType === 'full' ? '#059669' : '#B08B5C' }}>
+                  <span style={{ fontSize: 13, color: paymentType === 'full' ? '#059669' : '#0C0C0C' }}>
                     {paymentType === 'full' ? 'FREE' : `৳${deliveryCharge}`}
                   </span>
                 </div>
 
-                <div style={{ borderTop: '1px solid #E8E8E8', paddingTop: 12, marginBottom: 12 }}>
-                  {/* Total */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C' }}>Total</span>
-                    <span style={{ fontSize: 17, fontWeight: 700, color: '#0C0C0C' }}>
-                      ৳{paymentType === 'full' ? subtotal.toLocaleString() : total.toLocaleString()}
-                    </span>
-                  </div>
-
-                  {/* Payment Breakdown */}
-                  <div style={{ backgroundColor: '#FAFAFA', borderRadius: 6, padding: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 12, color: '#666' }}>Pay Now ({paymentMethod})</span>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#B08B5C' }}>
-                        ৳{paymentType === 'full' ? subtotal.toLocaleString() : deliveryCharge}
-                      </span>
-                    </div>
-                    {paymentType === 'partial' && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: 12, color: '#666' }}>Pay on Delivery</span>
-                        <span style={{ fontSize: 12, color: '#0C0C0C' }}>৳{subtotal.toLocaleString()}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  style={{
-                    width: '100%',
-                    padding: '14px',
-                    backgroundColor: '#B08B5C',
-                    color: '#FFFFFF',
-                    fontSize: 14,
-                    fontWeight: 600,
-                    border: 'none',
-                    borderRadius: 6,
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    opacity: loading ? 0.7 : 1,
-                    textTransform: 'uppercase',
-                    letterSpacing: 1
-                  }}
-                >
-                  {loading ? 'Processing...' : `Pay ৳${paymentType === 'full' ? subtotal : deliveryCharge} & Place Order`}
-                </button>
-
-                {/* Security Note */}
-                <div style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  gap: 6,
-                  marginTop: 12
-                }}>
-                  <Shield size={14} style={{ color: '#059669' }} />
-                  <span style={{ fontSize: 11, color: '#919191' }}>
-                    Your payment information is secure and encrypted
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid #E8E8E8' }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C' }}>Total</span>
+                  <span style={{ fontSize: 17, fontWeight: 700, color: '#0C0C0C' }}>
+                    ৳{total.toLocaleString()}
                   </span>
                 </div>
+              </div>
+
+              {/* Payment Method */}
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ fontSize: 12, fontWeight: 500, color: '#666', marginBottom: 10 }}>
+                  Payment Method
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('bkash')}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      border: paymentMethod === 'bkash' ? '2px solid #E2136E' : '1px solid #E0E0E0',
+                      borderRadius: 6,
+                      backgroundColor: paymentMethod === 'bkash' ? '#FDF2F8' : '#FFFFFF',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#E2136E' }}>bKash</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('nagad')}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      border: paymentMethod === 'nagad' ? '2px solid #F6921E' : '1px solid #E0E0E0',
+                      borderRadius: 6,
+                      backgroundColor: paymentMethod === 'nagad' ? '#FFF7ED' : '#FFFFFF',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#F6921E' }}>Nagad</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod('upay')}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      border: paymentMethod === 'upay' ? '2px solid #00A651' : '1px solid #E0E0E0',
+                      borderRadius: 6,
+                      backgroundColor: paymentMethod === 'upay' ? '#F0FDF4' : '#FFFFFF',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <span style={{ fontSize: 12, fontWeight: 600, color: '#00A651' }}>Upay</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Payment Breakdown */}
+              <div style={{ backgroundColor: '#FAFAFA', borderRadius: 6, padding: 12, marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <span style={{ fontSize: 12, color: '#666' }}>Pay Now ({paymentMethod})</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#B08B5C' }}>
+                    ৳{advanceAmount.toLocaleString()}
+                  </span>
+                </div>
+                {paymentType === 'partial' && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 12, color: '#666' }}>Pay on Delivery</span>
+                    <span style={{ fontSize: 12, color: '#0C0C0C' }}>৳{codAmount.toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  backgroundColor: '#B08B5C',
+                  color: '#FFFFFF',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  border: 'none',
+                  borderRadius: 6,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1,
+                  textTransform: 'uppercase',
+                  letterSpacing: 1
+                }}
+              >
+                {loading ? 'Processing...' : `Pay ৳${advanceAmount.toLocaleString()} & Place Order`}
+              </button>
+
+              {/* Security Note */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                gap: 6,
+                marginTop: 12
+              }}>
+                <Shield size={14} style={{ color: '#059669' }} />
+                <span style={{ fontSize: 11, color: '#919191' }}>
+                  Secure & encrypted payment
+                </span>
               </div>
             </div>
           </div>
