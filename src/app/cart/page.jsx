@@ -7,7 +7,7 @@ import { Minus, Plus, X, ShoppingBag, ArrowLeft, Lock } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, getTotal, getItemCount } = useCartStore();
+  const { items, removeItem, updateQuantity, getSubtotal, getItemCount } = useCartStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export default function CartPage() {
     );
   }
 
-  const subtotal = getTotal();
+  const subtotal = getSubtotal();
   const itemCount = getItemCount();
 
   return (
