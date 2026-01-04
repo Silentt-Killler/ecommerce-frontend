@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Truck, CreditCard, Shield, ChevronDown, Package, CheckCircle } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 import useAuthStore from '@/store/authStore';
-import { DISTRICTS } from '@/data/bangladesh-locations';
+import { districts } from '@/data/bangladesh-locations';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -82,7 +82,7 @@ function CheckoutContent() {
   }, [selectedDistrict]);
 
   // Filter districts
-  const filteredDistricts = DISTRICTS.filter(d => 
+  const filteredDistricts = districts.filter(d => 
     d.name.toLowerCase().includes(districtSearch.toLowerCase()) ||
     d.bn_name?.includes(districtSearch)
   );
