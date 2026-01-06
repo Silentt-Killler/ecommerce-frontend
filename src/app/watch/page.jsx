@@ -7,7 +7,7 @@ import { ChevronDown, X, Watch, SlidersHorizontal } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/product/ProductCard';
 
-// Filter Dropdown Component
+// Filter Dropdown Component - FIXED to show options
 function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
   return (
     <div style={{ position: 'relative' }}>
@@ -40,14 +40,14 @@ function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
             top: '100%',
             left: 0,
             marginTop: 8,
-            width: 200,
+            width: 180,
             backgroundColor: '#FFFFFF',
             border: '1px solid #E5E7EB',
             borderRadius: 8,
             boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             zIndex: 20,
             padding: '8px 0',
-            maxHeight: 280,
+            maxHeight: 240,
             overflowY: 'auto'
           }}>
             <button
@@ -68,21 +68,21 @@ function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
             </button>
             {options.map((option) => (
               <button
-                key={typeof option === 'object' ? option.value : option}
-                onClick={() => { onChange(typeof option === 'object' ? option.value : option); onToggle(); }}
+                key={option}
+                onClick={() => { onChange(option); onToggle(); }}
                 style={{
                   width: '100%',
                   textAlign: 'left',
                   padding: '10px 16px',
                   fontSize: 13,
-                  color: value === (typeof option === 'object' ? option.value : option) ? '#B08B5C' : '#374151',
-                  fontWeight: value === (typeof option === 'object' ? option.value : option) ? 600 : 400,
+                  color: value === option ? '#B08B5C' : '#374151',
+                  fontWeight: value === option ? 600 : 400,
                   backgroundColor: 'transparent',
                   border: 'none',
                   cursor: 'pointer'
                 }}
               >
-                {typeof option === 'object' ? option.label : option}
+                {option}
               </button>
             ))}
           </div>
@@ -116,40 +116,22 @@ function BrandPill({ brand, isActive, onClick }) {
   );
 }
 
-// Loading Component
-function LoadingSpinner() {
-  return (
-    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 40, height: 40, border: '3px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-    </div>
-  );
-}
-
 // Main Content Component
 function WatchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   
-  // Get initial values from URL
+  // ✅ FIX: Read initial value from URL
   const [selectedBrand, setSelectedBrand] = useState(searchParams.get('brand') || '');
   const [selectedPrice, setSelectedPrice] = useState(searchParams.get('price') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [openFilter, setOpenFilter] = useState('');
 
-  // Price filter options with values
-  const priceOptions = [
-    { label: 'Under ৳5,000', value: '0-5000' },
-    { label: '৳5,000 - ৳10,000', value: '5000-10000' },
-    { label: '৳10,000 - ৳25,000', value: '10000-25000' },
-    { label: '৳25,000 - ৳50,000', value: '25000-50000' },
-    { label: 'Above ৳50,000', value: '50000-999999' }
-  ];
-
+  const priceOptions = ['Under ৳5000', '৳5000 - ৳10000', '৳10000 - ৳25000', '৳25000 - ৳50000', 'Above ৳50000'];
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'price_low', label: 'Price: Low to High' },
@@ -157,11 +139,15 @@ function WatchContent() {
     { value: 'popular', label: 'Most Popular' }
   ];
 
-  // Update state when URL changes
+  // ✅ FIX: Update state when URL changes
   useEffect(() => {
-    setSelectedBrand(searchParams.get('brand') || '');
-    setSelectedPrice(searchParams.get('price') || '');
-    setSortBy(searchParams.get('sort') || 'newest');
+    const brandFromUrl = searchParams.get('brand') || '';
+    const priceFromUrl = searchParams.get('price') || '';
+    const sortFromUrl = searchParams.get('sort') || 'newest';
+    
+    setSelectedBrand(brandFromUrl);
+    setSelectedPrice(priceFromUrl);
+    setSortBy(sortFromUrl);
   }, [searchParams]);
 
   useEffect(() => {
@@ -172,19 +158,19 @@ function WatchContent() {
     fetchProducts();
   }, [selectedBrand, selectedPrice, sortBy]);
 
-  // Update URL when filters change
-  const updateURL = (newBrand, newPrice, newSort) => {
+  // ✅ FIX: Update URL when filter changes
+  const updateURL = (brand, price, sort) => {
     const params = new URLSearchParams();
-    if (newBrand) params.set('brand', newBrand);
-    if (newPrice) params.set('price', newPrice);
-    if (newSort && newSort !== 'newest') params.set('sort', newSort);
+    if (brand) params.set('brand', brand);
+    if (price) params.set('price', price);
+    if (sort && sort !== 'newest') params.set('sort', sort);
     
     const queryString = params.toString();
     router.push(`/watch${queryString ? '?' + queryString : ''}`, { scroll: false });
   };
 
-  const handleBrandChange = (brand) => {
-    const newBrand = selectedBrand === brand ? '' : brand;
+  const handleBrandChange = (brandSlug) => {
+    const newBrand = selectedBrand === brandSlug ? '' : brandSlug;
     setSelectedBrand(newBrand);
     updateURL(newBrand, selectedPrice, sortBy);
   };
@@ -216,11 +202,13 @@ function WatchContent() {
       if (selectedBrand) url += `&brand=${selectedBrand}`;
       if (sortBy) url += `&sort=${sortBy}`;
       
-      // Parse price range
+      // Parse price for API
       if (selectedPrice) {
-        const [minPrice, maxPrice] = selectedPrice.split('-');
-        if (minPrice) url += `&min_price=${minPrice}`;
-        if (maxPrice) url += `&max_price=${maxPrice}`;
+        if (selectedPrice === 'Under ৳5000') url += '&max_price=5000';
+        else if (selectedPrice === '৳5000 - ৳10000') url += '&min_price=5000&max_price=10000';
+        else if (selectedPrice === '৳10000 - ৳25000') url += '&min_price=10000&max_price=25000';
+        else if (selectedPrice === '৳25000 - ৳50000') url += '&min_price=25000&max_price=50000';
+        else if (selectedPrice === 'Above ৳50000') url += '&min_price=50000';
       }
       
       const res = await api.get(url);
@@ -242,48 +230,35 @@ function WatchContent() {
 
   const hasActiveFilters = selectedBrand || selectedPrice;
 
-  // Get display label for price
-  const getPriceLabel = () => {
-    if (!selectedPrice) return '';
-    const option = priceOptions.find(p => p.value === selectedPrice);
-    return option ? option.label : selectedPrice;
-  };
-
   return (
-    <div style={{ backgroundColor: '#F7F7F7', minHeight: '100vh' }}>
-      {/* Hero Section */}
-      <div style={{ 
-        backgroundColor: '#FFFFFF', 
-        borderBottom: '1px solid #E5E7EB',
-        paddingTop: 80
-      }}>
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '60px 40px 40px' }}>
-          <div style={{ textAlign: 'center', marginBottom: 40 }}>
-            <h1 style={{ 
-              fontSize: 32, 
-              fontWeight: 300, 
-              letterSpacing: 8, 
-              textTransform: 'uppercase',
-              marginBottom: 12,
-              color: '#0C0C0C'
-            }}>
-              Watches
-            </h1>
-            <p style={{ fontSize: 14, color: '#6B7280', letterSpacing: 1 }}>
-              Discover our curated collection of premium timepieces
-            </p>
-          </div>
+    <div style={{ minHeight: '100vh', backgroundColor: '#F7F7F7' }}>
+      {/* Spacer for header */}
+      <div style={{ height: 60 }} />
 
-          {/* Brand Pills */}
-          {brands.length > 0 && (
+      {/* Hero Section with Brand Pills */}
+      {brands.length > 0 && (
+        <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6' }}>
+          <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px' }}>
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <h1 style={{ 
+                fontSize: 28, 
+                fontWeight: 300, 
+                letterSpacing: 6, 
+                textTransform: 'uppercase',
+                color: '#0C0C0C'
+              }}>
+                Watches
+              </h1>
+            </div>
+            
+            {/* Brand Pills */}
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
+              justifyContent: 'center',
               gap: 12, 
               overflowX: 'auto',
-              paddingBottom: 8,
-              justifyContent: 'center',
-              flexWrap: 'wrap'
+              paddingBottom: 8
             }}>
               <button
                 onClick={() => handleBrandChange('')}
@@ -312,9 +287,9 @@ function WatchContent() {
                 />
               ))}
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Filter Bar */}
       <div style={{ 
@@ -363,7 +338,7 @@ function WatchContent() {
             {/* Right - Sort & Count */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
               <span style={{ fontSize: 13, color: '#6B7280' }}>
-                {total} {total === 1 ? 'item' : 'items'}
+                {total} items
               </span>
               
               <select
@@ -395,39 +370,47 @@ function WatchContent() {
       {/* Products Grid */}
       <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px 60px' }}>
         {loading ? (
-          <LoadingSpinner />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+            <div style={{ 
+              width: 40, 
+              height: 40, 
+              border: '2px solid #B08B5C', 
+              borderTopColor: 'transparent', 
+              borderRadius: '50%', 
+              animation: 'spin 1s linear infinite' 
+            }} />
+          </div>
         ) : products.length > 0 ? (
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: 24 
+            gap: 30 
           }}>
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-            <Watch size={64} style={{ color: '#D0D0D0', marginBottom: 24 }} />
-            <h2 style={{ fontSize: 20, fontWeight: 500, color: '#0C0C0C', marginBottom: 12 }}>
-              No watches found
-            </h2>
-            <p style={{ fontSize: 14, color: '#919191', marginBottom: 24 }}>
-              Try adjusting your filters
+          <div style={{ textAlign: 'center', padding: '80px 0' }}>
+            <Watch size={48} style={{ color: '#D1D5DB', marginBottom: 16 }} />
+            <h3 style={{ fontSize: 18, fontWeight: 500, color: '#1F2937', marginBottom: 8 }}>No watches found</h3>
+            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 24 }}>
+              Try adjusting your filters or browse all watches
             </p>
             <button
               onClick={clearAllFilters}
               style={{
-                padding: '12px 32px',
+                padding: '12px 24px',
                 backgroundColor: '#0C0C0C',
                 color: '#FFFFFF',
+                fontSize: 13,
+                fontWeight: 500,
+                borderRadius: 20,
                 border: 'none',
-                borderRadius: 6,
-                fontSize: 14,
                 cursor: 'pointer'
               }}
             >
-              Clear Filters
+              Clear All Filters
             </button>
           </div>
         )}
@@ -437,21 +420,23 @@ function WatchContent() {
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
-        @media (max-width: 1024px) {
-          .watch-grid { grid-template-columns: repeat(3, 1fr) !important; }
-        }
-        @media (max-width: 768px) {
-          .watch-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
       `}</style>
     </div>
   );
 }
 
-// Export with Suspense
+// Loading Fallback
+function LoadingFallback() {
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#F7F7F7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+    </div>
+  );
+}
+
 export default function WatchPage() {
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <Suspense fallback={<LoadingFallback />}>
       <WatchContent />
     </Suspense>
   );
