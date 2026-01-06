@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronDown, X, Watch, SlidersHorizontal } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/product/ProductCard';
 
-// Filter Dropdown Component - FIXED to show options
+// Filter Dropdown Component
 function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
   return (
     <div style={{ position: 'relative' }}>
@@ -118,17 +118,15 @@ function BrandPill({ brand, isActive, onClick }) {
 
 // Main Content Component
 function WatchContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   
-  // ✅ FIX: Read initial value from URL
-  const [selectedBrand, setSelectedBrand] = useState(searchParams.get('brand') || '');
-  const [selectedPrice, setSelectedPrice] = useState(searchParams.get('price') || '');
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
+  const [selectedBrand, setSelectedBrand] = useState('');
+  const [selectedPrice, setSelectedPrice] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
   const [openFilter, setOpenFilter] = useState('');
 
   const priceOptions = ['Under ৳5000', '৳5000 - ৳10000', '৳10000 - ৳25000', '৳25000 - ৳50000', 'Above ৳50000'];
@@ -139,17 +137,6 @@ function WatchContent() {
     { value: 'popular', label: 'Most Popular' }
   ];
 
-  // ✅ FIX: Update state when URL changes
-  useEffect(() => {
-    const brandFromUrl = searchParams.get('brand') || '';
-    const priceFromUrl = searchParams.get('price') || '';
-    const sortFromUrl = searchParams.get('sort') || 'newest';
-    
-    setSelectedBrand(brandFromUrl);
-    setSelectedPrice(priceFromUrl);
-    setSortBy(sortFromUrl);
-  }, [searchParams]);
-
   useEffect(() => {
     fetchBrands();
   }, []);
@@ -157,33 +144,6 @@ function WatchContent() {
   useEffect(() => {
     fetchProducts();
   }, [selectedBrand, selectedPrice, sortBy]);
-
-  // ✅ FIX: Update URL when filter changes
-  const updateURL = (brand, price, sort) => {
-    const params = new URLSearchParams();
-    if (brand) params.set('brand', brand);
-    if (price) params.set('price', price);
-    if (sort && sort !== 'newest') params.set('sort', sort);
-    
-    const queryString = params.toString();
-    router.push(`/watch${queryString ? '?' + queryString : ''}`, { scroll: false });
-  };
-
-  const handleBrandChange = (brandSlug) => {
-    const newBrand = selectedBrand === brandSlug ? '' : brandSlug;
-    setSelectedBrand(newBrand);
-    updateURL(newBrand, selectedPrice, sortBy);
-  };
-
-  const handlePriceChange = (price) => {
-    setSelectedPrice(price);
-    updateURL(selectedBrand, price, sortBy);
-  };
-
-  const handleSortChange = (sort) => {
-    setSortBy(sort);
-    updateURL(selectedBrand, selectedPrice, sort);
-  };
 
   const fetchBrands = async () => {
     try {
@@ -202,7 +162,6 @@ function WatchContent() {
       if (selectedBrand) url += `&brand=${selectedBrand}`;
       if (sortBy) url += `&sort=${sortBy}`;
       
-      // Parse price for API
       if (selectedPrice) {
         if (selectedPrice === 'Under ৳5000') url += '&max_price=5000';
         else if (selectedPrice === '৳5000 - ৳10000') url += '&min_price=5000&max_price=10000';
@@ -210,7 +169,7 @@ function WatchContent() {
         else if (selectedPrice === '৳25000 - ৳50000') url += '&min_price=25000&max_price=50000';
         else if (selectedPrice === 'Above ৳50000') url += '&min_price=50000';
       }
-      
+
       const res = await api.get(url);
       setProducts(res.data.products || []);
       setTotal(res.data.total || 0);
@@ -225,43 +184,49 @@ function WatchContent() {
     setSelectedBrand('');
     setSelectedPrice('');
     setSortBy('newest');
-    router.push('/watch', { scroll: false });
   };
 
   const hasActiveFilters = selectedBrand || selectedPrice;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F7F7F7' }}>
-      {/* Spacer for header */}
+      {/* Spacer for fixed header */}
       <div style={{ height: 60 }} />
 
-      {/* Hero Section with Brand Pills */}
+      {/* Breadcrumb */}
+      <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6' }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+            <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>Home</Link>
+            <span style={{ color: '#D1D5DB' }}>/</span>
+            <span style={{ color: '#0C0C0C', fontWeight: 500 }}>Watches</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Page Title */}
+      <div style={{ backgroundColor: '#FFFFFF' }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px' }}>
+          <h1 style={{ 
+            fontSize: 36, 
+            fontWeight: 300, 
+            letterSpacing: 6, 
+            color: '#0C0C0C', 
+            margin: 0,
+            textTransform: 'uppercase'
+          }}>
+            Watches
+          </h1>
+        </div>
+      </div>
+
+      {/* Brand Bar */}
       {brands.length > 0 && (
         <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6' }}>
-          <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px' }}>
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <h1 style={{ 
-                fontSize: 28, 
-                fontWeight: 300, 
-                letterSpacing: 6, 
-                textTransform: 'uppercase',
-                color: '#0C0C0C'
-              }}>
-                Watches
-              </h1>
-            </div>
-            
-            {/* Brand Pills */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              gap: 12, 
-              overflowX: 'auto',
-              paddingBottom: 8
-            }}>
+          <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
+            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
               <button
-                onClick={() => handleBrandChange('')}
+                onClick={() => setSelectedBrand('')}
                 style={{
                   padding: '10px 20px',
                   borderRadius: 20,
@@ -270,7 +235,6 @@ function WatchContent() {
                   whiteSpace: 'nowrap',
                   border: 'none',
                   cursor: 'pointer',
-                  transition: 'all 0.2s',
                   backgroundColor: !selectedBrand ? '#0C0C0C' : '#FFFFFF',
                   color: !selectedBrand ? '#FFFFFF' : '#374151',
                   boxShadow: !selectedBrand ? 'none' : '0 0 0 1px #D1D5DB'
@@ -283,7 +247,7 @@ function WatchContent() {
                   key={brand._id}
                   brand={brand}
                   isActive={selectedBrand === brand.slug}
-                  onClick={() => handleBrandChange(brand.slug)}
+                  onClick={() => setSelectedBrand(selectedBrand === brand.slug ? '' : brand.slug)}
                 />
               ))}
             </div>
@@ -309,7 +273,7 @@ function WatchContent() {
                 label="Price"
                 options={priceOptions}
                 value={selectedPrice}
-                onChange={handlePriceChange}
+                onChange={setSelectedPrice}
                 isOpen={openFilter === 'price'}
                 onToggle={() => setOpenFilter(openFilter === 'price' ? '' : 'price')}
               />
@@ -343,7 +307,7 @@ function WatchContent() {
               
               <select
                 value={sortBy}
-                onChange={(e) => handleSortChange(e.target.value)}
+                onChange={(e) => setSortBy(e.target.value)}
                 style={{
                   padding: '10px 16px',
                   border: '1px solid #D1D5DB',
@@ -368,7 +332,7 @@ function WatchContent() {
       </div>
 
       {/* Products Grid */}
-      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px 60px' }}>
+      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '40px 40px 60px' }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
             <div style={{ 
