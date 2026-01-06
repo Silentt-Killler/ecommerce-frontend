@@ -189,7 +189,7 @@ function WatchContent() {
   const hasActiveFilters = selectedBrand || selectedPrice;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F7F7F7' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
       {/* Spacer for fixed header */}
       <div style={{ height: 60 }} />
 
@@ -392,7 +392,7 @@ function WatchContent() {
 // Loading Fallback
 function LoadingFallback() {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F7F7F7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
     </div>
   );
