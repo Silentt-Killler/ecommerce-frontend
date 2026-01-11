@@ -145,7 +145,7 @@ function WatchContent() {
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [openFilter, setOpenFilter] = useState('');
 
-  const priceOptions = ['Under ৳5000', '৳5000 - ৳10000', '৳10000 - ৳25000', '৳25000 - ৳50000', 'Above ৳50000'];
+  const priceOptions = ['Under ৳500', '৳500 - ৳1000', '৳1000 - ৳2000', '৳2000 - ৳5000', 'Above ৳5000'];
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'price_low', label: 'Price: Low to High' },
@@ -210,11 +210,11 @@ function WatchContent() {
       if (sortBy) url += `&sort=${sortBy}`;
       
       if (selectedPrice) {
-        if (selectedPrice === 'Under ৳5000') url += '&max_price=5000';
-        else if (selectedPrice === '৳5000 - ৳10000') url += '&min_price=5000&max_price=10000';
-        else if (selectedPrice === '৳10000 - ৳25000') url += '&min_price=10000&max_price=25000';
-        else if (selectedPrice === '৳25000 - ৳50000') url += '&min_price=25000&max_price=50000';
-        else if (selectedPrice === 'Above ৳50000') url += '&min_price=50000';
+        if (selectedPrice === 'Under ৳500') url += '&max_price=500';
+        else if (selectedPrice === '৳500 - ৳1000') url += '&min_price=500&max_price=1000';
+        else if (selectedPrice === '৳1000 - ৳2000') url += '&min_price=1000&max_price=2000';
+        else if (selectedPrice === '৳2000 - ৳5000') url += '&min_price=2000&max_price=5000';
+        else if (selectedPrice === 'Above ৳5000') url += '&min_price=5000';
       }
 
       const res = await api.get(url);
