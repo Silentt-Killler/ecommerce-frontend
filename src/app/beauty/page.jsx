@@ -8,28 +8,81 @@ import { ChevronDown, X, Sparkles, SlidersHorizontal } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/product/ProductCard';
 
+// Filter Dropdown Component - Z-INDEX FIXED
 function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
   return (
-    <div className="relative">
+    <div style={{ position: 'relative', zIndex: isOpen ? 100 : 1 }}>
       <button
         onClick={onToggle}
-        className={`flex items-center gap-2 px-4 py-2.5 border rounded-full text-sm font-medium transition-colors ${
-          value ? 'border-[#0C0C0C] bg-[#0C0C0C] text-white' : 'border-gray-300 text-gray-700 hover:border-gray-400'
-        }`}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 16px',
+          border: value ? '1px solid #0C0C0C' : '1px solid #D1D5DB',
+          borderRadius: 20,
+          fontSize: 13,
+          fontWeight: 500,
+          backgroundColor: value ? '#0C0C0C' : '#FFFFFF',
+          color: value ? '#FFFFFF' : '#374151',
+          cursor: 'pointer',
+          transition: 'all 0.2s'
+        }}
       >
         {label}{value && `: ${value}`}
-        <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={14} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
       </button>
       
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-10" onClick={onToggle} />
-          <div className="absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-2 max-h-64 overflow-auto">
-            <button onClick={() => { onChange(''); onToggle(); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${!value ? 'text-[#B08B5C] font-medium' : 'text-gray-700'}`}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 90 }} onClick={onToggle} />
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            marginTop: 8,
+            width: 200,
+            backgroundColor: '#FFFFFF',
+            border: '1px solid #E5E7EB',
+            borderRadius: 12,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+            zIndex: 100,
+            padding: '8px 0',
+            maxHeight: 280,
+            overflowY: 'auto'
+          }}>
+            <button
+              onClick={() => { onChange(''); onToggle(); }}
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                padding: '12px 16px',
+                fontSize: 13,
+                color: !value ? '#B08B5C' : '#374151',
+                fontWeight: !value ? 600 : 400,
+                backgroundColor: !value ? '#FDF8F3' : 'transparent',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
               All {label}
             </button>
             {options.map((option) => (
-              <button key={option} onClick={() => { onChange(option); onToggle(); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${value === option ? 'text-[#B08B5C] font-medium' : 'text-gray-700'}`}>
+              <button
+                key={option}
+                onClick={() => { onChange(option); onToggle(); }}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  padding: '12px 16px',
+                  fontSize: 13,
+                  color: value === option ? '#B08B5C' : '#374151',
+                  fontWeight: value === option ? 600 : 400,
+                  backgroundColor: value === option ? '#FDF8F3' : 'transparent',
+                  border: 'none',
+                  cursor: 'pointer'
+                }}
+              >
                 {option}
               </button>
             ))}
@@ -40,23 +93,46 @@ function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
   );
 }
 
+// Subcategory Item
 function SubcategoryItem({ subcategory, isActive, onClick }) {
   return (
-    <button onClick={onClick} className={`flex flex-col items-center gap-2 min-w-[70px] sm:min-w-[80px] transition-all ${isActive ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}>
-      <div className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 transition-colors ${isActive ? 'border-[#B08B5C]' : 'border-transparent'}`}>
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+        minWidth: 80,
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        opacity: isActive ? 1 : 0.7,
+        transition: 'opacity 0.2s'
+      }}
+    >
+      <div style={{
+        width: 70,
+        height: 70,
+        borderRadius: '50%',
+        overflow: 'hidden',
+        border: isActive ? '2px solid #B08B5C' : '2px solid transparent',
+        transition: 'border-color 0.2s'
+      }}>
         {subcategory.image_url ? (
-          <Image src={subcategory.image_url} alt={subcategory.name} width={80} height={80} className="w-full h-full object-cover" />
+          <Image src={subcategory.image_url} alt={subcategory.name} width={70} height={70} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
-            <Sparkles size={20} className="text-purple-300 sm:w-6 sm:h-6" />
+          <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #FCE7F3 0%, #F3E8FF 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Sparkles size={24} style={{ color: '#A855F7' }} />
           </div>
         )}
       </div>
-      <span className={`text-[11px] sm:text-xs md:text-sm font-medium text-center leading-tight ${isActive ? 'text-[#0C0C0C]' : 'text-gray-600'}`}>{subcategory.name}</span>
+      <span style={{ fontSize: 12, color: isActive ? '#0C0C0C' : '#6B7280', fontWeight: isActive ? 600 : 400, textAlign: 'center' }}>{subcategory.name}</span>
     </button>
   );
 }
 
+// Main Content
 function BeautyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -105,8 +181,8 @@ function BeautyContent() {
     updateURL({ subcategory: newSub, type: selectedType, price: selectedPrice, sort: sortBy });
   };
 
-  const handleTypeChange = (type) => { setSelectedType(type); updateURL({ subcategory: selectedSubcategory, type, price: selectedPrice, sort: sortBy }); };
-  const handlePriceChange = (price) => { setSelectedPrice(price); updateURL({ subcategory: selectedSubcategory, type: selectedType, price, sort: sortBy }); };
+  const handleTypeChange = (type) => { setSelectedType(type); setOpenFilter(''); updateURL({ subcategory: selectedSubcategory, type, price: selectedPrice, sort: sortBy }); };
+  const handlePriceChange = (price) => { setSelectedPrice(price); setOpenFilter(''); updateURL({ subcategory: selectedSubcategory, type: selectedType, price, sort: sortBy }); };
   const handleSortChange = (sort) => { setSortBy(sort); updateURL({ subcategory: selectedSubcategory, type: selectedType, price: selectedPrice, sort }); };
 
   const fetchSubcategories = async () => {
@@ -138,36 +214,36 @@ function BeautyContent() {
   };
 
   const clearAllFilters = () => {
-    setSelectedSubcategory(''); setSelectedType(''); setSelectedPrice(''); setSortBy('newest');
+    setSelectedSubcategory(''); setSelectedType(''); setSelectedPrice(''); setSortBy('newest'); setOpenFilter('');
     router.push('/beauty', { scroll: false });
   };
 
   const hasActiveFilters = selectedSubcategory || selectedType || selectedPrice;
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF]">
-      <div className="h-16 md:h-20" />
+    <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
+      <div style={{ height: 64 }} />
 
-      <div className="bg-white border-b border-gray-100">
+      <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6' }}>
         <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/" className="text-gray-500 hover:text-gray-700">Home</Link>
-            <span className="text-gray-300">/</span>
-            <span className="text-[#0C0C0C] font-medium">Beauty & Care</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+            <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>Home</Link>
+            <span style={{ color: '#D1D5DB' }}>/</span>
+            <span style={{ color: '#0C0C0C', fontWeight: 500 }}>Beauty & Care</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-white">
+      <div style={{ backgroundColor: '#FFFFFF' }}>
         <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px' }}>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-[0.15em] text-[#0C0C0C] uppercase">Beauty & Care</h1>
+          <h1 style={{ fontSize: 36, fontWeight: 300, letterSpacing: 6, color: '#0C0C0C', margin: 0, textTransform: 'uppercase' }}>Beauty & Care</h1>
         </div>
       </div>
 
       {subcategories.length > 0 && (
-        <div className="bg-white border-b border-gray-100">
+        <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6' }}>
           <div style={{ maxWidth: 1600, margin: '0 auto', padding: '20px 40px' }}>
-            <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-2 scrollbar-hide">
+            <div style={{ display: 'flex', gap: 24, overflowX: 'auto', paddingBottom: 8 }}>
               <SubcategoryItem subcategory={{ name: 'All', image_url: null }} isActive={!selectedSubcategory} onClick={() => handleSubcategoryChange('')} />
               {subcategories.map((sub) => (
                 <SubcategoryItem key={sub._id} subcategory={sub} isActive={selectedSubcategory === sub.slug} onClick={() => handleSubcategoryChange(sub.slug)} />
@@ -177,63 +253,59 @@ function BeautyContent() {
         </div>
       )}
 
-      <div className="bg-white border-b border-gray-100 sticky top-16 md:top-20 z-30">
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto">
-              <SlidersHorizontal size={18} className="text-gray-400 flex-shrink-0" />
+      {/* Filter Bar - HIGH Z-INDEX */}
+      <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6', position: 'sticky', top: 64, zIndex: 50, overflow: 'visible' }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px', overflow: 'visible' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, overflow: 'visible' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, overflow: 'visible' }}>
+              <SlidersHorizontal size={18} style={{ color: '#9CA3AF', flexShrink: 0 }} />
               <FilterDropdown label="Price" options={priceOptions} value={selectedPrice} onChange={handlePriceChange} isOpen={openFilter === 'price'} onToggle={() => setOpenFilter(openFilter === 'price' ? '' : 'price')} />
               <FilterDropdown label="Type" options={typeOptions} value={selectedType} onChange={handleTypeChange} isOpen={openFilter === 'type'} onToggle={() => setOpenFilter(openFilter === 'type' ? '' : 'type')} />
               {hasActiveFilters && (
-                <button onClick={clearAllFilters} className="flex items-center gap-1 px-3 py-2 text-sm text-red-600 hover:text-red-700 whitespace-nowrap">
+                <button onClick={clearAllFilters} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 12px', fontSize: 13, color: '#DC2626', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
                   <X size={14} />Clear
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <span className="text-sm text-gray-500 hidden sm:inline">{total} items</span>
-              <select value={sortBy} onChange={(e) => handleSortChange(e.target.value)} className="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium text-gray-700 bg-white focus:outline-none focus:border-gray-400 cursor-pointer">
-                {sortOptions.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
+              <span style={{ fontSize: 13, color: '#6B7280' }}>{total} items</span>
+              <select value={sortBy} onChange={(e) => handleSortChange(e.target.value)} style={{ padding: '10px 16px', border: '1px solid #D1D5DB', borderRadius: 20, fontSize: 13, fontWeight: 500, color: '#374151', backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none' }}>
+                {sortOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
               </select>
             </div>
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px 60px' }}>
+      {/* Products - LOWER Z-INDEX */}
+      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px 60px', position: 'relative', zIndex: 1 }}>
         {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-2 border-[#B08B5C] border-t-transparent rounded-full animate-spin" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
+            <div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-            {products.map((product) => (<ProductCard key={product._id} product={product} />))}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 30 }}>
+            {products.map((product) => <ProductCard key={product._id} product={product} />)}
           </div>
         ) : (
-          <div className="text-center py-20">
-            <Sparkles size={48} className="mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-medium text-gray-800 mb-2">No products found</h3>
-            <p className="text-gray-500 text-sm mb-6">Try adjusting your filters or browse all products</p>
-            <button onClick={clearAllFilters} className="px-6 py-3 bg-[#0C0C0C] text-white text-sm font-medium rounded-full hover:bg-gray-800 transition-colors">Clear All Filters</button>
+          <div style={{ textAlign: 'center', padding: '80px 0' }}>
+            <Sparkles size={48} style={{ color: '#D1D5DB', marginBottom: 16 }} />
+            <h3 style={{ fontSize: 18, fontWeight: 500, color: '#1F2937', marginBottom: 8 }}>No products found</h3>
+            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 24 }}>Try adjusting your filters</p>
+            <button onClick={clearAllFilters} style={{ padding: '12px 24px', backgroundColor: '#0C0C0C', color: '#FFFFFF', fontSize: 13, fontWeight: 500, borderRadius: 20, border: 'none', cursor: 'pointer' }}>Clear All Filters</button>
           </div>
         )}
       </div>
+
+      <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
 
 function LoadingFallback() {
-  return (
-    <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center">
-      <div className="w-10 h-10 border-2 border-[#B08B5C] border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
+  return (<div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>);
 }
 
 export default function BeautyPage() {
-  return (
-    <Suspense fallback={<LoadingFallback />}>
-      <BeautyContent />
-    </Suspense>
-  );
+  return (<Suspense fallback={<LoadingFallback />}><BeautyContent /></Suspense>);
 }
