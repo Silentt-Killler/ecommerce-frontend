@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronDown, X, Watch, SlidersHorizontal } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/product/ProductCard';
 
-// Filter Dropdown Component
+// Filter Dropdown Component - Z-INDEX FIXED
 function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', zIndex: isOpen ? 100 : 1 }}>
       <button
         onClick={onToggle}
         style={{
@@ -22,7 +22,7 @@ function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
           borderRadius: 20,
           fontSize: 13,
           fontWeight: 500,
-          backgroundColor: value ? '#0C0C0C' : 'transparent',
+          backgroundColor: value ? '#0C0C0C' : '#FFFFFF',
           color: value ? '#FFFFFF' : '#374151',
           cursor: 'pointer',
           transition: 'all 0.2s'
@@ -34,20 +34,29 @@ function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
       
       {isOpen && (
         <>
-          <div style={{ position: 'fixed', inset: 0, zIndex: 10 }} onClick={onToggle} />
+          {/* Backdrop */}
+          <div 
+            style={{ 
+              position: 'fixed', 
+              inset: 0, 
+              zIndex: 90 
+            }} 
+            onClick={onToggle} 
+          />
+          {/* Dropdown Menu */}
           <div style={{
             position: 'absolute',
             top: '100%',
             left: 0,
             marginTop: 8,
-            width: 180,
+            width: 200,
             backgroundColor: '#FFFFFF',
             border: '1px solid #E5E7EB',
-            borderRadius: 8,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            zIndex: 20,
+            borderRadius: 12,
+            boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+            zIndex: 100,
             padding: '8px 0',
-            maxHeight: 240,
+            maxHeight: 280,
             overflowY: 'auto'
           }}>
             <button
@@ -55,14 +64,17 @@ function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
               style={{
                 width: '100%',
                 textAlign: 'left',
-                padding: '10px 16px',
+                padding: '12px 16px',
                 fontSize: 13,
                 color: !value ? '#B08B5C' : '#374151',
                 fontWeight: !value ? 600 : 400,
-                backgroundColor: 'transparent',
+                backgroundColor: !value ? '#FDF8F3' : 'transparent',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'background 0.15s'
               }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#F9FAFB'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = !value ? '#FDF8F3' : 'transparent'}
             >
               All {label}
             </button>
@@ -73,14 +85,17 @@ function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
                 style={{
                   width: '100%',
                   textAlign: 'left',
-                  padding: '10px 16px',
+                  padding: '12px 16px',
                   fontSize: 13,
                   color: value === option ? '#B08B5C' : '#374151',
                   fontWeight: value === option ? 600 : 400,
-                  backgroundColor: 'transparent',
+                  backgroundColor: value === option ? '#FDF8F3' : 'transparent',
                   border: 'none',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'background 0.15s'
                 }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#F9FAFB'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = value === option ? '#FDF8F3' : 'transparent'}
               >
                 {option}
               </button>
@@ -118,15 +133,16 @@ function BrandPill({ brand, isActive, onClick }) {
 
 // Main Content Component
 function WatchContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState([]);
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   
-  const [selectedBrand, setSelectedBrand] = useState('');
-  const [selectedPrice, setSelectedPrice] = useState('');
-  const [sortBy, setSortBy] = useState('newest');
+  const [selectedBrand, setSelectedBrand] = useState(searchParams.get('brand') || '');
+  const [selectedPrice, setSelectedPrice] = useState(searchParams.get('price') || '');
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [openFilter, setOpenFilter] = useState('');
 
   const priceOptions = ['Under ৳5000', '৳5000 - ৳10000', '৳10000 - ৳25000', '৳25000 - ৳50000', 'Above ৳50000'];
@@ -138,12 +154,43 @@ function WatchContent() {
   ];
 
   useEffect(() => {
+    setSelectedBrand(searchParams.get('brand') || '');
+    setSelectedPrice(searchParams.get('price') || '');
+    setSortBy(searchParams.get('sort') || 'newest');
+  }, [searchParams]);
+
+  useEffect(() => {
     fetchBrands();
   }, []);
 
   useEffect(() => {
     fetchProducts();
   }, [selectedBrand, selectedPrice, sortBy]);
+
+  const updateURL = (brand, price, sort) => {
+    const params = new URLSearchParams();
+    if (brand) params.set('brand', brand);
+    if (price) params.set('price', price);
+    if (sort && sort !== 'newest') params.set('sort', sort);
+    const query = params.toString();
+    router.push(`/watch${query ? '?' + query : ''}`, { scroll: false });
+  };
+
+  const handleBrandChange = (brandSlug) => {
+    const newBrand = selectedBrand === brandSlug ? '' : brandSlug;
+    setSelectedBrand(newBrand);
+    updateURL(newBrand, selectedPrice, sortBy);
+  };
+
+  const handlePriceChange = (price) => {
+    setSelectedPrice(price);
+    updateURL(selectedBrand, price, sortBy);
+  };
+
+  const handleSortChange = (sort) => {
+    setSortBy(sort);
+    updateURL(selectedBrand, selectedPrice, sort);
+  };
 
   const fetchBrands = async () => {
     try {
@@ -184,13 +231,14 @@ function WatchContent() {
     setSelectedBrand('');
     setSelectedPrice('');
     setSortBy('newest');
+    setOpenFilter('');
+    router.push('/watch', { scroll: false });
   };
 
   const hasActiveFilters = selectedBrand || selectedPrice;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
-      {/* Spacer for fixed header */}
       <div style={{ height: 60 }} />
 
       {/* Breadcrumb */}
@@ -207,14 +255,7 @@ function WatchContent() {
       {/* Page Title */}
       <div style={{ backgroundColor: '#FFFFFF' }}>
         <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px' }}>
-          <h1 style={{ 
-            fontSize: 36, 
-            fontWeight: 300, 
-            letterSpacing: 6, 
-            color: '#0C0C0C', 
-            margin: 0,
-            textTransform: 'uppercase'
-          }}>
+          <h1 style={{ fontSize: 36, fontWeight: 300, letterSpacing: 6, color: '#0C0C0C', margin: 0, textTransform: 'uppercase' }}>
             Watches
           </h1>
         </div>
@@ -226,7 +267,7 @@ function WatchContent() {
           <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
             <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 4 }}>
               <button
-                onClick={() => setSelectedBrand('')}
+                onClick={() => handleBrandChange('')}
                 style={{
                   padding: '10px 20px',
                   borderRadius: 20,
@@ -247,7 +288,7 @@ function WatchContent() {
                   key={brand._id}
                   brand={brand}
                   isActive={selectedBrand === brand.slug}
-                  onClick={() => setSelectedBrand(selectedBrand === brand.slug ? '' : brand.slug)}
+                  onClick={() => handleBrandChange(brand.slug)}
                 />
               ))}
             </div>
@@ -255,25 +296,26 @@ function WatchContent() {
         </div>
       )}
 
-      {/* Filter Bar */}
+      {/* Filter Bar - HIGH Z-INDEX */}
       <div style={{ 
         backgroundColor: '#FFFFFF', 
         borderBottom: '1px solid #F3F4F6',
         position: 'sticky',
         top: 60,
-        zIndex: 20
+        zIndex: 50,
+        overflow: 'visible'
       }}>
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px', overflow: 'visible' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, overflow: 'visible' }}>
             {/* Left - Filters */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, overflowX: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, overflow: 'visible' }}>
               <SlidersHorizontal size={18} style={{ color: '#9CA3AF', flexShrink: 0 }} />
               
               <FilterDropdown
                 label="Price"
                 options={priceOptions}
                 value={selectedPrice}
-                onChange={setSelectedPrice}
+                onChange={handlePriceChange}
                 isOpen={openFilter === 'price'}
                 onToggle={() => setOpenFilter(openFilter === 'price' ? '' : 'price')}
               />
@@ -307,7 +349,7 @@ function WatchContent() {
               
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
                 style={{
                   padding: '10px 16px',
                   border: '1px solid #D1D5DB',
@@ -331,25 +373,14 @@ function WatchContent() {
         </div>
       </div>
 
-      {/* Products Grid */}
-      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '40px 40px 60px' }}>
+      {/* Products Grid - LOWER Z-INDEX */}
+      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '40px 40px 60px', position: 'relative', zIndex: 1 }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
-            <div style={{ 
-              width: 40, 
-              height: 40, 
-              border: '2px solid #B08B5C', 
-              borderTopColor: 'transparent', 
-              borderRadius: '50%', 
-              animation: 'spin 1s linear infinite' 
-            }} />
+            <div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
           </div>
         ) : products.length > 0 ? (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: 30 
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 30 }}>
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
@@ -358,22 +389,8 @@ function WatchContent() {
           <div style={{ textAlign: 'center', padding: '80px 0' }}>
             <Watch size={48} style={{ color: '#D1D5DB', marginBottom: 16 }} />
             <h3 style={{ fontSize: 18, fontWeight: 500, color: '#1F2937', marginBottom: 8 }}>No watches found</h3>
-            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 24 }}>
-              Try adjusting your filters or browse all watches
-            </p>
-            <button
-              onClick={clearAllFilters}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: '#0C0C0C',
-                color: '#FFFFFF',
-                fontSize: 13,
-                fontWeight: 500,
-                borderRadius: 20,
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
+            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 24 }}>Try adjusting your filters or browse all watches</p>
+            <button onClick={clearAllFilters} style={{ padding: '12px 24px', backgroundColor: '#0C0C0C', color: '#FFFFFF', fontSize: 13, fontWeight: 500, borderRadius: 20, border: 'none', cursor: 'pointer' }}>
               Clear All Filters
             </button>
           </div>
@@ -381,15 +398,12 @@ function WatchContent() {
       </div>
 
       <style jsx global>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );
 }
 
-// Loading Fallback
 function LoadingFallback() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
