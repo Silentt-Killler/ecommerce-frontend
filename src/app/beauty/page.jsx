@@ -8,7 +8,7 @@ import { ChevronDown, X, Sparkles, SlidersHorizontal } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/product/ProductCard';
 
-// Filter Dropdown Component - Z-INDEX FIXED
+// Filter Dropdown Component
 function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
   return (
     <div style={{ position: 'relative', zIndex: isOpen ? 100 : 1 }}>
@@ -142,12 +142,13 @@ function BeautyContent() {
   const [total, setTotal] = useState(0);
   
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '');
-  const [selectedType, setSelectedType] = useState(searchParams.get('type') || '');
+  const [selectedSkinType, setSelectedSkinType] = useState(searchParams.get('skin_type') || '');
   const [selectedPrice, setSelectedPrice] = useState(searchParams.get('price') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [openFilter, setOpenFilter] = useState('');
 
-  const typeOptions = ['Face', 'Body', 'Hair', 'Lips', 'Eyes', 'Nails', 'Fragrance', 'Skincare', 'Makeup'];
+  // Skin Type Options - Change these based on your backend
+  const skinTypeOptions = ['Oily', 'Dry', 'Combination', 'Normal', 'Sensitive', 'All Skin Types'];
   const priceOptions = ['Under ৳500', '৳500 - ৳1000', '৳1000 - ৳2000', '৳2000 - ৳5000', 'Above ৳5000'];
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
@@ -158,18 +159,18 @@ function BeautyContent() {
 
   useEffect(() => {
     setSelectedSubcategory(searchParams.get('subcategory') || '');
-    setSelectedType(searchParams.get('type') || '');
+    setSelectedSkinType(searchParams.get('skin_type') || '');
     setSelectedPrice(searchParams.get('price') || '');
     setSortBy(searchParams.get('sort') || 'newest');
   }, [searchParams]);
 
   useEffect(() => { fetchSubcategories(); }, []);
-  useEffect(() => { fetchProducts(); }, [selectedSubcategory, selectedType, selectedPrice, sortBy]);
+  useEffect(() => { fetchProducts(); }, [selectedSubcategory, selectedSkinType, selectedPrice, sortBy]);
 
   const updateURL = (filters) => {
     const params = new URLSearchParams();
     if (filters.subcategory) params.set('subcategory', filters.subcategory);
-    if (filters.type) params.set('type', filters.type);
+    if (filters.skin_type) params.set('skin_type', filters.skin_type);
     if (filters.price) params.set('price', filters.price);
     if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
     router.push(`/beauty${params.toString() ? '?' + params.toString() : ''}`, { scroll: false });
@@ -178,12 +179,25 @@ function BeautyContent() {
   const handleSubcategoryChange = (slug) => {
     const newSub = selectedSubcategory === slug ? '' : slug;
     setSelectedSubcategory(newSub);
-    updateURL({ subcategory: newSub, type: selectedType, price: selectedPrice, sort: sortBy });
+    updateURL({ subcategory: newSub, skin_type: selectedSkinType, price: selectedPrice, sort: sortBy });
   };
 
-  const handleTypeChange = (type) => { setSelectedType(type); setOpenFilter(''); updateURL({ subcategory: selectedSubcategory, type, price: selectedPrice, sort: sortBy }); };
-  const handlePriceChange = (price) => { setSelectedPrice(price); setOpenFilter(''); updateURL({ subcategory: selectedSubcategory, type: selectedType, price, sort: sortBy }); };
-  const handleSortChange = (sort) => { setSortBy(sort); updateURL({ subcategory: selectedSubcategory, type: selectedType, price: selectedPrice, sort }); };
+  const handleSkinTypeChange = (skinType) => { 
+    setSelectedSkinType(skinType); 
+    setOpenFilter(''); 
+    updateURL({ subcategory: selectedSubcategory, skin_type: skinType, price: selectedPrice, sort: sortBy }); 
+  };
+  
+  const handlePriceChange = (price) => { 
+    setSelectedPrice(price); 
+    setOpenFilter(''); 
+    updateURL({ subcategory: selectedSubcategory, skin_type: selectedSkinType, price, sort: sortBy }); 
+  };
+  
+  const handleSortChange = (sort) => { 
+    setSortBy(sort); 
+    updateURL({ subcategory: selectedSubcategory, skin_type: selectedSkinType, price: selectedPrice, sort }); 
+  };
 
   const fetchSubcategories = async () => {
     try {
@@ -197,7 +211,7 @@ function BeautyContent() {
     try {
       let url = '/products?category=beauty&limit=20';
       if (selectedSubcategory) url += `&subcategory=${selectedSubcategory}`;
-      if (selectedType) url += `&type=${selectedType}`;
+      if (selectedSkinType) url += `&skin_type=${selectedSkinType}`;
       if (sortBy) url += `&sort=${sortBy}`;
       if (selectedPrice) {
         if (selectedPrice === 'Under ৳500') url += '&max_price=500';
@@ -214,11 +228,15 @@ function BeautyContent() {
   };
 
   const clearAllFilters = () => {
-    setSelectedSubcategory(''); setSelectedType(''); setSelectedPrice(''); setSortBy('newest'); setOpenFilter('');
+    setSelectedSubcategory(''); 
+    setSelectedSkinType(''); 
+    setSelectedPrice(''); 
+    setSortBy('newest'); 
+    setOpenFilter('');
     router.push('/beauty', { scroll: false });
   };
 
-  const hasActiveFilters = selectedSubcategory || selectedType || selectedPrice;
+  const hasActiveFilters = selectedSubcategory || selectedSkinType || selectedPrice;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
@@ -253,14 +271,14 @@ function BeautyContent() {
         </div>
       )}
 
-      {/* Filter Bar - HIGH Z-INDEX */}
+      {/* Filter Bar */}
       <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6', position: 'sticky', top: 64, zIndex: 50, overflow: 'visible' }}>
         <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px', overflow: 'visible' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, overflow: 'visible' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, overflow: 'visible' }}>
               <SlidersHorizontal size={18} style={{ color: '#9CA3AF', flexShrink: 0 }} />
               <FilterDropdown label="Price" options={priceOptions} value={selectedPrice} onChange={handlePriceChange} isOpen={openFilter === 'price'} onToggle={() => setOpenFilter(openFilter === 'price' ? '' : 'price')} />
-              <FilterDropdown label="Type" options={typeOptions} value={selectedType} onChange={handleTypeChange} isOpen={openFilter === 'type'} onToggle={() => setOpenFilter(openFilter === 'type' ? '' : 'type')} />
+              <FilterDropdown label="Skin Type" options={skinTypeOptions} value={selectedSkinType} onChange={handleSkinTypeChange} isOpen={openFilter === 'skin_type'} onToggle={() => setOpenFilter(openFilter === 'skin_type' ? '' : 'skin_type')} />
               {hasActiveFilters && (
                 <button onClick={clearAllFilters} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 12px', fontSize: 13, color: '#DC2626', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
                   <X size={14} />Clear
@@ -277,7 +295,7 @@ function BeautyContent() {
         </div>
       </div>
 
-      {/* Products - LOWER Z-INDEX */}
+      {/* Products */}
       <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px 60px', position: 'relative', zIndex: 1 }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
