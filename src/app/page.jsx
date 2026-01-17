@@ -61,57 +61,38 @@ export default function HomePage() {
     return linkMap[slug] || `/shop?category=${slug}`;
   };
 
-  // Mobile Featured Section with horizontal scroll
+  // Mobile Featured Section with new spec
   const MobileFeaturedSection = ({ title, products, viewAllLink }) => {
     const scrollRef = useRef(null);
     
     if (!products || products.length === 0) return null;
 
     return (
-      <section style={{ backgroundColor: '#FFFFFF', padding: '40px 0' }}>
-        {/* Section Title */}
+      <section style={{ backgroundColor: '#FFFFFF', paddingTop: 40, paddingBottom: 24 }}>
+        {/* Section Heading - New Spec */}
         <h2 style={{ 
-          fontSize: 18, 
+          fontSize: 20, 
           fontWeight: 600, 
-          letterSpacing: -0.2, 
+          letterSpacing: 2, 
           textAlign: 'center', 
           marginBottom: 24,
           color: '#0C0C0C',
+          textTransform: 'uppercase',
           padding: '0 16px'
         }}>
           {title}
         </h2>
         
-        {/* Scrollable Products */}
-        <div style={{ position: 'relative' }}>
-          <div
-            ref={scrollRef}
-            style={{
-              display: 'flex',
-              gap: 16,
-              overflowX: 'auto',
-              scrollSnapType: 'x mandatory',
-              WebkitOverflowScrolling: 'touch',
-              paddingLeft: 16,
-              paddingRight: 16,
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none'
-            }}
-            className="hide-scrollbar"
-          >
-            {products.map((product) => (
-              <div 
-                key={product._id} 
-                style={{ 
-                  flex: '0 0 calc(50% - 8px)',
-                  scrollSnapAlign: 'start',
-                  minWidth: 'calc(50% - 8px)'
-                }}
-              >
-                <ProductCard product={product} isMobile={true} />
-              </div>
-            ))}
-          </div>
+        {/* Product Grid - 2 Columns, 16px gap, 16px outer padding */}
+        <div style={{ 
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: 16,
+          padding: '0 16px'
+        }}>
+          {products.slice(0, 4).map((product) => (
+            <ProductCard key={product._id} product={product} isMobile={true} />
+          ))}
         </div>
 
         {/* View All - Text + Arrow */}
@@ -125,8 +106,7 @@ export default function HomePage() {
               color: '#0C0C0C',
               fontSize: 13,
               fontWeight: 500,
-              textDecoration: 'none',
-              transition: 'opacity 0.2s'
+              textDecoration: 'none'
             }}
           >
             View All
@@ -137,7 +117,7 @@ export default function HomePage() {
     );
   };
 
-  // Desktop Featured Section
+  // Desktop Featured Section - Original
   const DesktopFeaturedSection = ({ title, products, viewAllLink }) => {
     if (!products || products.length === 0) return null;
 
@@ -145,12 +125,14 @@ export default function HomePage() {
       <section style={{ backgroundColor: '#FFFFFF', paddingTop: 60, paddingBottom: 60 }}>
         <div style={{ maxWidth: 1800, margin: '0 auto', padding: '0 50px' }}>
           <h2 style={{ 
-            fontSize: 20, 
-            fontWeight: 600, 
-            letterSpacing: -0.2, 
+            fontSize: 32, 
+            fontWeight: 400, 
+            lineHeight: '40px',
+            letterSpacing: 8, 
             textAlign: 'center', 
             marginBottom: 40,
-            color: '#0C0C0C'
+            color: '#0C0C0C',
+            textTransform: 'uppercase'
           }}>
             {title}
           </h2>
@@ -192,7 +174,7 @@ export default function HomePage() {
   };
 
   return (
-    <div style={{ backgroundColor: '#FFFFFF', paddingBottom: isMobile ? 80 : 0 }}>
+    <div style={{ backgroundColor: '#FFFFFF', paddingBottom: isMobile ? 90 : 0 }}>
       {/* Hero Section */}
       <section style={{ 
         position: 'relative', 
@@ -220,7 +202,7 @@ export default function HomePage() {
           </div>
         )}
         
-        {/* Hero Buttons - ALWAYS HORIZONTAL */}
+        {/* Hero Buttons - Always Horizontal */}
         <div style={{
           position: 'absolute',
           bottom: isMobile ? 60 : 80,
@@ -242,7 +224,6 @@ export default function HomePage() {
               textTransform: 'uppercase',
               textDecoration: 'none',
               textAlign: 'center',
-              transition: 'all 0.3s ease',
               whiteSpace: 'nowrap'
             }}
           >
@@ -260,7 +241,6 @@ export default function HomePage() {
               textTransform: 'uppercase',
               textDecoration: 'none',
               textAlign: 'center',
-              transition: 'all 0.3s ease',
               whiteSpace: 'nowrap'
             }}
           >
@@ -275,16 +255,18 @@ export default function HomePage() {
         paddingTop: isMobile ? 40 : 70, 
         paddingBottom: isMobile ? 20 : 50 
       }}>
+        {/* Section Heading */}
         <h2 style={{ 
-          fontSize: isMobile ? 18 : 20, 
-          fontWeight: 600, 
-          letterSpacing: -0.2, 
+          fontSize: isMobile ? 20 : 32, 
+          fontWeight: isMobile ? 600 : 400, 
+          letterSpacing: isMobile ? 2 : 8, 
           textAlign: 'center', 
           marginBottom: isMobile ? 24 : 50,
           color: '#0C0C0C',
+          textTransform: 'uppercase',
           padding: isMobile ? '0 16px' : 0
         }}>
-          {isMobile ? 'Explore The New Styles' : 'Explore Our Collection'}
+          {isMobile ? 'EXPLORE THE NEW STYLES' : 'Explore Our Collection'}
         </h2>
         
         {/* Mobile: 2x2 Grid */}
@@ -410,7 +392,7 @@ export default function HomePage() {
         isMobile ? (
           <MobileFeaturedSection 
             key={cat._id}
-            title={`Featured ${cat.name}`}
+            title={`FEATURED ${cat.name.toUpperCase()}`}
             products={categoryProducts[cat.slug] || []}
             viewAllLink={getCategoryLink(cat.slug)}
           />
