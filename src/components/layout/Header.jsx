@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingBag, User, Search, Menu, X, Plus } from 'lucide-react';
+import { ShoppingBag, User, Search, Menu, X, Plus, MoreVertical } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 import useCartStore from '@/store/cartStore';
 import MenuOverlay from './MenuOverlay';
@@ -39,7 +39,6 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (dropdownTimeoutRef.current) {
@@ -59,7 +58,6 @@ export default function Header() {
     router.push('/');
   };
 
-  // Dropdown hover handlers with delay
   const handleDropdownEnter = () => {
     if (dropdownTimeoutRef.current) {
       clearTimeout(dropdownTimeoutRef.current);
@@ -70,7 +68,7 @@ export default function Header() {
   const handleDropdownLeave = () => {
     dropdownTimeoutRef.current = setTimeout(() => {
       setShowDropdown(false);
-    }, 150); // Small delay to allow moving to dropdown
+    }, 150);
   };
 
   // Get text/icon color based on scroll state and page
@@ -95,8 +93,8 @@ export default function Header() {
           borderBottom: isScrolled || !isHomePage ? '1px solid #E0E0E0' : 'none'
         }}
       >
-        {/* Container */}
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
+        {/* Desktop Header */}
+        <div className="hidden md:block" style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -104,8 +102,8 @@ export default function Header() {
             height: 60
           }}>
             
-            {/* Left - Contact Us (Desktop only) */}
-            <div style={{ flex: 1 }} className="hidden md:block">
+            {/* Left - Contact Us */}
+            <div style={{ flex: 1 }}>
               <Link 
                 href="/contact" 
                 style={{
@@ -212,7 +210,7 @@ export default function Header() {
                       position: 'absolute',
                       right: 0,
                       top: '100%',
-                      paddingTop: 8, // Gap for hover transition
+                      paddingTop: 8,
                       opacity: showDropdown ? 1 : 0,
                       visibility: showDropdown ? 'visible' : 'hidden',
                       transform: showDropdown ? 'translateY(0)' : 'translateY(-10px)',
@@ -278,7 +276,6 @@ export default function Header() {
                           My Orders
                         </Link>
                         
-                        {/* Admin Link - Only for admins */}
                         {user?.role === 'admin' && (
                           <Link 
                             href="/admin" 
@@ -298,10 +295,8 @@ export default function Header() {
                           </Link>
                         )}
                         
-                        {/* Divider */}
                         <div style={{ height: 1, backgroundColor: '#E8E8E8', margin: '8px 0' }} />
                         
-                        {/* Logout */}
                         <button
                           onClick={handleLogout}
                           style={{ 
@@ -356,11 +351,11 @@ export default function Header() {
                 <Search size={20} strokeWidth={1.5} />
               </button>
 
-              {/* Menu Toggle - Desktop only */}
+              {/* Menu Toggle */}
               <button 
                 onClick={() => setShowMenu(true)}
-                className="hidden md:flex"
                 style={{ 
+                  display: 'flex',
                   alignItems: 'center',
                   gap: 6,
                   background: 'none', 
@@ -375,6 +370,48 @@ export default function Header() {
                 <span style={{ fontSize: 12, letterSpacing: 1 }}>MENU</span>
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Mobile Header */}
+        <div className="md:hidden" style={{ padding: '0 16px' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            height: 56
+          }}>
+            {/* Left - Logo */}
+            <Link 
+              href="/"
+              style={{
+                fontSize: 18,
+                fontWeight: 300,
+                letterSpacing: 4,
+                color: getColor(),
+                textDecoration: 'none',
+                transition: 'color 0.3s'
+              }}
+            >
+              PRISMIN
+            </Link>
+
+            {/* Right - 3 Dot Menu */}
+            <button 
+              onClick={() => setShowMenu(true)}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                cursor: 'pointer',
+                color: getColor(),
+                transition: 'color 0.3s',
+                padding: 8,
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <MoreVertical size={22} strokeWidth={1.5} />
+            </button>
           </div>
         </div>
       </header>
