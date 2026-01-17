@@ -23,17 +23,16 @@ export default function ProductCard({ product, isMobile = false }) {
     return `/product/${product.slug}`;
   };
 
-  // Mobile version - simpler card without hover effects
+  // Mobile version - clean card without hover effects
   if (isMobile) {
     return (
       <Link href={getProductLink()} style={{ textDecoration: 'none', display: 'block' }}>
-        {/* Image */}
+        {/* Image Container - 3:4 Aspect Ratio */}
         <div style={{
           position: 'relative',
           aspectRatio: '3/4',
           backgroundColor: '#F5F5F5',
-          overflow: 'hidden',
-          borderRadius: 4
+          overflow: 'hidden'
         }}>
           {primaryImage ? (
             <Image
@@ -96,11 +95,13 @@ export default function ProductCard({ product, isMobile = false }) {
           )}
         </div>
 
-        {/* Product Info */}
-        <div style={{ paddingTop: 10 }}>
+        {/* Product Info - No border, no shadow */}
+        <div style={{ paddingTop: 12 }}>
+          {/* Title - 14px, 400 weight, 0.5px letter spacing */}
           <h3 style={{
-            fontSize: 13,
-            fontWeight: 500,
+            fontSize: 14,
+            fontWeight: 400,
+            letterSpacing: 0.5,
             color: '#0C0C0C',
             marginBottom: 6,
             lineHeight: 1.4,
@@ -113,9 +114,13 @@ export default function ProductCard({ product, isMobile = false }) {
             {product.name}
           </h3>
 
-          {/* Price */}
+          {/* Price - 14px, 600 weight */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C' }}>
+            <span style={{ 
+              fontSize: 14, 
+              fontWeight: 600, 
+              color: '#0C0C0C' 
+            }}>
               {formatPrice(product.price)}
             </span>
             {product.compare_price > product.price && (
@@ -133,13 +138,14 @@ export default function ProductCard({ product, isMobile = false }) {
     );
   }
 
-  // Desktop version - original with hover effects
+  // Desktop version - with hover effects
   return (
     <Link 
       href={getProductLink()} 
       className="block group"
     >
       <div className="relative">
+        {/* Image Container - 3:4 Aspect Ratio */}
         <div className="relative aspect-[3/4] bg-[#F5F5F5] overflow-hidden">
           {primaryImage ? (
             <Image
@@ -169,31 +175,41 @@ export default function ProductCard({ product, isMobile = false }) {
           )}
         </div>
 
-        <div className="pt-6">
+        {/* Product Info */}
+        <div style={{ paddingTop: 16 }}>
           {product.brand?.name && product.category === 'watch' && (
-            <p className="text-[11px] font-medium text-muted uppercase tracking-[1px] mb-1.5">
+            <p style={{
+              fontSize: 11,
+              fontWeight: 500,
+              color: '#919191',
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+              marginBottom: 6
+            }}>
               {product.brand.name}
             </p>
           )}
 
+          {/* Title - 14px, 400 weight */}
           <h3 style={{ 
-            fontSize: '15px', 
-            fontWeight: '500', 
+            fontSize: 14, 
+            fontWeight: 400, 
+            letterSpacing: 0.5,
             color: '#0C0C0C',
-            marginTop: '20px',
-            marginBottom: '8px',
-            lineHeight: '1.4'
+            marginBottom: 6,
+            lineHeight: 1.4
           }}>
             {product.name}
           </h3>
 
-          <div className="flex items-center gap-2.5">
-            <span className="text-[16px] font-semibold text-focus">
+          {/* Price - 14px, 600 weight */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C' }}>
               {formatPrice(product.price)}
             </span>
             
             {product.compare_price > product.price && (
-              <span className="text-[13px] text-muted line-through">
+              <span style={{ fontSize: 12, color: '#919191', textDecoration: 'line-through' }}>
                 {formatPrice(product.compare_price)}
               </span>
             )}
