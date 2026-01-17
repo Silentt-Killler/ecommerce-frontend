@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/product/ProductCard';
 
@@ -15,7 +15,6 @@ export default function HomePage() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Check if mobile
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -68,26 +67,16 @@ export default function HomePage() {
     
     if (!products || products.length === 0) return null;
 
-    const scroll = (direction) => {
-      if (scrollRef.current) {
-        const scrollAmount = scrollRef.current.offsetWidth * 0.8;
-        scrollRef.current.scrollBy({
-          left: direction === 'left' ? -scrollAmount : scrollAmount,
-          behavior: 'smooth'
-        });
-      }
-    };
-
     return (
       <section style={{ backgroundColor: '#FFFFFF', padding: '40px 0' }}>
+        {/* Section Title */}
         <h2 style={{ 
-          fontSize: 16, 
-          fontWeight: 500, 
-          letterSpacing: 3, 
+          fontSize: 18, 
+          fontWeight: 600, 
+          letterSpacing: -0.2, 
           textAlign: 'center', 
           marginBottom: 24,
           color: '#0C0C0C',
-          textTransform: 'uppercase',
           padding: '0 16px'
         }}>
           {title}
@@ -99,7 +88,7 @@ export default function HomePage() {
             ref={scrollRef}
             style={{
               display: 'flex',
-              gap: 12,
+              gap: 16,
               overflowX: 'auto',
               scrollSnapType: 'x mandatory',
               WebkitOverflowScrolling: 'touch',
@@ -110,13 +99,13 @@ export default function HomePage() {
             }}
             className="hide-scrollbar"
           >
-            {products.map((product, idx) => (
+            {products.map((product) => (
               <div 
                 key={product._id} 
                 style={{ 
-                  flex: '0 0 calc(50% - 6px)',
+                  flex: '0 0 calc(50% - 8px)',
                   scrollSnapAlign: 'start',
-                  minWidth: 'calc(50% - 6px)'
+                  minWidth: 'calc(50% - 8px)'
                 }}
               >
                 <ProductCard product={product} isMobile={true} />
@@ -125,24 +114,23 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* View All Button */}
+        {/* View All - Text + Arrow */}
         <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>
           <Link 
             href={viewAllLink}
             style={{
-              display: 'inline-block',
-              padding: '12px 32px',
-              backgroundColor: '#0C0C0C',
-              color: '#FFFFFF',
-              fontSize: 11,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              color: '#0C0C0C',
+              fontSize: 13,
               fontWeight: 500,
-              letterSpacing: 2,
-              textTransform: 'uppercase',
               textDecoration: 'none',
-              border: '1px solid #0C0C0C'
+              transition: 'opacity 0.2s'
             }}
           >
             View All
+            <ArrowRight size={16} strokeWidth={2} />
           </Link>
         </div>
       </section>
@@ -157,14 +145,12 @@ export default function HomePage() {
       <section style={{ backgroundColor: '#FFFFFF', paddingTop: 60, paddingBottom: 60 }}>
         <div style={{ maxWidth: 1800, margin: '0 auto', padding: '0 50px' }}>
           <h2 style={{ 
-            fontSize: 32, 
-            fontWeight: 400, 
-            lineHeight: '40px',
-            letterSpacing: 8, 
+            fontSize: 20, 
+            fontWeight: 600, 
+            letterSpacing: -0.2, 
             textAlign: 'center', 
             marginBottom: 40,
-            color: '#0C0C0C',
-            textTransform: 'uppercase'
+            color: '#0C0C0C'
           }}>
             {title}
           </h2>
@@ -179,32 +165,25 @@ export default function HomePage() {
             ))}
           </div>
 
+          {/* View All - Text + Arrow */}
           <div style={{ textAlign: 'center', marginTop: 40 }}>
             <Link 
               href={viewAllLink}
               style={{
-                display: 'inline-block',
-                padding: '14px 40px',
-                backgroundColor: '#0C0C0C',
-                color: '#FFFFFF',
-                fontSize: 11,
-                fontWeight: 400,
-                letterSpacing: 3,
-                textTransform: 'uppercase',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                color: '#0C0C0C',
+                fontSize: 13,
+                fontWeight: 500,
                 textDecoration: 'none',
-                transition: 'all 0.3s ease',
-                border: '1px solid #0C0C0C'
+                transition: 'opacity 0.2s'
               }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#B08B5C';
-                e.currentTarget.style.borderColor = '#B08B5C';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#0C0C0C';
-                e.currentTarget.style.borderColor = '#0C0C0C';
-              }}
+              onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'}
+              onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
             >
               View All
+              <ArrowRight size={16} strokeWidth={2} />
             </Link>
           </div>
         </div>
@@ -220,7 +199,6 @@ export default function HomePage() {
         height: isMobile ? '85vh' : '100vh', 
         width: '100%' 
       }}>
-        {/* Hero Image - Use mobile_image on mobile */}
         {(isMobile ? heroSlide?.mobile_image_url : heroSlide?.image_url) || heroSlide?.image_url ? (
           <Image
             src={(isMobile && heroSlide?.mobile_image_url) ? heroSlide.mobile_image_url : heroSlide?.image_url}
@@ -242,30 +220,30 @@ export default function HomePage() {
           </div>
         )}
         
-        {/* Hero Buttons */}
+        {/* Hero Buttons - ALWAYS HORIZONTAL */}
         <div style={{
           position: 'absolute',
           bottom: isMobile ? 60 : 80,
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
-          flexDirection: isMobile ? 'column' : 'row',
-          gap: isMobile ? 12 : 16,
-          width: isMobile ? 'calc(100% - 48px)' : 'auto'
+          flexDirection: 'row',
+          gap: 12,
         }}>
           <Link 
             href="/womenswear"
             style={{
-              padding: isMobile ? '14px 24px' : '14px 36px',
+              padding: isMobile ? '12px 24px' : '14px 36px',
               backgroundColor: '#FFFFFF',
               color: '#0C0C0C',
-              fontSize: 12,
+              fontSize: isMobile ? 11 : 12,
               fontWeight: 500,
               letterSpacing: 2,
               textTransform: 'uppercase',
               textDecoration: 'none',
               textAlign: 'center',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              whiteSpace: 'nowrap'
             }}
           >
             For Her
@@ -273,16 +251,17 @@ export default function HomePage() {
           <Link 
             href="/menswear"
             style={{
-              padding: isMobile ? '14px 24px' : '14px 36px',
+              padding: isMobile ? '12px 24px' : '14px 36px',
               backgroundColor: '#FFFFFF',
               color: '#0C0C0C',
-              fontSize: 12,
+              fontSize: isMobile ? 11 : 12,
               fontWeight: 500,
               letterSpacing: 2,
               textTransform: 'uppercase',
               textDecoration: 'none',
               textAlign: 'center',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              whiteSpace: 'nowrap'
             }}
           >
             For Him
@@ -297,19 +276,18 @@ export default function HomePage() {
         paddingBottom: isMobile ? 20 : 50 
       }}>
         <h2 style={{ 
-          fontSize: isMobile ? 16 : 32, 
-          fontWeight: isMobile ? 500 : 400, 
-          letterSpacing: isMobile ? 3 : 8, 
+          fontSize: isMobile ? 18 : 20, 
+          fontWeight: 600, 
+          letterSpacing: -0.2, 
           textAlign: 'center', 
           marginBottom: isMobile ? 24 : 50,
           color: '#0C0C0C',
-          textTransform: 'uppercase',
           padding: isMobile ? '0 16px' : 0
         }}>
           {isMobile ? 'Explore The New Styles' : 'Explore Our Collection'}
         </h2>
         
-        {/* Mobile: 2x2 Grid like Gucci */}
+        {/* Mobile: 2x2 Grid */}
         {isMobile ? (
           <div style={{ 
             display: 'grid', 
