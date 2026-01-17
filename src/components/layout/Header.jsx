@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingBag, User, Search, Menu, X, Plus, MoreVertical } from 'lucide-react';
+import { ShoppingBag, User, Search, Menu, X, Plus } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 import useCartStore from '@/store/cartStore';
 import MenuOverlay from './MenuOverlay';
@@ -396,21 +396,23 @@ export default function Header() {
               PRISMIN
             </Link>
 
-            {/* Right - 3 Dot Menu */}
+            {/* Right - Hamburger Menu (same as desktop) */}
             <button 
               onClick={() => setShowMenu(true)}
               style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
                 background: 'none', 
                 border: 'none', 
                 cursor: 'pointer',
                 color: getColor(),
                 transition: 'color 0.3s',
-                padding: 8,
-                display: 'flex',
-                alignItems: 'center'
+                padding: 8
               }}
             >
-              <MoreVertical size={22} strokeWidth={1.5} />
+              <Menu size={20} strokeWidth={1.5} />
+              <span style={{ fontSize: 11, letterSpacing: 1 }}>MENU</span>
             </button>
           </div>
         </div>
