@@ -18,7 +18,13 @@ const playfair = Playfair_Display({
 export const metadata = {
   title: 'PRISMIN - Premium E-commerce Store',
   description: 'Premium quality products for your lifestyle',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({ children }) {
