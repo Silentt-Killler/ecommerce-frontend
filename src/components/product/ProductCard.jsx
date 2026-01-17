@@ -47,18 +47,17 @@ export default function ProductCard({ product, isMobile = false }) {
   };
 
   // ============================================
-  // MOBILE VERSION - New Premium Spec
+  // MOBILE VERSION - Premium Luxury Design
   // ============================================
   if (isMobile) {
     return (
       <Link href={getProductLink()} style={{ textDecoration: 'none', display: 'block' }}>
-        {/* Image Container - 3:4 Aspect Ratio, Sharp Corners */}
+        {/* Image Container - 3:4, Full Width, No Rounded Corners */}
         <div style={{
           position: 'relative',
           aspectRatio: '3/4',
-          backgroundColor: '#F5F5F5',
-          overflow: 'hidden',
-          borderRadius: 0 // Sharp corners for luxury feel
+          backgroundColor: '#F7F7F7',
+          overflow: 'hidden'
         }}>
           {primaryImage ? (
             <Image
@@ -69,7 +68,7 @@ export default function ProductCard({ product, isMobile = false }) {
               style={{ 
                 objectFit: 'cover',
                 opacity: imageLoaded ? 1 : 0,
-                transition: 'opacity 0.3s'
+                transition: 'opacity 0.4s ease'
               }}
               onLoad={() => setImageLoaded(true)}
             />
@@ -87,18 +86,18 @@ export default function ProductCard({ product, isMobile = false }) {
             </div>
           )}
 
-          {/* Discount Badge */}
+          {/* Discount Badge - Minimal */}
           {discount > 0 && (
             <div style={{
               position: 'absolute',
-              top: 10,
-              left: 10,
-              backgroundColor: '#B08B5C',
+              top: 12,
+              left: 12,
+              backgroundColor: '#0C0C0C',
               color: '#FFFFFF',
-              padding: '5px 10px',
-              fontSize: 11,
+              padding: '6px 10px',
+              fontSize: 10,
               fontWeight: 600,
-              letterSpacing: 0.5
+              letterSpacing: 1
             }}>
               -{discount}%
             </div>
@@ -108,31 +107,36 @@ export default function ProductCard({ product, isMobile = false }) {
           {product.stock === 0 && (
             <div style={{
               position: 'absolute',
-              top: 10,
-              right: 10,
+              bottom: 0,
+              left: 0,
+              right: 0,
               backgroundColor: 'rgba(0,0,0,0.7)',
               color: '#FFFFFF',
-              padding: '5px 10px',
+              padding: '8px',
               fontSize: 11,
-              fontWeight: 500
+              fontWeight: 500,
+              textAlign: 'center',
+              letterSpacing: 1,
+              textTransform: 'uppercase'
             }}>
               Sold Out
             </div>
           )}
         </div>
 
-        {/* Product Info - Center Aligned */}
+        {/* Product Info - Minimal & Clean */}
         <div style={{ 
-          paddingTop: 12, 
-          textAlign: 'center' 
+          padding: '14px 4px 8px',
+          textAlign: 'center'
         }}>
-          {/* Product Name - 14px, Medium (500) */}
+          {/* Product Name */}
           <h3 style={{
-            fontSize: 14,
-            fontWeight: 500,
+            fontSize: 13,
+            fontWeight: 400,
             color: '#0C0C0C',
-            marginBottom: 4,
-            lineHeight: 1.4,
+            marginBottom: 6,
+            lineHeight: 1.5,
+            letterSpacing: 0.3,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
@@ -142,7 +146,7 @@ export default function ProductCard({ product, isMobile = false }) {
             {product.name}
           </h3>
 
-          {/* Price - 15px, Semibold (600) */}
+          {/* Price */}
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
@@ -150,16 +154,17 @@ export default function ProductCard({ product, isMobile = false }) {
             gap: 8 
           }}>
             <span style={{ 
-              fontSize: 15, 
+              fontSize: 14, 
               fontWeight: 600, 
-              color: '#0C0C0C' 
+              color: '#0C0C0C',
+              letterSpacing: 0.5
             }}>
               {formatPrice(product.price)}
             </span>
             {product.compare_price > product.price && (
               <span style={{
                 fontSize: 12,
-                color: '#919191',
+                color: '#999999',
                 textDecoration: 'line-through'
               }}>
                 {formatPrice(product.compare_price)}
