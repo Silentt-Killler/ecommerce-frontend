@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, X, ArrowLeft, TrendingUp, Clock } from 'lucide-react';
+import { Search, X, ArrowLeft, Clock } from 'lucide-react';
 import api from '@/lib/api';
 
 export default function SearchPage() {
@@ -17,12 +17,12 @@ export default function SearchPage() {
   const [recentSearches, setRecentSearches] = useState([]);
 
   useEffect(() => {
-    // Focus input on mount
+    // Focus input on mount with delay
     setTimeout(() => {
       inputRef.current?.focus();
-    }, 100);
+    }, 300);
     
-    // Load recent searches from localStorage
+    // Load recent searches
     try {
       const saved = localStorage.getItem('recentSearches');
       if (saved) {
@@ -32,10 +32,10 @@ export default function SearchPage() {
       console.error('Error loading recent searches:', e);
     }
 
-    // Fetch suggested/popular products
+    // Fetch suggested products
     const fetchSuggested = async () => {
       try {
-        const res = await api.get('/products?limit=6&sort=popular');
+        const res = await api.get('/products?limit=6');
         setSuggestedProducts(res.data.products || []);
       } catch (error) {
         console.error('Error fetching suggested products:', error);
@@ -70,7 +70,6 @@ export default function SearchPage() {
   const handleSearch = (searchQuery) => {
     if (!searchQuery.trim()) return;
     
-    // Save to recent searches
     try {
       const updated = [searchQuery, ...recentSearches.filter(s => s !== searchQuery)].slice(0, 5);
       setRecentSearches(updated);
@@ -102,18 +101,18 @@ export default function SearchPage() {
   return (
     <div style={{ 
       minHeight: '100vh', 
-      backgroundColor: '#FFFFFF',
-      paddingBottom: 100
+      backgroundColor: '#FFFFFF'
     }}>
-      {/* Search Header */}
+      {/* Fixed Search Header - Below main nav (56px header height) */}
       <div style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 10,
+        position: 'fixed',
+        top: 56,
+        left: 0,
+        right: 0,
+        zIndex: 30,
         backgroundColor: '#FFFFFF',
         borderBottom: '1px solid #E8E8E8',
-        padding: '12px 16px',
-        paddingTop: 'calc(12px + env(safe-area-inset-top))'
+        padding: '12px 16px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <button
@@ -132,7 +131,6 @@ export default function SearchPage() {
           
           <div style={{ 
             flex: 1, 
-            position: 'relative',
             display: 'flex',
             alignItems: 'center',
             backgroundColor: '#F5F5F5',
@@ -175,8 +173,13 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{ padding: '16px' }}>
+      {/* Content - with proper top padding for both headers */}
+      <div style={{ 
+        paddingTop: 130, // 56px (main header) + 58px (search header) + 16px gap
+        paddingBottom: 100,
+        paddingLeft: 16,
+        paddingRight: 16
+      }}>
         {/* Recent Searches */}
         {!query && recentSearches.length > 0 && (
           <div style={{ marginBottom: 32 }}>
@@ -263,9 +266,8 @@ export default function SearchPage() {
                     aspectRatio: '3/4',
                     position: 'relative',
                     backgroundColor: '#F5F5F5',
-                    borderRadius: 4,
                     overflow: 'hidden',
-                    marginBottom: 8
+                    marginBottom: 10
                   }}>
                     {product.images?.[0]?.url && (
                       <Image
@@ -277,17 +279,23 @@ export default function SearchPage() {
                     )}
                   </div>
                   <p style={{
-                    fontSize: 13,
-                    fontWeight: 400,
+                    fontSize: 14,
+                    fontWeight: 500,
                     color: '#0C0C0C',
                     marginBottom: 4,
+                    textAlign: 'center',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap'
                   }}>
                     {product.name}
                   </p>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#0C0C0C' }}>
+                  <p style={{ 
+                    fontSize: 15, 
+                    fontWeight: 600, 
+                    color: '#0C0C0C',
+                    textAlign: 'center'
+                  }}>
                     {formatPrice(product.price)}
                   </p>
                 </Link>
