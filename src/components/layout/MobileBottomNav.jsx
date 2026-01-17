@@ -12,6 +12,7 @@ export default function MobileBottomNav() {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
+  const [clickedTab, setClickedTab] = useState(null);
   const lastScrollY = useRef(0);
 
   const isAdminPage = pathname?.startsWith('/admin');
@@ -20,7 +21,6 @@ export default function MobileBottomNav() {
   useEffect(() => {
     setMounted(true);
     
-    // Set active tab based on pathname
     if (pathname === '/') setActiveTab('home');
     else if (pathname === '/cart') setActiveTab('cart');
     else if (pathname === '/account' || pathname === '/login') setActiveTab('profile');
@@ -33,11 +33,18 @@ export default function MobileBottomNav() {
       
       if (currentScrollY < 10) {
         setVisible(true);
-      } else if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-        // Scrolling down
+        lastScrollY.current = currentScrollY;
+        return;
+      }
+      
+      const scrollDifference = currentScrollY - lastScrollY.current;
+      
+      // Scrolling down - hide
+      if (scrollDifference > 5 && currentScrollY > 100) {
         setVisible(false);
-      } else if (currentScrollY < lastScrollY.current) {
-        // Scrolling up
+      }
+      // Scrolling up - show
+      else if (scrollDifference < -5) {
         setVisible(true);
       }
       
@@ -48,7 +55,13 @@ export default function MobileBottomNav() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Hide on admin and checkout pages
+  // Handle click animation
+  const handleClick = (id) => {
+    setClickedTab(id);
+    setActiveTab(id);
+    setTimeout(() => setClickedTab(null), 150);
+  };
+
   if (isAdminPage || isCheckoutPage) return null;
 
   const cartCount = mounted ? getItemCount() : 0;
@@ -69,66 +82,66 @@ export default function MobileBottomNav() {
         left: 0,
         right: 0,
         zIndex: 50,
-        backgroundColor: '#0C0C0C',
-        borderTop: '1px solid #1a1a1a',
+        backgroundColor: '#F9F9F9',
+        borderTop: '1px solid #E8E8E8',
         transform: visible ? 'translateY(0)' : 'translateY(100%)',
         transition: 'transform 0.3s ease',
-        paddingBottom: 'env(safe-area-inset-bottom)'
       }}
     >
       <div style={{
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'space-around',
-        height: 65,
-        paddingBottom: 8
+        height: 66,
+        paddingBottom: 'max(8px, env(safe-area-inset-bottom))'
       }}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
+          const isClicked = clickedTab === item.id;
           
           if (item.isCenter) {
-            // Center Home button - elevated
+            // Center Home button - elevated circle
             return (
               <Link
                 key={item.id}
                 href={item.href}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => handleClick(item.id)}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   textDecoration: 'none',
-                  marginTop: -20,
-                  transition: 'transform 0.2s ease'
+                  marginTop: -24,
+                  transform: isClicked ? 'scale(1.1)' : 'scale(1)',
+                  transition: 'transform 0.15s ease'
                 }}
               >
                 <div style={{
-                  width: 56,
-                  height: 56,
+                  width: 52,
+                  height: 52,
                   borderRadius: '50%',
-                  backgroundColor: isActive ? '#B08B5C' : '#1a1a1a',
+                  backgroundColor: isActive ? '#B08B5C' : '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '3px solid #0C0C0C',
-                  transform: isActive ? 'translateY(-4px)' : 'translateY(0)',
-                  transition: 'all 0.2s ease',
-                  boxShadow: isActive ? '0 4px 12px rgba(176, 139, 92, 0.4)' : 'none'
+                  border: isActive ? 'none' : '1px solid #E0E0E0',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  transition: 'all 0.2s ease'
                 }}>
                   <Icon 
-                    size={24} 
+                    size={22} 
                     strokeWidth={isActive ? 2 : 1.5}
-                    style={{ color: '#FFFFFF' }}
+                    color={isActive ? '#FFFFFF' : '#949494'}
                   />
                 </div>
                 <span style={{
                   fontSize: 10,
                   marginTop: 4,
-                  color: isActive ? '#B08B5C' : '#666666',
+                  color: isActive ? '#B08B5C' : '#949494',
                   fontWeight: isActive ? 500 : 400,
-                  letterSpacing: 0.5
+                  letterSpacing: 0.3
                 }}>
                   {item.label}
                 </span>
@@ -141,33 +154,31 @@ export default function MobileBottomNav() {
             <Link
               key={item.id}
               href={item.href}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => handleClick(item.id)}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'flex-end',
                 textDecoration: 'none',
-                padding: '8px 16px',
+                padding: '8px 20px',
                 position: 'relative',
-                transform: isActive ? 'translateY(-4px)' : 'translateY(0)',
-                transition: 'transform 0.2s ease'
+                transform: isClicked ? 'scale(1.1)' : 'scale(1)',
+                transition: 'transform 0.15s ease'
               }}
             >
               <div style={{ position: 'relative' }}>
                 <Icon 
                   size={22} 
-                  strokeWidth={isActive ? 2 : 1.5}
-                  style={{ 
-                    color: isActive ? '#FFFFFF' : '#666666',
-                    transition: 'color 0.2s ease'
-                  }}
+                  strokeWidth={isActive ? 1.2 : 1}
+                  color={isActive ? '#B08B5C' : '#949494'}
+                  style={{ transition: 'all 0.2s ease' }}
                 />
                 {/* Cart Badge */}
                 {item.badge > 0 && (
                   <span style={{
                     position: 'absolute',
-                    top: -6,
+                    top: -5,
                     right: -8,
                     minWidth: 16,
                     height: 16,
@@ -188,9 +199,9 @@ export default function MobileBottomNav() {
               <span style={{
                 fontSize: 10,
                 marginTop: 4,
-                color: isActive ? '#FFFFFF' : '#666666',
+                color: isActive ? '#B08B5C' : '#949494',
                 fontWeight: isActive ? 500 : 400,
-                letterSpacing: 0.5,
+                letterSpacing: 0.3,
                 transition: 'color 0.2s ease'
               }}>
                 {item.label}
