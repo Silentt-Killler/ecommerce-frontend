@@ -61,61 +61,54 @@ export default function HomePage() {
     return linkMap[slug] || `/shop?category=${slug}`;
   };
 
-  // Mobile Featured Section - Premium Layout
+  // Mobile Featured Section - Original Design
   const MobileFeaturedSection = ({ title, products, viewAllLink }) => {
     if (!products || products.length === 0) return null;
 
     return (
-      <section style={{ 
-        backgroundColor: '#FFFFFF', 
-        paddingTop: 48,
-        paddingBottom: 32
-      }}>
-        {/* Section Title - Luxury Typography */}
+      <section style={{ backgroundColor: '#FFFFFF', paddingTop: 40, paddingBottom: 24 }}>
+        {/* Section Heading - Original Style */}
         <h2 style={{ 
-          fontSize: 13, 
-          fontWeight: 500, 
-          letterSpacing: 3, 
+          fontSize: 20, 
+          fontWeight: 600, 
+          letterSpacing: 2, 
           textAlign: 'center', 
-          marginBottom: 28,
+          marginBottom: 24,
           color: '#0C0C0C',
-          textTransform: 'uppercase'
+          textTransform: 'uppercase',
+          padding: '0 16px'
         }}>
           {title}
         </h2>
         
-        {/* Product Grid - Tight Gap for Premium Feel */}
+        {/* Product Grid - 2 Columns, 16px gap */}
         <div style={{ 
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 1, // Minimal gap - Gucci style
-          backgroundColor: '#E8E8E8' // Line color between cards
+          gap: 16,
+          padding: '0 16px'
         }}>
           {products.slice(0, 4).map((product) => (
-            <div key={product._id} style={{ backgroundColor: '#FFFFFF' }}>
-              <ProductCard product={product} isMobile={true} />
-            </div>
+            <ProductCard key={product._id} product={product} isMobile={true} />
           ))}
         </div>
 
-        {/* View All - Minimal */}
-        <div style={{ textAlign: 'center', marginTop: 28 }}>
+        {/* View All - Text + Arrow */}
+        <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>
           <Link 
             href={viewAllLink}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 8,
+              gap: 6,
               color: '#0C0C0C',
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: 500,
-              letterSpacing: 1,
-              textDecoration: 'none',
-              textTransform: 'uppercase'
+              textDecoration: 'none'
             }}
           >
             View All
-            <ArrowRight size={14} strokeWidth={2} />
+            <ArrowRight size={16} strokeWidth={2} />
           </Link>
         </div>
       </section>
@@ -182,7 +175,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <section style={{ 
         position: 'relative', 
-        height: isMobile ? '90vh' : '100vh', 
+        height: isMobile ? '85vh' : '100vh', 
         width: '100%' 
       }}>
         {(isMobile ? heroSlide?.mobile_image_url : heroSlide?.image_url) || heroSlide?.image_url ? (
@@ -206,23 +199,23 @@ export default function HomePage() {
           </div>
         )}
         
-        {/* Hero Buttons */}
+        {/* Hero Buttons - Horizontal */}
         <div style={{
           position: 'absolute',
-          bottom: isMobile ? 50 : 80,
+          bottom: isMobile ? 60 : 80,
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
           flexDirection: 'row',
-          gap: isMobile ? 10 : 16
+          gap: 12
         }}>
           <Link 
             href="/womenswear"
             style={{
-              padding: isMobile ? '14px 28px' : '14px 36px',
+              padding: isMobile ? '12px 24px' : '14px 36px',
               backgroundColor: '#FFFFFF',
               color: '#0C0C0C',
-              fontSize: isMobile ? 10 : 12,
+              fontSize: isMobile ? 11 : 12,
               fontWeight: 500,
               letterSpacing: 2,
               textTransform: 'uppercase',
@@ -235,10 +228,10 @@ export default function HomePage() {
           <Link 
             href="/menswear"
             style={{
-              padding: isMobile ? '14px 28px' : '14px 36px',
+              padding: isMobile ? '12px 24px' : '14px 36px',
               backgroundColor: '#FFFFFF',
               color: '#0C0C0C',
-              fontSize: isMobile ? 10 : 12,
+              fontSize: isMobile ? 11 : 12,
               fontWeight: 500,
               letterSpacing: 2,
               textTransform: 'uppercase',
@@ -254,42 +247,39 @@ export default function HomePage() {
       {/* Category Section */}
       <section style={{ 
         backgroundColor: '#FFFFFF', 
-        paddingTop: isMobile ? 48 : 70, 
-        paddingBottom: isMobile ? 32 : 50 
+        paddingTop: isMobile ? 40 : 70, 
+        paddingBottom: isMobile ? 20 : 50 
       }}>
         <h2 style={{ 
-          fontSize: isMobile ? 13 : 32, 
-          fontWeight: isMobile ? 500 : 400, 
-          letterSpacing: isMobile ? 3 : 8, 
+          fontSize: isMobile ? 20 : 32, 
+          fontWeight: isMobile ? 600 : 400, 
+          letterSpacing: isMobile ? 2 : 8, 
           textAlign: 'center', 
-          marginBottom: isMobile ? 28 : 50,
+          marginBottom: isMobile ? 24 : 50,
           color: '#0C0C0C',
-          textTransform: 'uppercase'
+          textTransform: 'uppercase',
+          padding: isMobile ? '0 16px' : 0
         }}>
-          {isMobile ? 'EXPLORE' : 'Explore Our Collection'}
+          {isMobile ? 'EXPLORE THE NEW STYLES' : 'Explore Our Collection'}
         </h2>
         
-        {/* Mobile: 2x2 Grid - Edge to Edge */}
+        {/* Mobile: 2x2 Grid */}
         {isMobile ? (
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(2, 1fr)', 
-            gap: 1,
-            backgroundColor: '#E8E8E8'
+            gap: 2,
+            padding: '0 16px'
           }}>
             {categories.slice(0, 4).map((cat) => (
               <Link 
                 key={cat._id} 
                 href={getCategoryLink(cat.slug)}
-                style={{ 
-                  textDecoration: 'none', 
-                  display: 'block',
-                  backgroundColor: '#FFFFFF'
-                }}
+                style={{ textDecoration: 'none', display: 'block' }}
               >
                 <div style={{ 
                   position: 'relative', 
-                  aspectRatio: '3/4',
+                  aspectRatio: '1/1.2',
                   backgroundColor: '#F5F5F5', 
                   overflow: 'hidden'
                 }}>
@@ -312,29 +302,18 @@ export default function HomePage() {
                       <span style={{ color: '#999', fontSize: 12 }}>No Image</span>
                     </div>
                   )}
-                  
-                  {/* Category Name Overlay */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    padding: '20px 12px 16px',
-                    background: 'linear-gradient(transparent, rgba(0,0,0,0.5))'
-                  }}>
-                    <h3 style={{ 
-                      fontSize: 12, 
-                      fontWeight: 500, 
-                      color: '#FFFFFF',
-                      textAlign: 'center',
-                      letterSpacing: 2,
-                      textTransform: 'uppercase',
-                      margin: 0
-                    }}>
-                      {cat.name}
-                    </h3>
-                  </div>
                 </div>
+                
+                <h3 style={{ 
+                  textAlign: 'center', 
+                  fontSize: 13, 
+                  fontWeight: 500, 
+                  color: '#0C0C0C',
+                  padding: '12px 8px',
+                  margin: 0
+                }}>
+                  {cat.name}
+                </h3>
               </Link>
             ))}
           </div>
@@ -407,7 +386,7 @@ export default function HomePage() {
         isMobile ? (
           <MobileFeaturedSection 
             key={cat._id}
-            title={`Featured ${cat.name}`}
+            title={`FEATURED ${cat.name.toUpperCase()}`}
             products={categoryProducts[cat.slug] || []}
             viewAllLink={getCategoryLink(cat.slug)}
           />
@@ -424,16 +403,17 @@ export default function HomePage() {
       {/* Newsletter */}
       <section style={{ 
         backgroundColor: '#0C0C0C', 
-        padding: isMobile ? '50px 20px' : '70px 0' 
+        padding: isMobile ? '50px 16px' : '70px 0' 
       }}>
         <div style={{ 
-          maxWidth: 500, 
+          maxWidth: 550, 
           margin: '0 auto', 
+          padding: isMobile ? 0 : '0 24px', 
           textAlign: 'center' 
         }}>
           <h2 style={{ 
-            fontSize: isMobile ? 12 : 24, 
-            fontWeight: isMobile ? 500 : 400, 
+            fontSize: isMobile ? 18 : 24, 
+            fontWeight: 400, 
             letterSpacing: isMobile ? 3 : 6, 
             marginBottom: 12,
             color: '#FFFFFF',
@@ -443,12 +423,11 @@ export default function HomePage() {
           </h2>
           <p style={{ 
             color: '#888', 
-            marginBottom: 28, 
+            marginBottom: 24, 
             fontSize: isMobile ? 12 : 13, 
-            letterSpacing: 0.5,
-            lineHeight: 1.6
+            letterSpacing: 1 
           }}>
-            Subscribe for exclusive offers and new arrivals
+            Subscribe to receive updates on new arrivals and special offers
           </p>
           
           <form style={{ 
@@ -458,22 +437,21 @@ export default function HomePage() {
           }}>
             <input
               type="email"
-              placeholder="Your email address"
+              placeholder="Enter your email"
               style={{
                 flex: 1,
                 padding: '14px 20px',
                 backgroundColor: 'transparent',
-                border: '1px solid #333',
+                border: '1px solid #444',
                 color: '#FFFFFF',
                 fontSize: 13,
-                outline: 'none',
-                letterSpacing: 0.5
+                outline: 'none'
               }}
             />
             <button
               type="submit"
               style={{
-                padding: '14px 32px',
+                padding: '14px 30px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
                 fontSize: 11,
