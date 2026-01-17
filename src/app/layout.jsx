@@ -2,6 +2,7 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import './globals.css';
 
 const inter = Inter({
@@ -15,8 +16,9 @@ const playfair = Playfair_Display({
 });
 
 export const metadata = {
-  title: 'BRAND - Premium E-commerce Store',
+  title: 'PRISMIN - Premium E-commerce Store',
   description: 'Premium quality products for your lifestyle',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
 };
 
 export default function RootLayout({ children }) {
@@ -44,6 +46,7 @@ export default function RootLayout({ children }) {
           {children}
         </main>
         <Footer />
+        <MobileBottomNav />
       </body>
     </html>
   );
