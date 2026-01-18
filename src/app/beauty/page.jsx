@@ -8,83 +8,71 @@ import { ChevronDown, X, Sparkles, SlidersHorizontal } from 'lucide-react';
 import api from '@/lib/api';
 import ProductCard from '@/components/product/ProductCard';
 
-// Filter Dropdown Component
+function MobileFilterPanel({ isOpen, onClose, subcategories, selectedSubcategory, onSubcategoryChange, selectedSkinType, onSkinTypeChange, selectedPrice, onPriceChange, onClear }) {
+  const skinTypeOptions = ['Oily', 'Dry', 'Combination', 'Normal', 'Sensitive', 'All Skin Types'];
+  const priceOptions = ['Under ৳500', '৳500 - ৳1000', '৳1000 - ৳2000', '৳2000 - ৳5000', 'Above ৳5000'];
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100 }} onClick={onClose} />
+      <div style={{ position: 'fixed', top: 0, left: 0, bottom: 0, width: '85%', maxWidth: 320, backgroundColor: '#FFFFFF', zIndex: 101, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #E5E7EB' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: '#0C0C0C', margin: 0 }}>Filters</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><X size={24} color="#0C0C0C" /></button>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+          <div style={{ marginBottom: 28 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 600, color: '#0C0C0C', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 }}>Category</h3>
+            {[{ slug: '', name: 'All Items' }, ...subcategories].map((sub) => (
+              <button key={sub.slug || 'all'} onClick={() => onSubcategoryChange(sub.slug)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', background: 'none', border: 'none', borderBottom: '1px solid #F3F4F6', cursor: 'pointer', width: '100%' }}>
+                <span style={{ fontSize: 14, color: selectedSubcategory === sub.slug ? '#B08B5C' : '#374151', fontWeight: selectedSubcategory === sub.slug ? 600 : 400 }}>{sub.name}</span>
+                {selectedSubcategory === sub.slug && <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#B08B5C' }} />}
+              </button>
+            ))}
+          </div>
+          <div style={{ marginBottom: 28 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 600, color: '#0C0C0C', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 }}>Skin Type</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {skinTypeOptions.map((type) => (
+                <button key={type} onClick={() => onSkinTypeChange(selectedSkinType === type ? '' : type)} style={{ padding: '10px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer', backgroundColor: selectedSkinType === type ? '#0C0C0C' : '#F3F4F6', color: selectedSkinType === type ? '#FFFFFF' : '#374151' }}>{type}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginBottom: 28 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 600, color: '#0C0C0C', marginBottom: 14, textTransform: 'uppercase', letterSpacing: 1 }}>Price</h3>
+            {[{ value: '', label: 'All Prices' }, ...priceOptions.map(p => ({ value: p, label: p }))].map((price) => (
+              <button key={price.value || 'all'} onClick={() => onPriceChange(price.value)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', background: 'none', border: 'none', borderBottom: '1px solid #F3F4F6', cursor: 'pointer', width: '100%' }}>
+                <span style={{ fontSize: 14, color: selectedPrice === price.value ? '#B08B5C' : '#374151', fontWeight: selectedPrice === price.value ? 600 : 400 }}>{price.label}</span>
+                {selectedPrice === price.value && <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#B08B5C' }} />}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ padding: '16px 20px', borderTop: '1px solid #E5E7EB', display: 'flex', gap: 12 }}>
+          <button onClick={onClear} style={{ flex: 1, padding: '14px', backgroundColor: '#FFFFFF', border: '1px solid #D1D5DB', borderRadius: 8, fontSize: 14, fontWeight: 500, color: '#374151', cursor: 'pointer' }}>Clear All</button>
+          <button onClick={onClose} style={{ flex: 1, padding: '14px', backgroundColor: '#0C0C0C', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, color: '#FFFFFF', cursor: 'pointer' }}>Apply</button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
   return (
     <div style={{ position: 'relative', zIndex: isOpen ? 100 : 1 }}>
-      <button
-        onClick={onToggle}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '10px 16px',
-          border: value ? '1px solid #0C0C0C' : '1px solid #D1D5DB',
-          borderRadius: 20,
-          fontSize: 13,
-          fontWeight: 500,
-          backgroundColor: value ? '#0C0C0C' : '#FFFFFF',
-          color: value ? '#FFFFFF' : '#374151',
-          cursor: 'pointer',
-          transition: 'all 0.2s'
-        }}
-      >
+      <button onClick={onToggle} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', border: value ? '1px solid #0C0C0C' : '1px solid #D1D5DB', borderRadius: 20, fontSize: 13, fontWeight: 500, backgroundColor: value ? '#0C0C0C' : '#FFFFFF', color: value ? '#FFFFFF' : '#374151', cursor: 'pointer' }}>
         {label}{value && `: ${value}`}
-        <ChevronDown size={14} style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        <ChevronDown size={14} style={{ transform: isOpen ? 'rotate(180deg)' : 'none' }} />
       </button>
-      
       {isOpen && (
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 90 }} onClick={onToggle} />
-          <div style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            marginTop: 8,
-            width: 200,
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E5E7EB',
-            borderRadius: 12,
-            boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-            zIndex: 100,
-            padding: '8px 0',
-            maxHeight: 280,
-            overflowY: 'auto'
-          }}>
-            <button
-              onClick={() => { onChange(''); onToggle(); }}
-              style={{
-                width: '100%',
-                textAlign: 'left',
-                padding: '12px 16px',
-                fontSize: 13,
-                color: !value ? '#B08B5C' : '#374151',
-                fontWeight: !value ? 600 : 400,
-                backgroundColor: !value ? '#FDF8F3' : 'transparent',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              All {label}
-            </button>
-            {options.map((option) => (
-              <button
-                key={option}
-                onClick={() => { onChange(option); onToggle(); }}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '12px 16px',
-                  fontSize: 13,
-                  color: value === option ? '#B08B5C' : '#374151',
-                  fontWeight: value === option ? 600 : 400,
-                  backgroundColor: value === option ? '#FDF8F3' : 'transparent',
-                  border: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                {option}
-              </button>
+          <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 8, width: 200, backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.15)', zIndex: 100, padding: '8px 0', maxHeight: 280, overflowY: 'auto' }}>
+            <button onClick={() => { onChange(''); onToggle(); }} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', fontSize: 13, color: !value ? '#B08B5C' : '#374151', fontWeight: !value ? 600 : 400, backgroundColor: !value ? '#FDF8F3' : 'transparent', border: 'none', cursor: 'pointer' }}>All {label}</button>
+            {options.map((opt) => (
+              <button key={opt} onClick={() => { onChange(opt); onToggle(); }} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', fontSize: 13, color: value === opt ? '#B08B5C' : '#374151', fontWeight: value === opt ? 600 : 400, backgroundColor: value === opt ? '#FDF8F3' : 'transparent', border: 'none', cursor: 'pointer' }}>{opt}</button>
             ))}
           </div>
         </>
@@ -93,46 +81,23 @@ function FilterDropdown({ label, options, value, onChange, isOpen, onToggle }) {
   );
 }
 
-// Subcategory Item
-function SubcategoryItem({ subcategory, isActive, onClick }) {
+function SubcategoryCircle({ subcategory, isActive, onClick, isMobile }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 8,
-        minWidth: 80,
-        background: 'none',
-        border: 'none',
-        cursor: 'pointer',
-        opacity: isActive ? 1 : 0.7,
-        transition: 'opacity 0.2s'
-      }}
-    >
-      <div style={{
-        width: 70,
-        height: 70,
-        borderRadius: '50%',
-        overflow: 'hidden',
-        border: isActive ? '2px solid #B08B5C' : '2px solid transparent',
-        transition: 'border-color 0.2s'
-      }}>
+    <button onClick={onClick} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, minWidth: isMobile ? 60 : 80, background: 'none', border: 'none', cursor: 'pointer', opacity: isActive ? 1 : 0.7 }}>
+      <div style={{ width: isMobile ? 50 : 70, height: isMobile ? 50 : 70, borderRadius: '50%', overflow: 'hidden', border: isActive ? '2px solid #B08B5C' : '2px solid transparent' }}>
         {subcategory.image_url ? (
-          <Image src={subcategory.image_url} alt={subcategory.name} width={70} height={70} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <Image src={subcategory.image_url} alt={subcategory.name} width={isMobile ? 50 : 70} height={isMobile ? 50 : 70} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #FCE7F3 0%, #F3E8FF 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Sparkles size={24} style={{ color: '#A855F7' }} />
+            <Sparkles size={isMobile ? 18 : 24} style={{ color: '#A855F7' }} />
           </div>
         )}
       </div>
-      <span style={{ fontSize: 12, color: isActive ? '#0C0C0C' : '#6B7280', fontWeight: isActive ? 600 : 400, textAlign: 'center' }}>{subcategory.name}</span>
+      <span style={{ fontSize: isMobile ? 10 : 12, color: isActive ? '#B08B5C' : '#6B7280', fontWeight: isActive ? 600 : 400, textAlign: 'center' }}>{subcategory.name}</span>
     </button>
   );
 }
 
-// Main Content
 function BeautyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -140,14 +105,15 @@ function BeautyContent() {
   const [subcategories, setSubcategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
-  
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileFilter, setShowMobileFilter] = useState(false);
+
   const [selectedSubcategory, setSelectedSubcategory] = useState(searchParams.get('subcategory') || '');
   const [selectedSkinType, setSelectedSkinType] = useState(searchParams.get('skin_type') || '');
   const [selectedPrice, setSelectedPrice] = useState(searchParams.get('price') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [openFilter, setOpenFilter] = useState('');
 
-  // Skin Type Options - Change these based on your backend
   const skinTypeOptions = ['Oily', 'Dry', 'Combination', 'Normal', 'Sensitive', 'All Skin Types'];
   const priceOptions = ['Under ৳500', '৳500 - ৳1000', '৳1000 - ৳2000', '৳2000 - ৳5000', 'Above ৳5000'];
   const sortOptions = [
@@ -156,6 +122,13 @@ function BeautyContent() {
     { value: 'price_high', label: 'Price: High to Low' },
     { value: 'popular', label: 'Most Popular' }
   ];
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     setSelectedSubcategory(searchParams.get('subcategory') || '');
@@ -182,22 +155,9 @@ function BeautyContent() {
     updateURL({ subcategory: newSub, skin_type: selectedSkinType, price: selectedPrice, sort: sortBy });
   };
 
-  const handleSkinTypeChange = (skinType) => { 
-    setSelectedSkinType(skinType); 
-    setOpenFilter(''); 
-    updateURL({ subcategory: selectedSubcategory, skin_type: skinType, price: selectedPrice, sort: sortBy }); 
-  };
-  
-  const handlePriceChange = (price) => { 
-    setSelectedPrice(price); 
-    setOpenFilter(''); 
-    updateURL({ subcategory: selectedSubcategory, skin_type: selectedSkinType, price, sort: sortBy }); 
-  };
-  
-  const handleSortChange = (sort) => { 
-    setSortBy(sort); 
-    updateURL({ subcategory: selectedSubcategory, skin_type: selectedSkinType, price: selectedPrice, sort }); 
-  };
+  const handleSkinTypeChange = (skinType) => { setSelectedSkinType(skinType); setOpenFilter(''); updateURL({ subcategory: selectedSubcategory, skin_type: skinType, price: selectedPrice, sort: sortBy }); };
+  const handlePriceChange = (price) => { setSelectedPrice(price); setOpenFilter(''); updateURL({ subcategory: selectedSubcategory, skin_type: selectedSkinType, price, sort: sortBy }); };
+  const handleSortChange = (sort) => { setSortBy(sort); updateURL({ subcategory: selectedSubcategory, skin_type: selectedSkinType, price: selectedPrice, sort }); };
 
   const fetchSubcategories = async () => {
     try {
@@ -228,102 +188,117 @@ function BeautyContent() {
   };
 
   const clearAllFilters = () => {
-    setSelectedSubcategory(''); 
-    setSelectedSkinType(''); 
-    setSelectedPrice(''); 
-    setSortBy('newest'); 
-    setOpenFilter('');
+    setSelectedSubcategory(''); setSelectedSkinType(''); setSelectedPrice(''); setSortBy('newest'); setOpenFilter('');
     router.push('/beauty', { scroll: false });
   };
 
   const hasActiveFilters = selectedSubcategory || selectedSkinType || selectedPrice;
+  const activeFilterCount = [selectedSubcategory, selectedSkinType, selectedPrice].filter(Boolean).length;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
-      <div style={{ height: 64 }} />
+    <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', paddingBottom: isMobile ? 90 : 0 }}>
+      <div style={{ height: isMobile ? 56 : 60 }} />
 
-      <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6' }}>
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-            <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>Home</Link>
-            <span style={{ color: '#D1D5DB' }}>/</span>
-            <span style={{ color: '#0C0C0C', fontWeight: 500 }}>Beauty & Care</span>
+      <MobileFilterPanel isOpen={showMobileFilter} onClose={() => setShowMobileFilter(false)} subcategories={subcategories} selectedSubcategory={selectedSubcategory} onSubcategoryChange={handleSubcategoryChange} selectedSkinType={selectedSkinType} onSkinTypeChange={handleSkinTypeChange} selectedPrice={selectedPrice} onPriceChange={handlePriceChange} onClear={clearAllFilters} />
+
+      {!isMobile && (
+        <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6' }}>
+          <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+              <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>Home</Link>
+              <span style={{ color: '#D1D5DB' }}>/</span>
+              <span style={{ color: '#0C0C0C', fontWeight: 500 }}>Beauty & Care</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div style={{ backgroundColor: '#FFFFFF' }}>
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px' }}>
-          <h1 style={{ fontSize: 36, fontWeight: 300, letterSpacing: 6, color: '#0C0C0C', margin: 0, textTransform: 'uppercase' }}>Beauty & Care</h1>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: isMobile ? '20px 16px' : '32px 40px' }}>
+          <h1 style={{ fontSize: isMobile ? 24 : 36, fontWeight: 300, letterSpacing: isMobile ? 3 : 6, color: '#0C0C0C', margin: 0, textTransform: 'uppercase', textAlign: isMobile ? 'center' : 'left' }}>Beauty & Care</h1>
         </div>
       </div>
 
       {subcategories.length > 0 && (
         <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6' }}>
-          <div style={{ maxWidth: 1600, margin: '0 auto', padding: '20px 40px' }}>
-            <div style={{ display: 'flex', gap: 24, overflowX: 'auto', paddingBottom: 8 }}>
-              <SubcategoryItem subcategory={{ name: 'All', image_url: null }} isActive={!selectedSubcategory} onClick={() => handleSubcategoryChange('')} />
+          <div style={{ maxWidth: 1600, margin: '0 auto', padding: isMobile ? '16px' : '20px 40px' }}>
+            <div style={{ display: 'flex', gap: isMobile ? 16 : 24, overflowX: 'auto', paddingBottom: 8 }} className="hide-scrollbar">
+              <button onClick={() => handleSubcategoryChange('')} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, minWidth: isMobile ? 60 : 80, background: 'none', border: 'none', cursor: 'pointer' }}>
+                <div style={{ width: isMobile ? 50 : 70, height: isMobile ? 50 : 70, borderRadius: '50%', backgroundColor: !selectedSubcategory ? '#B08B5C' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', border: !selectedSubcategory ? '2px solid #B08B5C' : '2px solid transparent' }}>
+                  <span style={{ fontSize: isMobile ? 10 : 11, fontWeight: 500, color: !selectedSubcategory ? '#FFFFFF' : '#6B7280' }}>All</span>
+                </div>
+                <span style={{ fontSize: isMobile ? 10 : 12, color: !selectedSubcategory ? '#B08B5C' : '#6B7280', fontWeight: !selectedSubcategory ? 600 : 400 }}>All Items</span>
+              </button>
               {subcategories.map((sub) => (
-                <SubcategoryItem key={sub._id} subcategory={sub} isActive={selectedSubcategory === sub.slug} onClick={() => handleSubcategoryChange(sub.slug)} />
+                <SubcategoryCircle key={sub._id} subcategory={sub} isActive={selectedSubcategory === sub.slug} onClick={() => handleSubcategoryChange(sub.slug)} isMobile={isMobile} />
               ))}
             </div>
           </div>
         </div>
       )}
 
-      {/* Filter Bar */}
-      <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6', position: 'sticky', top: 64, zIndex: 50, overflow: 'visible' }}>
-        <div style={{ maxWidth: 1600, margin: '0 auto', padding: '16px 40px', overflow: 'visible' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, overflow: 'visible' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, overflow: 'visible' }}>
-              <SlidersHorizontal size={18} style={{ color: '#9CA3AF', flexShrink: 0 }} />
-              <FilterDropdown label="Price" options={priceOptions} value={selectedPrice} onChange={handlePriceChange} isOpen={openFilter === 'price'} onToggle={() => setOpenFilter(openFilter === 'price' ? '' : 'price')} />
-              <FilterDropdown label="Skin Type" options={skinTypeOptions} value={selectedSkinType} onChange={handleSkinTypeChange} isOpen={openFilter === 'skin_type'} onToggle={() => setOpenFilter(openFilter === 'skin_type' ? '' : 'skin_type')} />
-              {hasActiveFilters && (
-                <button onClick={clearAllFilters} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 12px', fontSize: 13, color: '#DC2626', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
-                  <X size={14} />Clear
-                </button>
-              )}
+      <div style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #F3F4F6', position: 'sticky', top: isMobile ? 56 : 60, zIndex: 50 }}>
+        <div style={{ maxWidth: 1600, margin: '0 auto', padding: isMobile ? '12px 16px' : '16px 40px' }}>
+          {isMobile ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <button onClick={() => setShowMobileFilter(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#374151', cursor: 'pointer' }}>
+                <SlidersHorizontal size={16} />Filters
+                {activeFilterCount > 0 && <span style={{ backgroundColor: '#B08B5C', color: '#FFFFFF', fontSize: 11, fontWeight: 600, padding: '2px 6px', borderRadius: 10 }}>{activeFilterCount}</span>}
+              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 13, color: '#6B7280' }}>Sort:</span>
+                <select value={sortBy} onChange={(e) => handleSortChange(e.target.value)} style={{ padding: '10px 12px', border: '1px solid #E5E7EB', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#374151', backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none' }}>
+                  {sortOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
-              <span style={{ fontSize: 13, color: '#6B7280' }}>{total} items</span>
-              <select value={sortBy} onChange={(e) => handleSortChange(e.target.value)} style={{ padding: '10px 16px', border: '1px solid #D1D5DB', borderRadius: 20, fontSize: 13, fontWeight: 500, color: '#374151', backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none' }}>
-                {sortOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-              </select>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <SlidersHorizontal size={18} style={{ color: '#9CA3AF' }} />
+                <FilterDropdown label="Price" options={priceOptions} value={selectedPrice} onChange={handlePriceChange} isOpen={openFilter === 'price'} onToggle={() => setOpenFilter(openFilter === 'price' ? '' : 'price')} />
+                <FilterDropdown label="Skin Type" options={skinTypeOptions} value={selectedSkinType} onChange={handleSkinTypeChange} isOpen={openFilter === 'skin_type'} onToggle={() => setOpenFilter(openFilter === 'skin_type' ? '' : 'skin_type')} />
+                {hasActiveFilters && <button onClick={clearAllFilters} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 12px', fontSize: 13, color: '#DC2626', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}><X size={14} />Clear</button>}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <span style={{ fontSize: 13, color: '#6B7280' }}>{total} items</span>
+                <select value={sortBy} onChange={(e) => handleSortChange(e.target.value)} style={{ padding: '10px 16px', border: '1px solid #D1D5DB', borderRadius: 20, fontSize: 13, fontWeight: 500, color: '#374151', backgroundColor: '#FFFFFF', cursor: 'pointer', outline: 'none' }}>
+                  {sortOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                </select>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Products */}
-      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '32px 40px 60px', position: 'relative', zIndex: 1 }}>
+      <div style={{ maxWidth: 1600, margin: '0 auto', padding: isMobile ? '20px 16px 40px' : '40px 40px 60px' }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0' }}>
             <div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
           </div>
         ) : products.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 30 }}>
-            {products.map((product) => <ProductCard key={product._id} product={product} />)}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 16 : 30 }}>
+            {products.map((product) => <ProductCard key={product._id} product={product} isMobile={isMobile} />)}
           </div>
         ) : (
-          <div style={{ textAlign: 'center', padding: '80px 0' }}>
+          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
             <Sparkles size={48} style={{ color: '#D1D5DB', marginBottom: 16 }} />
             <h3 style={{ fontSize: 18, fontWeight: 500, color: '#1F2937', marginBottom: 8 }}>No products found</h3>
             <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 24 }}>Try adjusting your filters</p>
-            <button onClick={clearAllFilters} style={{ padding: '12px 24px', backgroundColor: '#0C0C0C', color: '#FFFFFF', fontSize: 13, fontWeight: 500, borderRadius: 20, border: 'none', cursor: 'pointer' }}>Clear All Filters</button>
+            <button onClick={clearAllFilters} style={{ padding: '12px 24px', backgroundColor: '#0C0C0C', color: '#FFFFFF', fontSize: 13, fontWeight: 500, borderRadius: 8, border: 'none', cursor: 'pointer' }}>Clear Filters</button>
           </div>
         )}
       </div>
 
-      <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style jsx global>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
     </div>
   );
 }
 
-function LoadingFallback() {
-  return (<div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>);
-}
-
 export default function BeautyPage() {
-  return (<Suspense fallback={<LoadingFallback />}><BeautyContent /></Suspense>);
+  return <Suspense fallback={<div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>}><BeautyContent /></Suspense>;
 }
