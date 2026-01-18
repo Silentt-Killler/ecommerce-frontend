@@ -3,8 +3,58 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Search, ShoppingBag, Home, User } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
+
+// Custom thin icons for premium look
+const SearchIcon = ({ active }) => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "1.5" : "1"}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
+  </svg>
+);
+
+const BagIcon = ({ active }) => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1"}>
+    {active ? (
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0" />
+    ) : (
+      <>
+        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" />
+        <path d="M3 6h18" />
+        <path d="M16 10a4 4 0 01-8 0" />
+      </>
+    )}
+  </svg>
+);
+
+const HomeIcon = ({ active }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1"}>
+    {active ? (
+      <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+    ) : (
+      <>
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+        <path d="M9 22V12h6v10" />
+      </>
+    )}
+  </svg>
+);
+
+const UserIcon = ({ active }) => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1"}>
+    {active ? (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M20 21a8 8 0 10-16 0" />
+      </>
+    ) : (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M20 21a8 8 0 10-16 0" />
+      </>
+    )}
+  </svg>
+);
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
@@ -12,7 +62,6 @@ export default function MobileBottomNav() {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
-  const [clickedTab, setClickedTab] = useState(null);
   const lastScrollY = useRef(0);
 
   const isAdminPage = pathname?.startsWith('/admin');
@@ -39,12 +88,9 @@ export default function MobileBottomNav() {
       
       const scrollDifference = currentScrollY - lastScrollY.current;
       
-      // Scrolling down - hide
       if (scrollDifference > 5 && currentScrollY > 100) {
         setVisible(false);
-      }
-      // Scrolling up - show
-      else if (scrollDifference < -5) {
+      } else if (scrollDifference < -5) {
         setVisible(true);
       }
       
@@ -55,22 +101,15 @@ export default function MobileBottomNav() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Handle click animation
-  const handleClick = (id) => {
-    setClickedTab(id);
-    setActiveTab(id);
-    setTimeout(() => setClickedTab(null), 150);
-  };
-
   if (isAdminPage || isCheckoutPage) return null;
 
   const cartCount = mounted ? getItemCount() : 0;
 
   const navItems = [
-    { id: 'search', icon: Search, href: '/search', label: 'Search' },
-    { id: 'cart', icon: ShoppingBag, href: '/cart', label: 'Cart', badge: cartCount },
-    { id: 'home', icon: Home, href: '/', label: 'Home', isCenter: true },
-    { id: 'profile', icon: User, href: '/account', label: 'Profile' },
+    { id: 'search', Icon: SearchIcon, href: '/search' },
+    { id: 'cart', Icon: BagIcon, href: '/cart', badge: cartCount },
+    { id: 'home', Icon: HomeIcon, href: '/' },
+    { id: 'profile', Icon: UserIcon, href: '/account' },
   ];
 
   return (
@@ -82,130 +121,63 @@ export default function MobileBottomNav() {
         left: 0,
         right: 0,
         zIndex: 50,
-        backgroundColor: '#F9F9F9',
-        borderTop: '1px solid #E8E8E8',
+        backgroundColor: '#FFFFFF',
+        borderTop: '1px solid rgba(0,0,0,0.05)',
         transform: visible ? 'translateY(0)' : 'translateY(100%)',
         transition: 'transform 0.3s ease',
+        paddingBottom: 'env(safe-area-inset-bottom)'
       }}
     >
       <div style={{
         display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'space-around',
-        height: 66,
-        paddingBottom: 'max(8px, env(safe-area-inset-bottom))'
+        alignItems: 'center',
+        justifyContent: 'space-evenly',
+        height: 70
       }}>
         {navItems.map((item) => {
-          const Icon = item.icon;
+          const { Icon } = item;
           const isActive = activeTab === item.id;
-          const isClicked = clickedTab === item.id;
           
-          if (item.isCenter) {
-            // Center Home button - elevated circle
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                onClick={() => handleClick(item.id)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textDecoration: 'none',
-                  marginTop: -24,
-                  transform: isClicked ? 'scale(1.1)' : 'scale(1)',
-                  transition: 'transform 0.15s ease'
-                }}
-              >
-                <div style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: '50%',
-                  backgroundColor: isActive ? '#B08B5C' : '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: isActive ? 'none' : '1px solid #E0E0E0',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                  transition: 'all 0.2s ease'
-                }}>
-                  <Icon 
-                    size={22} 
-                    strokeWidth={isActive ? 2 : 1.5}
-                    color={isActive ? '#FFFFFF' : '#949494'}
-                  />
-                </div>
-                <span style={{
-                  fontSize: 10,
-                  marginTop: 4,
-                  color: isActive ? '#B08B5C' : '#949494',
-                  fontWeight: isActive ? 500 : 400,
-                  letterSpacing: 0.3
-                }}>
-                  {item.label}
-                </span>
-              </Link>
-            );
-          }
-
-          // Regular nav items
           return (
             <Link
               key={item.id}
               href={item.href}
-              onClick={() => handleClick(item.id)}
+              onClick={() => setActiveTab(item.id)}
               style={{
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'flex-end',
-                textDecoration: 'none',
-                padding: '8px 20px',
+                justifyContent: 'center',
+                width: 50,
+                height: 50,
                 position: 'relative',
-                transform: isClicked ? 'scale(1.1)' : 'scale(1)',
-                transition: 'transform 0.15s ease'
+                color: isActive ? '#B08B5C' : '#A0A0A0',
+                textDecoration: 'none',
+                transition: 'color 0.2s ease'
               }}
             >
-              <div style={{ position: 'relative' }}>
-                <Icon 
-                  size={22} 
-                  strokeWidth={isActive ? 1.2 : 1}
-                  color={isActive ? '#B08B5C' : '#949494'}
-                  style={{ transition: 'all 0.2s ease' }}
-                />
-                {/* Cart Badge */}
-                {item.badge > 0 && (
-                  <span style={{
-                    position: 'absolute',
-                    top: -5,
-                    right: -8,
-                    minWidth: 16,
-                    height: 16,
-                    backgroundColor: '#B08B5C',
-                    color: '#FFFFFF',
-                    fontSize: 9,
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 8,
-                    padding: '0 4px'
-                  }}>
-                    {item.badge > 99 ? '99+' : item.badge}
-                  </span>
-                )}
-              </div>
-              <span style={{
-                fontSize: 10,
-                marginTop: 4,
-                color: isActive ? '#B08B5C' : '#949494',
-                fontWeight: isActive ? 500 : 400,
-                letterSpacing: 0.3,
-                transition: 'color 0.2s ease'
-              }}>
-                {item.label}
-              </span>
+              <Icon active={isActive} />
+              
+              {/* Cart Badge */}
+              {item.badge > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: 6,
+                  right: 6,
+                  minWidth: 16,
+                  height: 16,
+                  backgroundColor: '#B08B5C',
+                  color: '#FFFFFF',
+                  fontSize: 9,
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 8,
+                  padding: '0 4px'
+                }}>
+                  {item.badge > 99 ? '99+' : item.badge}
+                </span>
+              )}
             </Link>
           );
         })}
