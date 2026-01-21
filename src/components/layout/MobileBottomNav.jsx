@@ -5,38 +5,31 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import useCartStore from '@/store/cartStore';
 
-// --- Premium Icons ---
-const HomeIcon = ({ active }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "2"}>
-    <path d="M3 9.5L12 2.5L21 9.5V20.5C21 21.0523 20.5523 21.5 20 21.5H15V14.5H9V21.5H4C3.44772 21.5 3 21.0523 3 20.5V9.5Z" />
-  </svg>
-);
-
+// Icons remain same, just tweaked sizing slightly for the pill shape
 const SearchIcon = ({ active }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "3" : "2"}>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2" : "1.5"}>
     <circle cx="11" cy="11" r="7" />
-    <path d="M20 20L16 16" strokeLinecap="round" />
+    <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
   </svg>
 );
 
 const BagIcon = ({ active }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "2"}>
-    {active ? (
-      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0" />
-    ) : (
-      <>
-        <path d="M6 2L3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6L18 2H6Z" strokeLinejoin="round" />
-        <path d="M3 6H21" strokeLinejoin="round" />
-        <path d="M16 10C16 12.2091 14.2091 14 12 14C9.79086 14 8 12.2091 8 10" strokeLinecap="round" strokeLinejoin="round" />
-      </>
-    )}
+  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1.5"}>
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0" />
+  </svg>
+);
+
+const HomeIcon = ({ active }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1.5"}>
+    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+    <path d="M9 22V12h6v10" />
   </svg>
 );
 
 const UserIcon = ({ active }) => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "2"}>
-    <path d="M20 21C20 18.2386 16.4183 16 12 16C7.58172 16 4 18.2386 4 21" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="12" cy="7" r="4" strokeLinecap="round" strokeLinejoin="round" />
+  <svg width="24" height="24" viewBox="0 0 24 24" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth={active ? "0" : "1.5"}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M20 21a8 8 0 10-16 0" />
   </svg>
 );
 
@@ -44,10 +37,8 @@ export default function MobileBottomNav() {
   const pathname = usePathname();
   const { getItemCount } = useCartStore();
   const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
-  
-  // স্ক্রল লজিকের জন্য স্টেট
-  const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
 
   const isAdminPage = pathname?.startsWith('/admin');
@@ -56,32 +47,32 @@ export default function MobileBottomNav() {
   useEffect(() => {
     setMounted(true);
     if (pathname === '/') setActiveTab('home');
-    else if (pathname?.includes('/search')) setActiveTab('search');
     else if (pathname === '/cart') setActiveTab('cart');
-    else if (pathname?.includes('/account')) setActiveTab('account');
+    else if (pathname === '/account' || pathname === '/login') setActiveTab('profile');
+    else if (pathname?.includes('/search')) setActiveTab('search');
   }, [pathname]);
 
-  // স্ক্রল হ্যান্ডলার: নিচে নামলে মেনু লুকাবে, উপরে উঠলে মেনু দেখাবে
+  // Scroll logic for Pinterest-style hide/show
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      // একদম উপরে থাকলে সবসময় দেখাবে
-      if (currentScrollY < 10) {
-        setIsVisible(true);
+      // Always show at very top
+      if (currentScrollY < 50) {
+        setVisible(true);
         lastScrollY.current = currentScrollY;
         return;
       }
 
-      // নিচে স্ক্রল করলে (Scrolling Down) -> Hide
-      if (currentScrollY > lastScrollY.current + 10) {
-        setIsVisible(false);
-      } 
-      // উপরে স্ক্রল করলে (Scrolling Up) -> Show
-      else if (currentScrollY < lastScrollY.current - 5) {
-        setIsVisible(true);
-      }
+      const scrollDifference = currentScrollY - lastScrollY.current;
 
+      // Hide on scroll down, Show on scroll up
+      if (scrollDifference > 10) { 
+        setVisible(false);
+      } else if (scrollDifference < -10) {
+        setVisible(true);
+      }
+      
       lastScrollY.current = currentScrollY;
     };
 
@@ -94,33 +85,52 @@ export default function MobileBottomNav() {
   const cartCount = mounted ? getItemCount() : 0;
 
   const navItems = [
-    { id: 'home', Icon: HomeIcon, href: '/' },
+    { id: 'home', Icon: HomeIcon, href: '/' }, // Pinterest usually puts Home first
     { id: 'search', Icon: SearchIcon, href: '/search' },
     { id: 'cart', Icon: BagIcon, href: '/cart', badge: cartCount },
-    { id: 'account', Icon: UserIcon, href: '/account' },
+    { id: 'profile', Icon: UserIcon, href: '/account' },
   ];
 
   return (
-    <div className="md:hidden flex justify-center w-full pointer-events-none fixed bottom-8 z-50">
+    <>
+      {/* This empty div acts as a spacer so your content doesn't get hidden 
+        behind the floating nav at the very bottom of the page.
+      */}
+      <div className="md:hidden" style={{ height: 100 }} />
+
       <nav
-        className={`
-          pointer-events-auto
-          flex items-center justify-between px-6 py-4
-          bg-white text-black
-          shadow-[0_8px_30px_rgb(0,0,0,0.12)]
-          rounded-full
-          transition-all duration-300 ease-in-out
-          ${isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-24 opacity-0 scale-95'}
-        `}
+        className="md:hidden"
         style={{
-            // এই Width-এর কারণেই এটি "Floating Pill" এর মতো দেখাবে
-            width: '280px', 
-            // Backdrop blur অপশনাল, যদি গ্লাস ইফেক্ট চান
-            backdropFilter: 'blur(10px)',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)'
+          position: 'fixed',
+          bottom: 24, // Floating above bottom edge
+          left: '50%', // Center align
+          width: 'auto', // Auto width based on content (or use fixed percentage like 90%)
+          minWidth: '280px',
+          maxWidth: '90%',
+          
+          // The Magic Transformation
+          transform: visible 
+            ? 'translateX(-50%) translateY(0) scale(1)' 
+            : 'translateX(-50%) translateY(150%) scale(0.9)', 
+          
+          zIndex: 100,
+          backgroundColor: 'rgba(255, 255, 255, 0.85)', // Glass effect
+          backdropFilter: 'blur(12px)', // Blurs content behind the nav
+          borderRadius: '50px', // Pill shape
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)', // Premium Luxury Shadow
+          border: '1px solid rgba(255, 255, 255, 0.5)',
+          
+          padding: '8px 24px',
+          paddingBottom: '8px', // Override safe-area for the pill look
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth luxury animation
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '24px'
         }}
       >
         {navItems.map((item) => {
+          const { Icon } = item;
           const isActive = activeTab === item.id;
           
           return (
@@ -128,24 +138,40 @@ export default function MobileBottomNav() {
               key={item.id}
               href={item.href}
               onClick={() => setActiveTab(item.id)}
-              className="relative flex items-center justify-center w-10 h-10"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 44,
+                height: 44,
+                position: 'relative',
+                color: isActive ? '#111111' : '#888888', // Darker black for active luxury feel
+                textDecoration: 'none',
+                borderRadius: '50%',
+                backgroundColor: isActive ? 'rgba(0,0,0,0.04)' : 'transparent', // Subtle active background
+                transition: 'all 0.3s ease'
+              }}
             >
-              <div 
-                className={`transition-all duration-200 ${
-                  isActive ? 'text-black scale-110' : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                <item.Icon active={isActive} />
-              </div>
-
-              {/* Minimal Dot Badge for Cart */}
+              <Icon active={isActive} />
+              
+              {/* Cart Badge - Redesigned for Luxury */}
               {item.badge > 0 && (
-                <span className="absolute top-0 right-0 h-2.5 w-2.5 bg-red-500 rounded-full border border-white" />
+                <span style={{
+                  position: 'absolute',
+                  top: 8,
+                  right: 6,
+                  minWidth: 8,
+                  height: 8,
+                  backgroundColor: '#C5A572', // Gold/Luxury accent color
+                  borderRadius: '50%',
+                  border: '2px solid white', // Creates a cutout effect
+                  display: 'block'
+                }} />
               )}
             </Link>
           );
         })}
       </nav>
-    </div>
+    </>
   );
 }
