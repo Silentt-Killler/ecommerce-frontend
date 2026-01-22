@@ -136,7 +136,7 @@ export default function AdminSlidersPage() {
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs new */}
       <div style={{ backgroundColor: '#1f2937', borderRadius: 16, padding: 8, marginBottom: 24, display: 'inline-flex', gap: 4 }}>
         <button
           onClick={() => setActiveTab('desktop')}
