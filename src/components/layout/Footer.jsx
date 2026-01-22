@@ -1,128 +1,126 @@
 import Link from 'next/link';
-import { Facebook, Instagram, Twitter } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Phone, Mail, Youtube } from 'lucide-react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-focus text-white">
-      {/* Main Footer */}
-      <div className="container-custom py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
+    <footer className="bg-focus text-white pt-16 pb-8 border-t border-gray-800">
+      <div className="container-custom mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 lg:gap-8 mb-16">
           
-          {/* Brand */}
-          <div className="md:col-span-1">
+          {/* Column 1: Brand Info & Socials */}
+          <div className="lg:col-span-1 space-y-6">
             <Link href="/">
-              <h2 className="text-2xl tracking-[0.3em] font-light mb-4">PRISMIN</h2>
+              <h2 className="text-3xl tracking-[0.2em] font-bold uppercase">PRISMIN</h2>
             </Link>
-            <p className="text-primary-400 text-sm leading-relaxed">
-              Premium quality products for the modern lifestyle.
+            
+            <p className="text-gray-300 text-sm leading-relaxed text-justify">
+              PRISMIN is a women-first fashion and beauty brand for those who dress with intention. 
+              Blending global inspiration with the grace of our own culture, we curate soulful pieces 
+              that honour a woman’s choice, comfort, and quiet confidence.
             </p>
+
+            <div className="pt-4">
+              <h4 className="text-sm font-bold uppercase tracking-wider mb-4">CONNECT WITH US</h4>
+              <div className="flex gap-3">
+                {/* Circular Social Icons like Rise */}
+                <a href="#" className="bg-white text-black p-2.5 rounded-full hover:bg-gray-200 transition-colors">
+                  <Facebook size={18} />
+                </a>
+                <a href="#" className="bg-white text-black p-2.5 rounded-full hover:bg-gray-200 transition-colors">
+                  <Instagram size={18} />
+                </a>
+                <a href="#" className="bg-white text-black p-2.5 rounded-full hover:bg-gray-200 transition-colors">
+                  <Twitter size={18} />
+                </a>
+                <a href="#" className="bg-white text-black p-2.5 rounded-full hover:bg-gray-200 transition-colors">
+                  <Youtube size={18} />
+                </a>
+              </div>
+            </div>
           </div>
 
-          {/* Shop */}
+          {/* Column 2: Need Help? */}
           <div>
-            <h3 className="text-sm tracking-[0.2em] mb-6">SHOP</h3>
-            <ul className="space-y-3">
+            <h3 className="text-sm font-bold uppercase tracking-wider mb-6">NEED HELP?</h3>
+            <div className="space-y-4 text-sm text-gray-300">
+              <p>
+                (10 AM – 6 PM)<br />
+                (Except Weekend/Govt. Holidays)
+              </p>
+              
+              <div className="flex items-center gap-3 pt-2">
+                <Phone size={18} className="text-white" />
+                <span className="hover:text-white transition-colors">+880 1XXX-XXXXXX</span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Mail size={18} className="text-white" />
+                <a href="mailto:info@prismin.com" className="underline hover:text-white transition-colors">
+                  info@prismin.com
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3: Information */}
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider mb-6">INFORMATION</h3>
+            <ul className="space-y-3 text-sm text-gray-300">
               <li>
-                <Link href="/shop?category=menswear" className="text-primary-400 text-sm hover:text-white transition-colors">
-                  Menswear
+                <Link href="/about" className="hover:text-white transition-colors">
+                  About PRISMIN
                 </Link>
               </li>
               <li>
-                <Link href="/shop?category=womenswear" className="text-primary-400 text-sm hover:text-white transition-colors">
-                  Womenswear
+                <Link href="/social-responsibility" className="hover:text-white transition-colors">
+                  Social Responsibility
                 </Link>
               </li>
+              {/* Added Store Locator to match visuals, remove if not needed */}
               <li>
-                <Link href="/shop?category=winter-collection" className="text-primary-400 text-sm hover:text-white transition-colors">
-                  Winter Collection
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop?category=watch" className="text-primary-400 text-sm hover:text-white transition-colors">
-                  Watch
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop" className="text-primary-400 text-sm hover:text-white transition-colors">
-                  All Products
+                <Link href="/stores" className="hover:text-white transition-colors">
+                  Store Locator
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Help */}
+          {/* Column 4: Policy */}
           <div>
-            <h3 className="text-sm tracking-[0.2em] mb-6">HELP</h3>
-            <ul className="space-y-3">
+            <h3 className="text-sm font-bold uppercase tracking-wider mb-6">POLICY</h3>
+            <ul className="space-y-3 text-sm text-gray-300">
               <li>
-                <Link href="/contact" className="text-primary-400 text-sm hover:text-white transition-colors">
-                  Contact Us
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="text-primary-400 text-sm hover:text-white transition-colors">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/shipping" className="text-primary-400 text-sm hover:text-white transition-colors">
-                  Shipping Info
-                </Link>
-              </li>
-              <li>
-                <Link href="/returns" className="text-primary-400 text-sm hover:text-white transition-colors">
-                  Returns & Exchange
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-primary-400 text-sm hover:text-white transition-colors">
+                <Link href="/privacy" className="hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
               </li>
+              <li>
+                <Link href="/returns" className="hover:text-white transition-colors">
+                  Return and Exchange Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-white transition-colors">
+                  Terms and Conditions
+                </Link>
+              </li>
+              <li>
+                <Link href="/safety" className="hover:text-white transition-colors">
+                  Safety Advisory
+                </Link>
+              </li>
             </ul>
           </div>
 
-          {/* Contact */}
-          <div>
-            <h3 className="text-sm tracking-[0.2em] mb-6">CONTACT</h3>
-            <ul className="space-y-3 text-primary-400 text-sm">
-              <li>Dhaka, Bangladesh</li>
-              <li>+880 1XXX-XXXXXX</li>
-              <li>info@prismin.com</li>
-            </ul>
-            
-            {/* Social Links */}
-            <div className="flex gap-4 mt-6">
-              <a href="#" className="text-primary-400 hover:text-white transition-colors">
-                <Facebook size={20} />
-              </a>
-              <a href="#" className="text-primary-400 hover:text-white transition-colors">
-                <Instagram size={20} />
-              </a>
-              <a href="#" className="text-primary-400 hover:text-white transition-colors">
-                <Twitter size={20} />
-              </a>
-            </div>
-          </div>
         </div>
-      </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-primary-800">
-        <div className="container-custom py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-primary-500 text-xs tracking-wide">
-            <p>&copy; {currentYear} PRISMIN. All rights reserved.</p>
-            <div className="flex gap-6">
-              <Link href="/privacy" className="hover:text-white transition-colors">
-                Privacy
-              </Link>
-              <Link href="/terms" className="hover:text-white transition-colors">
-                Terms
-              </Link>
-            </div>
-          </div>
+        {/* Bottom Bar */}
+        <div className="border-t border-gray-800 pt-8 text-center">
+          <p className="text-gray-400 text-xs tracking-wide">
+            &copy; {currentYear} PRISMIN Brand. All Rights Reserved.
+          </p>
         </div>
       </div>
     </footer>
