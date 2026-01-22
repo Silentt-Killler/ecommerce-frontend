@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function HomePage() {
         const productsMap = {};
         for (const cat of cats.slice(0, 4)) {
           try {
-            const prodRes = await api.get(`/products?category=${cat.slug}&limit=8`);
+            const prodRes = await api.get('/products?category=' + cat.slug + '&limit=8');
             productsMap[cat.slug] = prodRes.data.products || [];
           } catch (e) {
             productsMap[cat.slug] = [];
@@ -49,26 +49,38 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const heroSlide = settings?.hero_slides?.[0];
-
-  // Updated category link mapping
-  const getCategoryLink = (slug) => {
-    const linkMap = {
-      'original-pakistani': '/original-pakistani',
-      'inspired-pakistani': '/inspired-pakistani',
-      'premium-bag': '/premium-bag',
-      'beauty': '/beauty',
-    };
-    return linkMap[slug] || `/shop?category=${slug}`;
+  // Get hero slide based on device type
+  const getHeroSlide = () => {
+    const slides = settings?.hero_slides || [];
+    const deviceType = isMobile ? 'mobile' : 'desktop';
+    
+    // Find first active slide for current device type
+    const deviceSlide = slides.find(s => (s.type || 'desktop') === deviceType && s.is_active !== false);
+    
+    // Fallback to any slide if no device-specific slide found
+    if (!deviceSlide && slides.length > 0) {
+      return slides.find(s => s.is_active !== false) || slides[0];
+    }
+    
+    return deviceSlide;
   };
 
-  // Mobile Featured Section - Original Design
+  const heroSlide = getHeroSlide();
+
+  // Use category.url from database, fallback to /slug
+  const getCategoryLink = (category) => {
+    if (category.url) {
+      return category.url;
+    }
+    return '/' + category.slug;
+  };
+
+  // Mobile Featured Section
   const MobileFeaturedSection = ({ title, products, viewAllLink }) => {
     if (!products || products.length === 0) return null;
 
     return (
       <section style={{ backgroundColor: '#FFFFFF', paddingTop: 40, paddingBottom: 24 }}>
-        {/* Section Heading - Original Style */}
         <h2 style={{ 
           fontSize: 20, 
           fontWeight: 600, 
@@ -82,7 +94,6 @@ export default function HomePage() {
           {title}
         </h2>
         
-        {/* Product Grid - 2 Columns, 16px gap */}
         <div style={{ 
           display: 'grid',
           gridTemplateColumns: 'repeat(2, 1fr)',
@@ -94,7 +105,6 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* View All - Text + Arrow */}
         <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>
           <Link 
             href={viewAllLink}
@@ -116,7 +126,7 @@ export default function HomePage() {
     );
   };
 
-  // Desktop Featured Section - Original
+  // Desktop Featured Section
   const DesktopFeaturedSection = ({ title, products, viewAllLink }) => {
     if (!products || products.length === 0) return null;
 
@@ -179,9 +189,9 @@ export default function HomePage() {
         height: isMobile ? '85vh' : '100vh', 
         width: '100%' 
       }}>
-        {(isMobile ? heroSlide?.mobile_image_url : heroSlide?.image_url) || heroSlide?.image_url ? (
+        {heroSlide?.image_url ? (
           <Image
-            src={(isMobile && heroSlide?.mobile_image_url) ? heroSlide.mobile_image_url : heroSlide?.image_url}
+            src={heroSlide.image_url}
             alt="PRISMIN"
             fill
             style={{ objectFit: 'cover' }}
@@ -196,53 +206,44 @@ export default function HomePage() {
             justifyContent: 'center',
             background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)'
           }}>
-            <p style={{ color: '#666', fontSize: 14 }}>Upload hero image from Admin Panel</p>
+            <p style={{ color: '#666', fontSize: 14 }}>
+              {isMobile ? 'Upload mobile hero image from Admin Panel' : 'Upload desktop hero image from Admin Panel'}
+            </p>
           </div>
         )}
         
-        {/* Hero Buttons - Updated Links */}
-        <div style={{
-          position: 'absolute',
-          bottom: isMobile ? 60 : 80,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          display: 'flex',
-          flexDirection: 'row',
-          gap: 12
-        }}>
-          <Link 
-            href="/original-pakistani"
-            style={{
-              padding: isMobile ? '12px 24px' : '14px 36px',
-              backgroundColor: '#FFFFFF',
-              color: '#0C0C0C',
-              fontSize: isMobile ? 11 : 12,
-              fontWeight: 500,
-              letterSpacing: 2,
-              textTransform: 'uppercase',
-              textDecoration: 'none',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Original
-          </Link>
-          <Link 
-            href="/inspired-pakistani"
-            style={{
-              padding: isMobile ? '12px 24px' : '14px 36px',
-              backgroundColor: '#FFFFFF',
-              color: '#0C0C0C',
-              fontSize: isMobile ? 11 : 12,
-              fontWeight: 500,
-              letterSpacing: 2,
-              textTransform: 'uppercase',
-              textDecoration: 'none',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            Inspired
-          </Link>
-        </div>
+        {/* Hero Buttons - Dynamic from first 2 categories */}
+        {categories.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            bottom: isMobile ? 60 : 80,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            flexDirection: 'row',
+            gap: 12
+          }}>
+            {categories.slice(0, 2).map((cat) => (
+              <Link 
+                key={cat._id}
+                href={getCategoryLink(cat)}
+                style={{
+                  padding: isMobile ? '12px 24px' : '14px 36px',
+                  backgroundColor: '#FFFFFF',
+                  color: '#0C0C0C',
+                  fontSize: isMobile ? 11 : 12,
+                  fontWeight: 500,
+                  letterSpacing: 2,
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                {cat.name}
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Category Section */}
@@ -275,7 +276,7 @@ export default function HomePage() {
             {categories.slice(0, 4).map((cat) => (
               <Link 
                 key={cat._id} 
-                href={getCategoryLink(cat.slug)}
+                href={getCategoryLink(cat)}
                 style={{ textDecoration: 'none', display: 'block' }}
               >
                 <div style={{ 
@@ -328,7 +329,7 @@ export default function HomePage() {
             {categories.slice(0, 4).map((cat) => (
               <Link 
                 key={cat._id} 
-                href={getCategoryLink(cat.slug)}
+                href={getCategoryLink(cat)}
                 style={{ textDecoration: 'none', display: 'block' }}
               >
                 <div 
@@ -387,16 +388,16 @@ export default function HomePage() {
         isMobile ? (
           <MobileFeaturedSection 
             key={cat._id}
-            title={`FEATURED ${cat.name.toUpperCase()}`}
+            title={'FEATURED ' + cat.name.toUpperCase()}
             products={categoryProducts[cat.slug] || []}
-            viewAllLink={getCategoryLink(cat.slug)}
+            viewAllLink={getCategoryLink(cat)}
           />
         ) : (
           <DesktopFeaturedSection 
             key={cat._id}
-            title={`Featured ${cat.name}`}
+            title={'Featured ' + cat.name}
             products={categoryProducts[cat.slug] || []}
-            viewAllLink={getCategoryLink(cat.slug)}
+            viewAllLink={getCategoryLink(cat)}
           />
         )
       ))}
