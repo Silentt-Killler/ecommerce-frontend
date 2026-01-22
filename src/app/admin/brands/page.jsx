@@ -88,14 +88,30 @@ export default function AdminBrandsPage() {
     filterCategory === 'all' || b.category_slug === filterCategory
   );
 
-  const getCategoryColor = (slug) => {
-    const colors = {
-      watch: '#3b82f6',
-      menswear: '#10b981',
-      womenswear: '#ec4899',
-      accessories: '#f59e0b'
-    };
-    return colors[slug] || '#6b7280';
+  // Dynamic color generator based on category index
+  const getCategoryColor = (slug, index) => {
+    const colors = [
+      '#3b82f6', // blue
+      '#10b981', // green
+      '#ec4899', // pink
+      '#f59e0b', // amber
+      '#8b5cf6', // purple
+      '#ef4444', // red
+      '#06b6d4', // cyan
+      '#84cc16', // lime
+      '#f97316', // orange
+      '#6366f1', // indigo
+    ];
+    return colors[index % colors.length];
+  };
+
+  // Get unique category slugs that have brands
+  const getCategorySlugsWithBrands = () => {
+    const slugsWithBrands = [...new Set(filteredBrands.map(b => b.category_slug))];
+    // Sort by category order if available
+    return categories
+      .filter(cat => slugsWithBrands.includes(cat.slug))
+      .map(cat => cat.slug);
   };
 
   return (
@@ -104,7 +120,7 @@ export default function AdminBrandsPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 4 }}>Brands</h1>
-          <p style={{ fontSize: 14, color: '#6b7280' }}>Manage brands for Watch category</p>
+          <p style={{ fontSize: 14, color: '#6b7280' }}>Manage brands for all categories</p>
         </div>
         <button 
           onClick={() => setShowModal(true)}
@@ -143,18 +159,17 @@ export default function AdminBrandsPage() {
           </div>
         ) : filteredBrands.length > 0 ? (
           <div style={{ padding: 20 }}>
-            {/* Group by category */}
-            {['watch', 'menswear', 'womenswear', 'accessories'].map(catSlug => {
-              const catBrands = filteredBrands.filter(b => b.category_slug === catSlug);
+            {/* FIXED: Dynamic categories instead of hardcoded */}
+            {categories.map((category, catIndex) => {
+              const catBrands = filteredBrands.filter(b => b.category_slug === category.slug);
               if (catBrands.length === 0) return null;
               
-              const catName = categories.find(c => c.slug === catSlug)?.name || catSlug;
-              const color = getCategoryColor(catSlug);
+              const color = getCategoryColor(category.slug, catIndex);
               
               return (
-                <div key={catSlug} style={{ marginBottom: 24 }}>
+                <div key={category._id || category.slug} style={{ marginBottom: 24 }}>
                   <h3 style={{ fontSize: 14, fontWeight: 600, color: color, marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
-                    {catName}
+                    {category.name} ({catBrands.length})
                   </h3>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                     {catBrands.map(brand => (
@@ -183,6 +198,46 @@ export default function AdminBrandsPage() {
                 </div>
               );
             })}
+
+            {/* Show brands with unknown/deleted categories */}
+            {(() => {
+              const knownSlugs = categories.map(c => c.slug);
+              const unknownBrands = filteredBrands.filter(b => !knownSlugs.includes(b.category_slug));
+              if (unknownBrands.length === 0) return null;
+              
+              return (
+                <div style={{ marginBottom: 24 }}>
+                  <h3 style={{ fontSize: 14, fontWeight: 600, color: '#6b7280', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Other / Unknown Category ({unknownBrands.length})
+                  </h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                    {unknownBrands.map(brand => (
+                      <div 
+                        key={brand._id}
+                        style={{ 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          gap: 10,
+                          padding: '10px 16px', 
+                          backgroundColor: '#111827', 
+                          borderRadius: 8,
+                          border: '1px solid #37415130'
+                        }}
+                      >
+                        <span style={{ fontSize: 14, fontWeight: 500, color: '#fff' }}>{brand.name}</span>
+                        <span style={{ fontSize: 11, color: '#6b7280' }}>({brand.category_slug})</span>
+                        <button
+                          onClick={() => handleDelete(brand)}
+                          style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', opacity: 0.7 }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         ) : (
           <div style={{ padding: 60, textAlign: 'center' }}>
@@ -232,7 +287,7 @@ export default function AdminBrandsPage() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., Fossil, Casio"
+                  placeholder="e.g., Lakme, Maybelline, Gucci"
                   required
                   style={{ width: '100%', padding: 12, backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, color: '#fff', fontSize: 14 }}
                 />
@@ -258,6 +313,12 @@ export default function AdminBrandsPage() {
           </div>
         </div>
       )}
+
+      <style jsx global>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
