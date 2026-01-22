@@ -7,25 +7,25 @@ import { X, ChevronDown, ChevronRight } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 import api from '@/lib/api';
 
-// Main categories with their routes (Accessories removed)
+// Updated categories - Watch removed, new Pakistani categories added
 const CATEGORIES = [
   { 
-    name: 'Menswear', 
-    slug: 'menswear',
-    href: '/menswear',
-    type: 'subcategory' // Fetch subcategories
-  },
-  { 
-    name: 'Womenswear', 
-    slug: 'womenswear',
-    href: '/womenswear',
+    name: 'Original Pakistani', 
+    slug: 'original-pakistani',
+    href: '/original-pakistani',
     type: 'subcategory'
   },
   { 
-    name: 'Watches', 
-    slug: 'watch',
-    href: '/watch',
-    type: 'brand' // Fetch brands instead
+    name: 'Inspired Pakistani', 
+    slug: 'inspired-pakistani',
+    href: '/inspired-pakistani',
+    type: 'subcategory'
+  },
+  { 
+    name: 'Premium Bag', 
+    slug: 'premium-bag',
+    href: '/premium-bag',
+    type: 'subcategory'
   },
   { 
     name: 'Beauty & Care', 
@@ -40,7 +40,6 @@ export default function MenuOverlay({ isOpen, onClose }) {
   const { isAuthenticated } = useAuthStore();
   const [expandedCategory, setExpandedCategory] = useState(null);
   const [subcategories, setSubcategories] = useState({});
-  const [brands, setBrands] = useState({});
   const [loading, setLoading] = useState({});
 
   // Prevent body scroll when menu is open
@@ -75,44 +74,13 @@ export default function MenuOverlay({ isOpen, onClose }) {
     }
   };
 
-  // Fetch brands for watch category only
-  const fetchBrands = async (categorySlug) => {
-    if (brands[categorySlug]) return;
-    
-    setLoading(prev => ({ ...prev, [categorySlug]: true }));
-    try {
-      // Only fetch brands that belong to this specific category
-      const res = await api.get(`/brands?category_slug=${categorySlug}`);
-      const allBrands = res.data.brands || res.data || [];
-      
-      // Filter to ensure only brands for this category
-      const filteredBrands = allBrands.filter(
-        b => b.category_slug === categorySlug && b.is_active !== false
-      );
-      
-      setBrands(prev => ({
-        ...prev,
-        [categorySlug]: filteredBrands
-      }));
-    } catch (error) {
-      console.error('Failed to fetch brands:', error);
-      setBrands(prev => ({ ...prev, [categorySlug]: [] }));
-    } finally {
-      setLoading(prev => ({ ...prev, [categorySlug]: false }));
-    }
-  };
-
   // Handle category click - expand/collapse
   const handleCategoryClick = (category) => {
     if (expandedCategory === category.slug) {
       setExpandedCategory(null);
     } else {
       setExpandedCategory(category.slug);
-      if (category.type === 'brand') {
-        fetchBrands(category.slug);
-      } else {
-        fetchSubcategories(category.slug);
-      }
+      fetchSubcategories(category.slug);
     }
   };
 
@@ -126,12 +94,6 @@ export default function MenuOverlay({ isOpen, onClose }) {
   const handleSubcategoryClick = (category, subcategory) => {
     onClose();
     router.push(`${category.href}?subcategory=${subcategory.slug}`);
-  };
-
-  // Handle brand click (for watches)
-  const handleBrandClick = (category, brand) => {
-    onClose();
-    router.push(`${category.href}?brand=${brand.slug}`);
   };
 
   // Handle navigation
@@ -252,29 +214,28 @@ export default function MenuOverlay({ isOpen, onClose }) {
                 >
                   <span style={{
                     fontSize: 15,
-                    fontWeight: 400,
+                    fontWeight: 500,
                     color: '#0C0C0C',
                     letterSpacing: 0.5
                   }}>
                     {category.name}
                   </span>
-                  
                   <ChevronDown 
                     size={18} 
                     strokeWidth={1.5}
                     style={{
                       color: '#919191',
-                      transition: 'transform 0.3s ease',
-                      transform: expandedCategory === category.slug ? 'rotate(180deg)' : 'rotate(0deg)'
+                      transform: expandedCategory === category.slug ? 'rotate(180deg)' : 'rotate(0)',
+                      transition: 'transform 0.3s ease'
                     }}
                   />
                 </button>
 
-                {/* Expandable Content - Subcategories or Brands */}
+                {/* Expanded Content */}
                 <div style={{
-                  maxHeight: expandedCategory === category.slug ? 500 : 0,
+                  maxHeight: expandedCategory === category.slug ? '500px' : '0',
                   overflow: 'hidden',
-                  transition: 'max-height 0.4s ease',
+                  transition: 'max-height 0.3s ease',
                   backgroundColor: '#FAFAFA'
                 }}>
                   {/* Loading State */}
@@ -284,39 +245,8 @@ export default function MenuOverlay({ isOpen, onClose }) {
                     </div>
                   )}
 
-                  {/* For Watch - Show Brands */}
-                  {category.type === 'brand' && brands[category.slug]?.map((brand) => (
-                    <button
-                      key={brand.slug}
-                      onClick={() => handleBrandClick(category, brand)}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '12px 28px 12px 44px',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F0F0'}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <ChevronRight size={14} strokeWidth={1.5} style={{ color: '#B08B5C' }} />
-                      <span style={{
-                        fontSize: 13,
-                        color: '#4A4A4A',
-                        fontWeight: 400
-                      }}>
-                        {brand.name}
-                      </span>
-                    </button>
-                  ))}
-
-                  {/* For Others - Show Subcategories */}
-                  {category.type === 'subcategory' && subcategories[category.slug]?.map((sub) => (
+                  {/* Subcategories */}
+                  {subcategories[category.slug]?.map((sub) => (
                     <button
                       key={sub.slug}
                       onClick={() => handleSubcategoryClick(category, sub)}
