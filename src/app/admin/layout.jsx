@@ -27,7 +27,6 @@ const menuItems = [
   { name: 'Home Sliders', href: '/admin/sliders', icon: Image },
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
-  { name: 'Subcategories', href: '/admin/subcategories', icon: Layers },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Leads', href: '/admin/leads', icon: UserPlus },
   { name: 'Customers', href: '/admin/customers', icon: Users },
