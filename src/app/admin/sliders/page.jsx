@@ -37,11 +37,17 @@ export default function AdminSlidersPage() {
     e.preventDefault();
     try {
       const slides = [...(settings?.hero_slides || [])];
-      const newSlide = { ...formData, is_active: true };
+      // FIXED: Use formData.type instead of activeTab
+      const newSlide = { 
+        image_url: formData.image_url,
+        link: formData.link,
+        type: formData.type,  // This ensures correct type is saved
+        is_active: true 
+      };
 
       if (editingIndex !== null) {
         const allSlides = settings?.hero_slides || [];
-        const typeSlides = allSlides.filter(s => (s.type || 'desktop') === activeTab);
+        const typeSlides = allSlides.filter(s => (s.type || 'desktop') === formData.type);
         const actualIndex = allSlides.indexOf(typeSlides[editingIndex]);
         slides[actualIndex] = { ...slides[actualIndex], ...newSlide };
       } else {
@@ -74,9 +80,11 @@ export default function AdminSlidersPage() {
     }
   };
 
-  const openAddModal = () => {
+  // FIXED: Pass type directly instead of relying on activeTab state
+  const openAddModal = (type) => {
+    setActiveTab(type);
     setEditingIndex(null);
-    setFormData({ image_url: '', link: '', type: activeTab });
+    setFormData({ image_url: '', link: '', type: type });  // Directly use passed type
     setShowModal(true);
   };
 
@@ -110,15 +118,16 @@ export default function AdminSlidersPage() {
           <p style={{ fontSize: 14, color: '#6b7280' }}>Manage hero section sliders for desktop and mobile</p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
+          {/* FIXED: Pass type directly to openAddModal */}
           <button
-            onClick={() => { setActiveTab('desktop'); openAddModal(); }}
+            onClick={() => openAddModal('desktop')}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', backgroundColor: '#3b82f6', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer' }}
           >
             <Monitor size={18} />
             Add Desktop
           </button>
           <button
-            onClick={() => { setActiveTab('mobile'); openAddModal(); }}
+            onClick={() => openAddModal('mobile')}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', backgroundColor: '#10b981', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer' }}
           >
             <Smartphone size={18} />
@@ -146,7 +155,7 @@ export default function AdminSlidersPage() {
           }}
         >
           <Monitor size={18} />
-          Desktop Sliders
+          Desktop Sliders ({getSlides('desktop').length})
         </button>
         <button
           onClick={() => setActiveTab('mobile')}
@@ -157,7 +166,7 @@ export default function AdminSlidersPage() {
             padding: '14px 24px',
             borderRadius: 10,
             border: 'none',
-            backgroundColor: activeTab === 'mobile' ? '#3b82f6' : 'transparent',
+            backgroundColor: activeTab === 'mobile' ? '#10b981' : 'transparent',
             color: activeTab === 'mobile' ? '#fff' : '#9ca3af',
             fontSize: 14,
             fontWeight: 600,
@@ -165,14 +174,14 @@ export default function AdminSlidersPage() {
           }}
         >
           <Smartphone size={18} />
-          Mobile Sliders
+          Mobile Sliders ({getSlides('mobile').length})
         </button>
       </div>
 
       {/* Size Info */}
-      <div style={{ backgroundColor: '#1e3a5f', border: '1px solid #3b82f6', borderRadius: 12, padding: 16, marginBottom: 24 }}>
-        <p style={{ fontSize: 14, color: '#93c5fd' }}>
-          <strong>Recommended Size:</strong> {activeTab === 'desktop' ? '1920 x 800 pixels' : '768 x 1000 pixels'}
+      <div style={{ backgroundColor: activeTab === 'desktop' ? '#1e3a5f' : '#064e3b', border: `1px solid ${activeTab === 'desktop' ? '#3b82f6' : '#10b981'}`, borderRadius: 12, padding: 16, marginBottom: 24 }}>
+        <p style={{ fontSize: 14, color: activeTab === 'desktop' ? '#93c5fd' : '#6ee7b7' }}>
+          <strong>Recommended Size:</strong> {activeTab === 'desktop' ? '1920 x 800 pixels (Landscape)' : '768 x 1000 pixels (Portrait)'}
         </p>
       </div>
 
@@ -197,6 +206,21 @@ export default function AdminSlidersPage() {
                     <ImageIcon size={48} style={{ color: '#6b7280' }} />
                   </div>
                 )}
+                {/* Type Badge */}
+                <div style={{
+                  position: 'absolute',
+                  top: 8,
+                  left: 8,
+                  padding: '4px 10px',
+                  backgroundColor: (slide.type || 'desktop') === 'mobile' ? '#10b981' : '#3b82f6',
+                  borderRadius: 6,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: '#fff',
+                  textTransform: 'uppercase'
+                }}>
+                  {slide.type || 'desktop'}
+                </div>
               </div>
               <div style={{ padding: 16 }}>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -223,10 +247,10 @@ export default function AdminSlidersPage() {
           <p style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 8 }}>No {activeTab} sliders</p>
           <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 24 }}>Add your first {activeTab} slider to get started</p>
           <button
-            onClick={openAddModal}
-            style={{ padding: '12px 24px', backgroundColor: '#3b82f6', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer' }}
+            onClick={() => openAddModal(activeTab)}
+            style={{ padding: '12px 24px', backgroundColor: activeTab === 'desktop' ? '#3b82f6' : '#10b981', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer' }}
           >
-            Add Slider
+            Add {activeTab === 'desktop' ? 'Desktop' : 'Mobile'} Slider
           </button>
         </div>
       )}
@@ -236,18 +260,38 @@ export default function AdminSlidersPage() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: 'rgba(0,0,0,0.8)' }}>
           <div style={{ width: '100%', maxWidth: 500, backgroundColor: '#1f2937', borderRadius: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 24, borderBottom: '1px solid #374151' }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>
-                {editingIndex !== null ? 'Edit' : 'Add'} {activeTab === 'desktop' ? 'Desktop' : 'Mobile'} Slider
-              </h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {formData.type === 'mobile' ? <Smartphone size={20} style={{ color: '#10b981' }} /> : <Monitor size={20} style={{ color: '#3b82f6' }} />}
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff' }}>
+                  {editingIndex !== null ? 'Edit' : 'Add'} {formData.type === 'desktop' ? 'Desktop' : 'Mobile'} Slider
+                </h2>
+              </div>
               <button onClick={() => setShowModal(false)} style={{ padding: 8, backgroundColor: '#374151', borderRadius: 8, border: 'none', cursor: 'pointer', color: '#9ca3af', display: 'flex' }}>
                 <X size={20} />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} style={{ padding: 24 }}>
+              {/* Type indicator */}
+              <div style={{ 
+                marginBottom: 20, 
+                padding: 12, 
+                backgroundColor: formData.type === 'mobile' ? '#064e3b' : '#1e3a5f', 
+                borderRadius: 8,
+                border: `1px solid ${formData.type === 'mobile' ? '#10b981' : '#3b82f6'}`
+              }}>
+                <p style={{ fontSize: 13, color: formData.type === 'mobile' ? '#6ee7b7' : '#93c5fd', margin: 0 }}>
+                  Adding slider for: <strong>{formData.type === 'mobile' ? 'Mobile' : 'Desktop'}</strong>
+                  <br />
+                  <span style={{ fontSize: 12, opacity: 0.8 }}>
+                    Recommended: {formData.type === 'desktop' ? '1920 x 800 px' : '768 x 1000 px'}
+                  </span>
+                </p>
+              </div>
+
               <div style={{ marginBottom: 20 }}>
                 <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#fff', marginBottom: 8 }}>
-                  Image URL ({activeTab === 'desktop' ? '1920 x 800' : '768 x 1000'})
+                  Image URL
                 </label>
                 <input
                   type="url"
@@ -271,7 +315,7 @@ export default function AdminSlidersPage() {
               {formData.image_url && (
                 <div style={{ 
                   marginBottom: 20,
-                  aspectRatio: activeTab === 'desktop' ? '1920/800' : '768/1000',
+                  aspectRatio: formData.type === 'desktop' ? '1920/800' : '768/1000',
                   maxHeight: 200,
                   backgroundColor: '#374151',
                   borderRadius: 10,
@@ -313,15 +357,21 @@ export default function AdminSlidersPage() {
                 </button>
                 <button
                   type="submit"
-                  style={{ flex: 1, padding: 14, backgroundColor: '#3b82f6', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer' }}
+                  style={{ flex: 1, padding: 14, backgroundColor: formData.type === 'mobile' ? '#10b981' : '#3b82f6', color: '#fff', fontSize: 14, fontWeight: 600, borderRadius: 10, border: 'none', cursor: 'pointer' }}
                 >
-                  {editingIndex !== null ? 'Update' : 'Add'} Slider
+                  {editingIndex !== null ? 'Update' : 'Add'} {formData.type === 'mobile' ? 'Mobile' : 'Desktop'} Slider
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      <style jsx global>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
