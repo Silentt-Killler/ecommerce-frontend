@@ -64,11 +64,13 @@ export default function MobileBottomNav() {
 
   return (
     <>
-      {/* Mobile-only spacer: কন্টেন্ট যেন নেভবারের নিচে চাপা না পড়ে */}
+      {/* Mobile-only spacer */}
       <div className="block md:hidden h-[70px]" />
 
       <nav
-        className="block md:hidden" // Tailwind class দিয়ে ডেস্কটপে হাইড করা হয়েছে
+        // CHANGE HERE: 'display: flex' কে স্টাইল থেকে সরিয়ে এখানে Tailwind ক্লাস হিসেবে দেওয়া হয়েছে
+        // 'md:hidden' এখন ঠিকমত কাজ করবে কারণ ইনলাইন স্টাইল এর উপর ওভাররাইড করছে না
+        className="md:hidden flex items-center justify-around" 
         style={{
           position: 'fixed',
           bottom: 0,
@@ -77,23 +79,21 @@ export default function MobileBottomNav() {
           width: '100%',
           height: '65px',
           zIndex: 999,
-          
-          // --- ডিজাইন: পিওর হোয়াইট + প্রিমিয়াম শ্যাডো ---
+           
+          // --- ডিজাইন: পিওর হোয়াইট + প্রিমিয়াম শ্যাডো ---
           backgroundColor: '#FFFFFF',
           // উপরে হালকা বর্ডার এবং সফট শ্যাডো (Separation এর জন্য)
           borderTop: '1px solid #f0f0f0',
           boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.05)', 
-          
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-around',
+           
+          // REMOVED: display, alignItems, justifyContent এখান থেকে সরিয়ে className-এ নেওয়া হয়েছে
           paddingBottom: 'env(safe-area-inset-bottom)', // iOS Home Indicator সাপোর্ট
         }}
       >
         {navItems.map((item) => {
           const { Icon } = item;
           const isActive = activeTab === item.id;
-          
+           
           return (
             <Link
               key={item.id}
@@ -108,7 +108,7 @@ export default function MobileBottomNav() {
                 height: '100%',
                 position: 'relative',
                 textDecoration: 'none',
-                WebkitTapHighlightColor: 'transparent', // ক্লিক করলে নীল বক্স হবে না
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
               <div style={{
