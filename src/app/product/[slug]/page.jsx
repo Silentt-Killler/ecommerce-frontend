@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -24,6 +24,10 @@ export default function ProductDetailPage() {
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Touch swipe refs
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -91,6 +95,27 @@ export default function ProductDetailPage() {
     window.open('https://wa.me/8801XXXXXXXXX?text=' + message, '_blank');
   };
 
+  // Touch handlers for swipe
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!product?.images || product.images.length <= 1) return;
+    const diff = touchStartX.current - touchEndX.current;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        setSelectedImage((prev) => (prev + 1) % product.images.length);
+      } else {
+        setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length);
+      }
+    }
+  };
+
   const handleMouseEnter = () => !isMobile && setIsZoomed(true);
   const handleMouseLeave = () => setIsZoomed(false);
   const handleMouseMove = (e) => {
@@ -146,7 +171,12 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Main Image */}
-        <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', backgroundColor: '#F9FAFB' }}>
+        <div 
+          style={{ position: 'relative', width: '100%', aspectRatio: '3/4', backgroundColor: '#F9FAFB' }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {product.images?.[selectedImage]?.url ? (
             <Image src={product.images[selectedImage].url} alt={product.name} fill style={{ objectFit: 'cover' }} priority />
           ) : (
