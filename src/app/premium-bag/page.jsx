@@ -11,7 +11,7 @@ import ProductCard from '@/components/product/ProductCard';
 function MobileFilterPanel({ isOpen, onClose, subcategories, selectedSubcategory, onSubcategoryChange, selectedSize, onSizeChange, selectedColor, onColorChange, selectedPrice, onPriceChange, onClear }) {
   const sizeOptions = ['Small', 'Medium', 'Large', 'XL', 'Free Size'];
   const colorOptions = ['Black', 'White', 'Brown', 'Tan', 'Beige', 'Navy', 'Burgundy', 'Gray', 'Pink', 'Red'];
-  const priceOptions = ['Under \E0\A7\B32000', '\E0\A7\B32000 - \E0\A7\B35000', '\E0\A7\B35000 - \E0\A7\B310000', '\E0\A7\B310000 - \E0\A7\B320000', 'Above \E0\A7\B320000'];
+  const priceOptions = ['Under ৳2000', '৳2000 - ৳5000', '৳5000 - ৳10000', '৳10000 - ৳20000', 'Above ৳20000'];
 
   if (!isOpen) return null;
 
@@ -126,7 +126,7 @@ function PremiumBagContent() {
 
   const sizeOptions = ['Small', 'Medium', 'Large', 'XL', 'Free Size'];
   const colorOptions = ['Black', 'White', 'Brown', 'Tan', 'Beige', 'Navy', 'Burgundy', 'Gray', 'Pink', 'Red'];
-  const priceOptions = ['Under \E0\A7\B32000', '\E0\A7\B32000 - \E0\A7\B35000', '\E0\A7\B35000 - \E0\A7\B310000', '\E0\A7\B310000 - \E0\A7\B320000', 'Above \E0\A7\B320000'];
+  const priceOptions = ['Under ৳2000', '৳2000 - ৳5000', '৳5000 - ৳10000', '৳10000 - ৳20000', 'Above ৳20000'];
   const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'price_low', label: 'Price: Low to High' },
@@ -159,7 +159,7 @@ function PremiumBagContent() {
     if (filters.color) params.set('color', filters.color);
     if (filters.price) params.set('price', filters.price);
     if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort);
-    router.push(`/premium-bag${params.toString() ? '?' + params.toString() : ''}`, { scroll: false });
+    router.push('/premium-bag' + (params.toString() ? '?' + params.toString() : ''), { scroll: false });
   };
 
   const handleSubcategoryChange = (slug) => {
@@ -184,16 +184,16 @@ function PremiumBagContent() {
     setLoading(true);
     try {
       let url = '/products?category=premium-bag&limit=20';
-      if (selectedSubcategory) url += `&subcategory=${selectedSubcategory}`;
-      if (selectedSize) url += `&size=${selectedSize}`;
-      if (selectedColor) url += `&color=${selectedColor}`;
-      if (sortBy) url += `&sort=${sortBy}`;
+      if (selectedSubcategory) url += '&subcategory=' + selectedSubcategory;
+      if (selectedSize) url += '&size=' + selectedSize;
+      if (selectedColor) url += '&color=' + selectedColor;
+      if (sortBy) url += '&sort=' + sortBy;
       if (selectedPrice) {
-        if (selectedPrice === 'Under \E0\A7\B32000') url += '&max_price=2000';
-        else if (selectedPrice === '\E0\A7\B32000 - \E0\A7\B35000') url += '&min_price=2000&max_price=5000';
-        else if (selectedPrice === '\E0\A7\B35000 - \E0\A7\B310000') url += '&min_price=5000&max_price=10000';
-        else if (selectedPrice === '\E0\A7\B310000 - \E0\A7\B320000') url += '&min_price=10000&max_price=20000';
-        else if (selectedPrice === 'Above \E0\A7\B320000') url += '&min_price=20000';
+        if (selectedPrice === 'Under ৳2000') url += '&max_price=2000';
+        else if (selectedPrice === '৳2000 - ৳5000') url += '&min_price=2000&max_price=5000';
+        else if (selectedPrice === '৳5000 - ৳10000') url += '&min_price=5000&max_price=10000';
+        else if (selectedPrice === '৳10000 - ৳20000') url += '&min_price=10000&max_price=20000';
+        else if (selectedPrice === 'Above ৳20000') url += '&min_price=20000';
       }
       const res = await api.get(url);
       setProducts(res.data.products || []);
@@ -299,15 +299,23 @@ function PremiumBagContent() {
           </div>
         )}
       </div>
-      <style jsx global>{\`
+      <style jsx global>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      \`}</style>
+      `}</style>
     </div>
   );
 }
 
 export default function PremiumBagPage() {
-  return <Suspense fallback={<div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>}><PremiumBagContent /></Suspense>;
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 40, height: 40, border: '2px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      </div>
+    }>
+      <PremiumBagContent />
+    </Suspense>
+  );
 }
