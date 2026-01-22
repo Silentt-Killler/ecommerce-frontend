@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import useCartStore from '@/store/cartStore';
 
-// Icons remain same, just tweaked sizing slightly for the pill shape
+// --- ICONS (Same as before) ---
 const SearchIcon = ({ active }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? "2" : "1.5"}>
     <circle cx="11" cy="11" r="7" />
@@ -52,13 +52,13 @@ export default function MobileBottomNav() {
     else if (pathname?.includes('/search')) setActiveTab('search');
   }, [pathname]);
 
-  // Scroll logic for Pinterest-style hide/show
+  // --- FAST SCROLL LOGIC ---
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      // Always show at very top
-      if (currentScrollY < 50) {
+      // Always show at the very top (safeguard)
+      if (currentScrollY < 10) {
         setVisible(true);
         lastScrollY.current = currentScrollY;
         return;
@@ -66,10 +66,12 @@ export default function MobileBottomNav() {
 
       const scrollDifference = currentScrollY - lastScrollY.current;
 
-      // Hide on scroll down, Show on scroll up
-      if (scrollDifference > 10) { 
+      // Sensitivity: 
+      // Scroll Down (> 5px): Hide immediately
+      // Scroll Up (< 0px): Show immediately
+      if (scrollDifference > 5) { 
         setVisible(false);
-      } else if (scrollDifference < -10) {
+      } else if (scrollDifference < 0) {
         setVisible(true);
       }
       
@@ -80,12 +82,13 @@ export default function MobileBottomNav() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Do not render on Admin/Checkout
   if (isAdminPage || isCheckoutPage) return null;
 
   const cartCount = mounted ? getItemCount() : 0;
 
   const navItems = [
-    { id: 'home', Icon: HomeIcon, href: '/' }, // Pinterest usually puts Home first
+    { id: 'home', Icon: HomeIcon, href: '/' },
     { id: 'search', Icon: SearchIcon, href: '/search' },
     { id: 'cart', Icon: BagIcon, href: '/cart', badge: cartCount },
     { id: 'profile', Icon: UserIcon, href: '/account' },
@@ -93,40 +96,36 @@ export default function MobileBottomNav() {
 
   return (
     <>
-      {/* This empty div acts as a spacer so your content doesn't get hidden 
-        behind the floating nav at the very bottom of the page.
-      */}
-      <div className="md:hidden" style={{ height: 100 }} />
+      {/* Spacer to prevent content from hiding behind nav */}
+      <div className="md:hidden" style={{ height: 90 }} />
 
       <nav
-        className="md:hidden"
+        // "flex" & "md:hidden" classes ensure it works on mobile but hides on desktop
+        className="flex md:hidden" 
         style={{
           position: 'fixed',
-          bottom: 24, // Floating above bottom edge
-          left: '50%', // Center align
-          width: 'auto', // Auto width based on content (or use fixed percentage like 90%)
-          minWidth: '280px',
-          maxWidth: '90%',
+          bottom: 20, // Slightly floating from bottom
+          left: 16,   // Margin from left
+          right: 16,  // Margin from right (Makes it wide)
+          height: 64, // Sleek height
           
-          // The Magic Transformation
-          transform: visible 
-            ? 'translateX(-50%) translateY(0) scale(1)' 
-            : 'translateX(-50%) translateY(150%) scale(0.9)', 
+          // Fast Animation Logic
+          transform: visible ? 'translateY(0)' : 'translateY(130%)',
+          opacity: visible ? 1 : 0,
           
-          zIndex: 100,
-          backgroundColor: 'rgba(255, 255, 255, 0.85)', // Glass effect
-          backdropFilter: 'blur(12px)', // Blurs content behind the nav
-          borderRadius: '50px', // Pill shape
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)', // Premium Luxury Shadow
-          border: '1px solid rgba(255, 255, 255, 0.5)',
+          zIndex: 999,
+          backgroundColor: 'rgba(255, 255, 255, 0.9)', // Clean White
+          backdropFilter: 'blur(15px)', // Premium Glass Effect
+          borderRadius: '20px', // Soft rounded corners (Luxury feel)
+          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08)', // High-end soft shadow
+          border: '1px solid rgba(255, 255, 255, 0.4)',
           
-          padding: '8px 24px',
-          paddingBottom: '8px', // Override safe-area for the pill look
-          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth luxury animation
-          display: 'flex',
+          // Snappy Transition (0.2s)
+          transition: 'transform 0.2s ease-out, opacity 0.2s ease-out', 
+          
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '24px'
+          justifyContent: 'space-between', // Distribute space evenly
+          padding: '0 20px' // Internal spacing
         }}
       >
         {navItems.map((item) => {
@@ -140,33 +139,42 @@ export default function MobileBottomNav() {
               onClick={() => setActiveTab(item.id)}
               style={{
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 position: 'relative',
-                color: isActive ? '#111111' : '#888888', // Darker black for active luxury feel
+                color: isActive ? '#1A1A1A' : '#9CA3AF', // Jet Black (Active) vs Cool Grey (Inactive)
                 textDecoration: 'none',
-                borderRadius: '50%',
-                backgroundColor: isActive ? 'rgba(0,0,0,0.04)' : 'transparent', // Subtle active background
-                transition: 'all 0.3s ease'
+                // Remove tap highlight on mobile
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
               <Icon active={isActive} />
               
-              {/* Cart Badge - Redesigned for Luxury */}
+              {/* Cart Badge with NUMBER */}
               {item.badge > 0 && (
                 <span style={{
                   position: 'absolute',
-                  top: 8,
-                  right: 6,
-                  minWidth: 8,
-                  height: 8,
-                  backgroundColor: '#C5A572', // Gold/Luxury accent color
-                  borderRadius: '50%',
-                  border: '2px solid white', // Creates a cutout effect
-                  display: 'block'
-                }} />
+                  top: 2,
+                  right: 0,
+                  backgroundColor: '#B08B5C', // Luxury Gold Color
+                  color: '#FFFFFF',
+                  fontSize: '10px',
+                  fontWeight: '700',
+                  height: '16px',
+                  minWidth: '16px',
+                  padding: '0 4px',
+                  borderRadius: '10px', // Pill shape for numbers
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '2px solid #FFFFFF', // White border to pop out
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>
+                  {item.badge > 99 ? '99+' : item.badge}
+                </span>
               )}
             </Link>
           );
