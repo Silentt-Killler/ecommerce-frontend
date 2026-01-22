@@ -24,6 +24,14 @@ export default function ProductDetailPage() {
   const [openAccordion, setOpenAccordion] = useState('');
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (params.slug) {
@@ -34,26 +42,25 @@ export default function ProductDetailPage() {
   const fetchProduct = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/products/slug/${params.slug}`);
+      const res = await api.get('/products/slug/' + params.slug);
       setProduct(res.data);
       
-      // Fetch related products
       if (res.data.category) {
-        const relatedRes = await api.get(`/products?category=${res.data.category}&limit=4`);
+        const relatedRes = await api.get('/products?category=' + res.data.category + '&limit=4');
         const filtered = (relatedRes.data.products || []).filter(p => p._id !== res.data._id);
         setRelatedProducts(filtered.slice(0, 4));
       }
     } catch (error) {
       console.error('Failed to fetch product:', error);
       toast.error('Product not found');
-      router.push('/shop');
+      router.push('/');
     } finally {
       setLoading(false);
     }
   };
 
   const handleAddToCart = () => {
-    if (!selectedSize) {
+    if (needsSize && !selectedSize) {
       toast.error('Please select a size');
       return;
     }
@@ -65,7 +72,7 @@ export default function ProductDetailPage() {
       image: product.images?.[0]?.url,
       quantity: quantity,
       variant: {
-        size: selectedSize,
+        size: selectedSize || null,
         color: product.color?.name || null
       }
     });
@@ -74,7 +81,7 @@ export default function ProductDetailPage() {
   };
 
   const handleBuyNow = () => {
-    if (!selectedSize) {
+    if (needsSize && !selectedSize) {
       toast.error('Please select a size');
       return;
     }
@@ -86,7 +93,7 @@ export default function ProductDetailPage() {
       image: product.images?.[0]?.url,
       quantity: quantity,
       variant: {
-        size: selectedSize,
+        size: selectedSize || null,
         color: product.color?.name || null
       }
     });
@@ -95,20 +102,14 @@ export default function ProductDetailPage() {
   };
 
   const handleWhatsApp = () => {
-    const message = encodeURIComponent(`Hi, I'm interested in ${product.name} - ৳${product.price}`);
-    window.open(`https://wa.me/8801XXXXXXXXX?text=${message}`, '_blank');
+    const message = encodeURIComponent('Hi, I am interested in ' + product.name + ' - ৳' + product.price);
+    window.open('https://wa.me/8801XXXXXXXXX?text=' + message, '_blank');
   };
 
-  // Auto zoom on hover - no click needed
-  const handleMouseEnter = () => {
-    setIsZoomed(true);
-  };
-
-  const handleMouseLeave = () => {
-    setIsZoomed(false);
-  };
-
+  const handleMouseEnter = () => !isMobile && setIsZoomed(true);
+  const handleMouseLeave = () => setIsZoomed(false);
   const handleMouseMove = (e) => {
+    if (isMobile) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
@@ -131,28 +132,18 @@ export default function ProductDetailPage() {
 
   const getCategoryName = (category) => {
     const names = {
-      'menswear': 'Menswear',
-      'womenswear': 'Womenswear',
-      'beauty': 'Beauty & Care',
-      'watch': 'Watch'
+      'original-pakistani': 'Original Pakistani',
+      'inspired-pakistani': 'Inspired Pakistani',
+      'premium-bag': 'Premium Bag',
+      'beauty': 'Beauty & Care'
     };
     return names[category] || category;
   };
 
-  // Size Chart Data
-  const sizeChartData = {
-    menswear: [
-      { size: 'M', chest: '38-40', length: '28', shoulder: '17' },
-      { size: 'L', chest: '40-42', length: '29', shoulder: '18' },
-      { size: 'XL', chest: '42-44', length: '30', shoulder: '19' }
-    ],
-    womenswear: [
-      { size: 'M', bust: '34-36', waist: '28-30', hip: '36-38' },
-      { size: 'L', bust: '36-38', waist: '30-32', hip: '38-40' },
-      { size: 'XL', bust: '38-40', waist: '32-34', hip: '40-42' },
-      { size: 'Free Size', bust: '32-40', waist: '26-34', hip: '34-42' }
-    ]
-  };
+  // Check if category needs size selection
+  const isClothingCategory = ['original-pakistani', 'inspired-pakistani'].includes(product?.category);
+  const isBagCategory = product?.category === 'premium-bag';
+  const needsSize = isClothingCategory || isBagCategory;
 
   if (loading) {
     return (
@@ -171,10 +162,302 @@ export default function ProductDetailPage() {
     );
   }
 
-  // Get sizes - from backend OR default
-  const sizes = product.sizes?.length > 0 ? product.sizes : (product.available_sizes?.length > 0 ? product.available_sizes : ['M', 'L', 'XL']);
-  const currentSizeChart = sizeChartData[product.category] || sizeChartData.menswear;
+  const sizes = product.sizes?.length > 0 ? product.sizes : (product.available_sizes?.length > 0 ? product.available_sizes : ['M', 'L', 'XL', 'Free Size']);
 
+  // ========== MOBILE LAYOUT ==========
+  if (isMobile) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', paddingBottom: 100 }}>
+        {/* Header Spacer */}
+        <div style={{ height: 56 }} />
+
+        {/* Main Image with Swipe */}
+        <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', backgroundColor: '#F9FAFB' }}>
+          {product.images?.[selectedImage]?.url ? (
+            <Image
+              src={product.images[selectedImage].url}
+              alt={product.name}
+              fill
+              style={{ objectFit: 'cover' }}
+              priority
+            />
+          ) : (
+            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D1D5DB' }}>
+              No Image
+            </div>
+          )}
+
+          {/* Image Navigation */}
+          {product.images?.length > 1 && (
+            <>
+              <button onClick={prevImage} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                <ChevronLeft size={20} color="#0C0C0C" />
+              </button>
+              <button onClick={nextImage} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', width: 36, height: 36, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                <ChevronRight size={20} color="#0C0C0C" />
+              </button>
+              
+              {/* Dots Indicator */}
+              <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 6 }}>
+                {product.images.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      backgroundColor: selectedImage === index ? '#0C0C0C' : 'rgba(255,255,255,0.7)',
+                      border: 'none',
+                      padding: 0
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Product Info */}
+        <div style={{ padding: '20px 16px' }}>
+          {/* Title */}
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: '#0C0C0C', lineHeight: 1.4, margin: 0 }}>
+            {product.name}
+          </h1>
+
+          {/* Price */}
+          <div style={{ marginTop: 12 }}>
+            <span style={{ fontSize: 24, fontWeight: 700, color: '#0C0C0C' }}>
+              {formatPrice(product.price)}
+            </span>
+            {product.compare_price > product.price && (
+              <span style={{ fontSize: 14, color: '#9CA3AF', textDecoration: 'line-through', marginLeft: 10 }}>
+                {formatPrice(product.compare_price)}
+              </span>
+            )}
+          </div>
+
+          {/* SKU & Availability */}
+          <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: 12, color: '#6B7280' }}>
+            <span>SKU: <span style={{ color: '#374151' }}>{product.sku || 'N/A'}</span></span>
+            <span>
+              <span style={{ color: product.stock > 0 ? '#059669' : '#DC2626', fontWeight: 500 }}>
+                {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+              </span>
+            </span>
+          </div>
+
+          {/* Color */}
+          {product.color?.name && (
+            <div style={{ marginTop: 20 }}>
+              <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>
+                Color: <span style={{ color: '#0C0C0C', fontWeight: 500 }}>{product.color.name}</span>
+              </p>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', backgroundColor: product.color.code || '#0C0C0C', border: '2px solid #E5E7EB' }} />
+            </div>
+          )}
+
+          {/* Size Selection */}
+          {needsSize && (
+            <div style={{ marginTop: 20 }}>
+              <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 10 }}>Size</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {sizes.map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    style={{
+                      minWidth: 44,
+                      height: 40,
+                      padding: '0 14px',
+                      borderRadius: size === 'Free Size' ? 6 : '50%',
+                      border: selectedSize === size ? '2px solid #0C0C0C' : '1px solid #D1D5DB',
+                      backgroundColor: selectedSize === size ? '#0C0C0C' : '#FFFFFF',
+                      color: selectedSize === size ? '#FFFFFF' : '#374151',
+                      fontSize: 12,
+                      fontWeight: 500
+                    }}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quantity */}
+          <div style={{ marginTop: 20 }}>
+            <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 10 }}>Quantity</p>
+            <div style={{ display: 'inline-flex', alignItems: 'center', border: '1px solid #E5E7EB', borderRadius: 6 }}>
+              <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ width: 40, height: 40, border: 'none', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Minus size={16} color="#374151" />
+              </button>
+              <span style={{ width: 40, textAlign: 'center', fontSize: 15, fontWeight: 600, color: '#0C0C0C' }}>{quantity}</span>
+              <button onClick={() => setQuantity(quantity + 1)} style={{ width: 40, height: 40, border: 'none', backgroundColor: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Plus size={16} color="#374151" />
+              </button>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button
+              onClick={handleAddToCart}
+              disabled={product.stock === 0}
+              style={{
+                width: '100%',
+                height: 48,
+                backgroundColor: 'transparent',
+                color: product.stock > 0 ? '#0C0C0C' : '#9CA3AF',
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: 1,
+                border: product.stock > 0 ? '1px solid #0C0C0C' : '1px solid #D1D5DB',
+                borderRadius: 6,
+                textTransform: 'uppercase'
+              }}
+            >
+              Add to Cart
+            </button>
+            
+            <button
+              onClick={handleBuyNow}
+              disabled={product.stock === 0}
+              style={{
+                width: '100%',
+                height: 48,
+                backgroundColor: product.stock > 0 ? '#0C0C0C' : '#E5E7EB',
+                color: product.stock > 0 ? '#FFFFFF' : '#9CA3AF',
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: 1,
+                border: 'none',
+                borderRadius: 6,
+                textTransform: 'uppercase'
+              }}
+            >
+              Buy Now
+            </button>
+
+            <button
+              onClick={handleWhatsApp}
+              style={{
+                width: '100%',
+                height: 48,
+                backgroundColor: '#25D366',
+                color: '#FFFFFF',
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: 1,
+                border: 'none',
+                borderRadius: 6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                textTransform: 'uppercase'
+              }}
+            >
+              <MessageCircle size={18} />
+              WhatsApp
+            </button>
+          </div>
+
+          {/* Accordion Sections */}
+          <div style={{ marginTop: 28, borderTop: '1px solid #F3F4F6' }}>
+            {/* Product Description */}
+            <div style={{ borderBottom: '1px solid #F3F4F6' }}>
+              <button
+                onClick={() => setOpenAccordion(openAccordion === 'description' ? '' : 'description')}
+                style={{ width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none' }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Product Description</span>
+                <ChevronDown size={18} color="#6B7280" style={{ transform: openAccordion === 'description' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+              {openAccordion === 'description' && (
+                <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.7 }}>
+                  {product.description || 'No description available.'}
+                </div>
+              )}
+            </div>
+
+            {/* Wash Guide - Only for clothing */}
+            {isClothingCategory && (
+              <div style={{ borderBottom: '1px solid #F3F4F6' }}>
+                <button
+                  onClick={() => setOpenAccordion(openAccordion === 'washguide' ? '' : 'washguide')}
+                  style={{ width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none' }}
+                >
+                  <span style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Wash Guide</span>
+                  <ChevronDown size={18} color="#6B7280" style={{ transform: openAccordion === 'washguide' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                </button>
+                {openAccordion === 'washguide' && (
+                  <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8 }}>
+                    {product.wash_guide || (
+                      <ul style={{ margin: 0, paddingLeft: 18 }}>
+                        <li style={{ marginBottom: 6 }}>Machine wash cold with similar colors</li>
+                        <li style={{ marginBottom: 6 }}>Do not bleach</li>
+                        <li style={{ marginBottom: 6 }}>Tumble dry low</li>
+                        <li style={{ marginBottom: 6 }}>Iron on low heat if needed</li>
+                        <li>Do not dry clean</li>
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Delivery & Return */}
+            <div style={{ borderBottom: '1px solid #F3F4F6' }}>
+              <button
+                onClick={() => setOpenAccordion(openAccordion === 'delivery' ? '' : 'delivery')}
+                style={{ width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none' }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Delivery & Return</span>
+                <ChevronDown size={18} color="#6B7280" style={{ transform: openAccordion === 'delivery' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              </button>
+              {openAccordion === 'delivery' && (
+                <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8 }}>
+                  {product.delivery_return || (
+                    <>
+                      <p style={{ margin: '0 0 10px 0', fontWeight: 500, color: '#0C0C0C' }}>Delivery:</p>
+                      <ul style={{ margin: '0 0 14px 0', paddingLeft: 18 }}>
+                        <li style={{ marginBottom: 4 }}>Dhaka City: 1-2 business days</li>
+                        <li style={{ marginBottom: 4 }}>Outside Dhaka: 3-5 business days</li>
+                        <li>Delivery charge: ৳70 (Dhaka) / ৳120 (Outside)</li>
+                      </ul>
+                      <p style={{ margin: '0 0 10px 0', fontWeight: 500, color: '#0C0C0C' }}>Return Policy:</p>
+                      <ul style={{ margin: 0, paddingLeft: 18 }}>
+                        <li style={{ marginBottom: 4 }}>7 days easy return</li>
+                        <li style={{ marginBottom: 4 }}>Product must be unused with tags</li>
+                        <li>Exchange available for size issues</li>
+                      </ul>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div style={{ padding: '24px 16px', backgroundColor: '#F9FAFB' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, letterSpacing: 1, textAlign: 'center', marginBottom: 20, color: '#0C0C0C', textTransform: 'uppercase' }}>
+              Related Products
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+              {relatedProducts.map((p) => (
+                <ProductCard key={p._id} product={p} isMobile={true} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ========== DESKTOP LAYOUT ==========
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
       {/* Spacer for header */}
@@ -186,7 +469,7 @@ export default function ProductDetailPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#6B7280' }}>
             <Link href="/" style={{ color: '#6B7280', textDecoration: 'none' }}>Home</Link>
             <span style={{ color: '#D1D5DB' }}>/</span>
-            <Link href={`/${product.category}`} style={{ color: '#6B7280', textDecoration: 'none' }}>{getCategoryName(product.category)}</Link>
+            <Link href={'/' + product.category} style={{ color: '#6B7280', textDecoration: 'none' }}>{getCategoryName(product.category)}</Link>
             <span style={{ color: '#D1D5DB' }}>/</span>
             <span style={{ color: '#0C0C0C' }}>{product.name}</span>
           </div>
@@ -199,16 +482,9 @@ export default function ProductDetailPage() {
           
           {/* Left - Images */}
           <div>
-            {/* Main Image - Auto zoom on hover */}
+            {/* Main Image with Zoom */}
             <div 
-              style={{ 
-                position: 'relative', 
-                aspectRatio: '4/5', 
-                backgroundColor: '#F9FAFB', 
-                borderRadius: 4,
-                overflow: 'hidden',
-                cursor: 'crosshair'
-              }}
+              style={{ position: 'relative', aspectRatio: '4/5', backgroundColor: '#F9FAFB', borderRadius: 4, overflow: 'hidden', cursor: 'crosshair' }}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
               onMouseMove={handleMouseMove}
@@ -218,95 +494,34 @@ export default function ProductDetailPage() {
                   src={product.images[selectedImage].url}
                   alt={product.name}
                   fill
-                  style={{ 
-                    objectFit: 'cover',
-                    transform: isZoomed ? 'scale(2)' : 'scale(1)',
-                    transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                    transition: isZoomed ? 'none' : 'transform 0.3s'
-                  }}
+                  style={{ objectFit: 'cover', transform: isZoomed ? 'scale(2)' : 'scale(1)', transformOrigin: zoomPosition.x + '% ' + zoomPosition.y + '%', transition: isZoomed ? 'none' : 'transform 0.3s' }}
                 />
               ) : (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D1D5DB', fontSize: 14 }}>
-                  No Image
-                </div>
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D1D5DB', fontSize: 14 }}>No Image</div>
               )}
 
-              {/* Navigation Arrows */}
               {product.images?.length > 1 && (
                 <>
-                  <button
-                    onClick={prevImage}
-                    style={{
-                      position: 'absolute',
-                      left: 16,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: 40,
-                      height: 40,
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(255,255,255,0.9)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                      zIndex: 10
-                    }}
-                  >
+                  <button onClick={prevImage} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', zIndex: 10 }}>
                     <ChevronLeft size={20} color="#0C0C0C" />
                   </button>
-                  <button
-                    onClick={nextImage}
-                    style={{
-                      position: 'absolute',
-                      right: 16,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: 40,
-                      height: 40,
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(255,255,255,0.9)',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                      zIndex: 10
-                    }}
-                  >
+                  <button onClick={nextImage} style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', zIndex: 10 }}>
                     <ChevronRight size={20} color="#0C0C0C" />
                   </button>
                 </>
               )}
             </div>
 
-            {/* Thumbnail Images */}
+            {/* Thumbnails */}
             {product.images?.length > 1 && (
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
                 {product.images.map((img, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    style={{
-                      width: 75,
-                      height: 90,
-                      borderRadius: 4,
-                      overflow: 'hidden',
-                      border: selectedImage === index ? '2px solid #0C0C0C' : '1px solid #E5E7EB',
-                      padding: 0,
-                      cursor: 'pointer',
-                      backgroundColor: '#F9FAFB'
-                    }}
+                    style={{ width: 75, height: 90, borderRadius: 4, overflow: 'hidden', border: selectedImage === index ? '2px solid #0C0C0C' : '1px solid #E5E7EB', padding: 0, cursor: 'pointer', backgroundColor: '#F9FAFB' }}
                   >
-                    <Image
-                      src={img.url}
-                      alt={`${product.name} ${index + 1}`}
-                      width={75}
-                      height={90}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                    <Image src={img.url} alt={product.name + ' ' + (index + 1)} width={75} height={90} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </button>
                 ))}
               </div>
@@ -315,245 +530,101 @@ export default function ProductDetailPage() {
 
           {/* Right - Product Info */}
           <div style={{ maxWidth: 480 }}>
-            {/* Title */}
-            <h1 style={{ 
-              fontSize: 26, 
-              fontWeight: 500, 
-              color: '#0C0C0C', 
-              lineHeight: 1.3,
-              margin: 0
-            }}>
-              {product.name}
-            </h1>
+            <h1 style={{ fontSize: 26, fontWeight: 500, color: '#0C0C0C', lineHeight: 1.3, margin: 0 }}>{product.name}</h1>
 
-            {/* SKU, Availability, Product Type */}
+            {/* SKU, Availability, Type */}
             <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ fontSize: 13, color: '#6B7280' }}>
-                SKU: <span style={{ color: '#374151' }}>{product.sku || 'N/A'}</span>
-              </div>
-              <div style={{ fontSize: 13, color: '#6B7280' }}>
-                Availability:{' '}
-                <span style={{ color: product.stock > 0 ? '#059669' : '#DC2626', fontWeight: 500 }}>
-                  {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
-                </span>
-              </div>
-              <div style={{ fontSize: 13, color: '#6B7280' }}>
-                Product Type: <span style={{ color: '#374151' }}>{getCategoryName(product.category)}</span>
-              </div>
+              <div style={{ fontSize: 13, color: '#6B7280' }}>SKU: <span style={{ color: '#374151' }}>{product.sku || 'N/A'}</span></div>
+              <div style={{ fontSize: 13, color: '#6B7280' }}>Availability: <span style={{ color: product.stock > 0 ? '#059669' : '#DC2626', fontWeight: 500 }}>{product.stock > 0 ? 'In Stock' : 'Out of Stock'}</span></div>
+              <div style={{ fontSize: 13, color: '#6B7280' }}>Product Type: <span style={{ color: '#374151' }}>{getCategoryName(product.category)}</span></div>
             </div>
 
             {/* Price */}
             <div style={{ marginTop: 20 }}>
-              <span style={{ fontSize: 28, fontWeight: 600, color: '#0C0C0C' }}>
-                {formatPrice(product.price)}
-              </span>
+              <span style={{ fontSize: 28, fontWeight: 600, color: '#0C0C0C' }}>{formatPrice(product.price)}</span>
               {product.compare_price > product.price && (
-                <span style={{ fontSize: 16, color: '#9CA3AF', textDecoration: 'line-through', marginLeft: 12 }}>
-                  {formatPrice(product.compare_price)}
-                </span>
+                <span style={{ fontSize: 16, color: '#9CA3AF', textDecoration: 'line-through', marginLeft: 12 }}>{formatPrice(product.compare_price)}</span>
               )}
             </div>
 
-           {/* Color - Only show if product has color */}
+            {/* Color */}
             {product.color?.name && (
               <div style={{ marginTop: 24 }}>
-                <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 10 }}>
-                  Color: <span style={{ color: '#0C0C0C', fontWeight: 500 }}>{product.color.name}</span>
-                </div>
-                <div 
-                  style={{ 
-                    width: 30, 
-                    height: 30, 
-                    borderRadius: '50%', 
-                    backgroundColor: product.color.code || '#0C0C0C',
-                    border: '2px solid #E5E7EB',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                  }} 
-                />
+                <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 10 }}>Color: <span style={{ color: '#0C0C0C', fontWeight: 500 }}>{product.color.name}</span></div>
+                <div style={{ width: 30, height: 30, borderRadius: '50%', backgroundColor: product.color.code || '#0C0C0C', border: '2px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }} />
               </div>
             )}
 
-            {/* Size - Always Show */}
-            <div style={{ marginTop: 24 }}>
-              <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 10 }}>Size</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                {sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    style={{
-                      minWidth: 48,
-                      height: 44,
-                      padding: '0 16px',
-                      borderRadius: size === 'Free Size' ? 6 : '50%',
-                      border: selectedSize === size ? '2px solid #0C0C0C' : '1px solid #D1D5DB',
-                      backgroundColor: selectedSize === size ? '#0C0C0C' : '#FFFFFF',
-                      color: selectedSize === size ? '#FFFFFF' : '#374151',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {/* Size */}
+            {needsSize && (
+              <div style={{ marginTop: 24 }}>
+                <div style={{ fontSize: 13, color: '#6B7280', marginBottom: 10 }}>Size</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                  {sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      style={{
+                        minWidth: 48,
+                        height: 44,
+                        padding: '0 16px',
+                        borderRadius: size === 'Free Size' ? 6 : '50%',
+                        border: selectedSize === size ? '2px solid #0C0C0C' : '1px solid #D1D5DB',
+                        backgroundColor: selectedSize === size ? '#0C0C0C' : '#FFFFFF',
+                        color: selectedSize === size ? '#FFFFFF' : '#374151',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Quantity + Add to Cart - No Love Icon */}
+            {/* Quantity + Add to Cart */}
             <div style={{ marginTop: 28, display: 'flex', alignItems: 'center', gap: 12 }}>
-              {/* Quantity Selector - Bigger */}
-              <div style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                border: '1px solid #E5E7EB', 
-                borderRadius: 4
-              }}>
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  style={{
-                    width: 44,
-                    height: 50,
-                    border: 'none',
-                    backgroundColor: 'transparent',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #E5E7EB', borderRadius: 4 }}>
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ width: 44, height: 50, border: 'none', backgroundColor: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Minus size={18} color="#374151" />
                 </button>
-                <span style={{ 
-                  width: 50, 
-                  height: 50, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  color: '#0C0C0C',
-                  borderLeft: '1px solid #E5E7EB',
-                  borderRight: '1px solid #E5E7EB'
-                }}>
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  style={{
-                    width: 44,
-                    height: 50,
-                    border: 'none',
-                    backgroundColor: 'transparent',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
+                <span style={{ width: 50, height: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 600, color: '#0C0C0C', borderLeft: '1px solid #E5E7EB', borderRight: '1px solid #E5E7EB' }}>{quantity}</span>
+                <button onClick={() => setQuantity(quantity + 1)} style={{ width: 44, height: 50, border: 'none', backgroundColor: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Plus size={18} color="#374151" />
                 </button>
               </div>
 
-              {/* Add to Cart Button - 50px height, takes remaining space */}
               <button
                 onClick={handleAddToCart}
                 disabled={product.stock === 0}
-                style={{
-                  flex: 1,
-                  height: 50,
-                  backgroundColor: 'transparent',
-                  color: product.stock > 0 ? '#0C0C0C' : '#9CA3AF',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  letterSpacing: 1.5,
-                  border: product.stock > 0 ? '1px solid #0C0C0C' : '1px solid #D1D5DB',
-                  borderRadius: 4,
-                  cursor: product.stock > 0 ? 'pointer' : 'not-allowed',
-                  textTransform: 'uppercase',
-                  transition: 'all 0.2s'
-                }}
-                onMouseOver={(e) => {
-                  if (product.stock > 0) {
-                    e.currentTarget.style.backgroundColor = '#B08B5C';
-                    e.currentTarget.style.borderColor = '#B08B5C';
-                    e.currentTarget.style.color = '#FFFFFF';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  if (product.stock > 0) {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.borderColor = '#0C0C0C';
-                    e.currentTarget.style.color = '#0C0C0C';
-                  }
-                }}
+                style={{ flex: 1, height: 50, backgroundColor: 'transparent', color: product.stock > 0 ? '#0C0C0C' : '#9CA3AF', fontSize: 13, fontWeight: 600, letterSpacing: 1.5, border: product.stock > 0 ? '1px solid #0C0C0C' : '1px solid #D1D5DB', borderRadius: 4, cursor: product.stock > 0 ? 'pointer' : 'not-allowed', textTransform: 'uppercase', transition: 'all 0.2s' }}
+                onMouseOver={(e) => { if (product.stock > 0) { e.currentTarget.style.backgroundColor = '#B08B5C'; e.currentTarget.style.borderColor = '#B08B5C'; e.currentTarget.style.color = '#FFFFFF'; } }}
+                onMouseOut={(e) => { if (product.stock > 0) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = '#0C0C0C'; e.currentTarget.style.color = '#0C0C0C'; } }}
               >
                 Add to Cart
               </button>
             </div>
 
-            {/* Buy Now Button */}
+            {/* Buy Now */}
             <button
               onClick={handleBuyNow}
               disabled={product.stock === 0}
-              style={{
-                width: '100%',
-                height: 50,
-                marginTop: 10,
-                backgroundColor: product.stock > 0 ? '#0C0C0C' : '#E5E7EB',
-                color: product.stock > 0 ? '#FFFFFF' : '#9CA3AF',
-                fontSize: 13,
-                fontWeight: 600,
-                letterSpacing: 1.5,
-                border: 'none',
-                borderRadius: 4,
-                cursor: product.stock > 0 ? 'pointer' : 'not-allowed',
-                textTransform: 'uppercase',
-                transition: 'all 0.2s'
-              }}
-              onMouseOver={(e) => {
-                if (product.stock > 0) {
-                  e.currentTarget.style.backgroundColor = '#B08B5C';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (product.stock > 0) {
-                  e.currentTarget.style.backgroundColor = '#0C0C0C';
-                }
-              }}
+              style={{ width: '100%', height: 50, marginTop: 10, backgroundColor: product.stock > 0 ? '#0C0C0C' : '#E5E7EB', color: product.stock > 0 ? '#FFFFFF' : '#9CA3AF', fontSize: 13, fontWeight: 600, letterSpacing: 1.5, border: 'none', borderRadius: 4, cursor: product.stock > 0 ? 'pointer' : 'not-allowed', textTransform: 'uppercase', transition: 'all 0.2s' }}
+              onMouseOver={(e) => { if (product.stock > 0) e.currentTarget.style.backgroundColor = '#B08B5C'; }}
+              onMouseOut={(e) => { if (product.stock > 0) e.currentTarget.style.backgroundColor = '#0C0C0C'; }}
             >
               Buy Now
             </button>
 
-            {/* WhatsApp Button */}
+            {/* WhatsApp */}
             <button
               onClick={handleWhatsApp}
-              style={{
-                width: '100%',
-                height: 50,
-                marginTop: 10,
-                backgroundColor: '#25D366',
-                color: '#FFFFFF',
-                fontSize: 13,
-                fontWeight: 600,
-                letterSpacing: 1.5,
-                border: 'none',
-                borderRadius: 4,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                textTransform: 'uppercase',
-                transition: 'all 0.2s'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#1fb855';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#25D366';
-              }}
+              style={{ width: '100%', height: 50, marginTop: 10, backgroundColor: '#25D366', color: '#FFFFFF', fontSize: 13, fontWeight: 600, letterSpacing: 1.5, border: 'none', borderRadius: 4, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, textTransform: 'uppercase', transition: 'all 0.2s' }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1fb855'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#25D366'}
             >
               <MessageCircle size={18} />
               WhatsApp
@@ -561,139 +632,27 @@ export default function ProductDetailPage() {
 
             {/* Accordion Sections */}
             <div style={{ marginTop: 32, borderTop: '1px solid #F3F4F6' }}>
-              {/* Product Description */}
+              {/* Description */}
               <div style={{ borderBottom: '1px solid #F3F4F6' }}>
-                <button
-                  onClick={() => setOpenAccordion(openAccordion === 'description' ? '' : 'description')}
-                  style={{
-                    width: '100%',
-                    padding: '16px 0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
+                <button onClick={() => setOpenAccordion(openAccordion === 'description' ? '' : 'description')} style={{ width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
                   <span style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Product Description</span>
-                  <ChevronDown 
-                    size={18} 
-                    color="#6B7280"
-                    style={{ 
-                      transform: openAccordion === 'description' ? 'rotate(180deg)' : 'none',
-                      transition: 'transform 0.2s'
-                    }} 
-                  />
+                  <ChevronDown size={18} color="#6B7280" style={{ transform: openAccordion === 'description' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
                 </button>
                 {openAccordion === 'description' && (
-                  <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.7 }}>
-                    {product.description || 'No description available.'}
-                  </div>
+                  <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.7 }}>{product.description || 'No description available.'}</div>
                 )}
               </div>
 
-              {/* Size Chart - Always Show */}
-              <div style={{ borderBottom: '1px solid #F3F4F6' }}>
-                <button
-                  onClick={() => setOpenAccordion(openAccordion === 'sizechart' ? '' : 'sizechart')}
-                  style={{
-                    width: '100%',
-                    padding: '16px 0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Size Chart</span>
-                  <ChevronDown 
-                    size={18} 
-                    color="#6B7280"
-                    style={{ 
-                      transform: openAccordion === 'sizechart' ? 'rotate(180deg)' : 'none',
-                      transition: 'transform 0.2s'
-                    }} 
-                  />
-                </button>
-                {openAccordion === 'sizechart' && (
-                  <div style={{ paddingBottom: 16 }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#F9FAFB' }}>
-                          <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#0C0C0C', borderBottom: '1px solid #E5E7EB' }}>Size</th>
-                          {product.category === 'womenswear' ? (
-                            <>
-                              <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#0C0C0C', borderBottom: '1px solid #E5E7EB' }}>Bust</th>
-                              <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#0C0C0C', borderBottom: '1px solid #E5E7EB' }}>Waist</th>
-                              <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#0C0C0C', borderBottom: '1px solid #E5E7EB' }}>Hip</th>
-                            </>
-                          ) : (
-                            <>
-                              <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#0C0C0C', borderBottom: '1px solid #E5E7EB' }}>Chest</th>
-                              <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#0C0C0C', borderBottom: '1px solid #E5E7EB' }}>Length</th>
-                              <th style={{ padding: '10px 12px', textAlign: 'left', fontWeight: 600, color: '#0C0C0C', borderBottom: '1px solid #E5E7EB' }}>Shoulder</th>
-                            </>
-                          )}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentSizeChart.map((row) => (
-                          <tr key={row.size}>
-                            <td style={{ padding: '10px 12px', color: '#374151', fontWeight: 500, borderBottom: '1px solid #F3F4F6' }}>{row.size}</td>
-                            {product.category === 'womenswear' ? (
-                              <>
-                                <td style={{ padding: '10px 12px', color: '#6B7280', borderBottom: '1px solid #F3F4F6' }}>{row.bust}"</td>
-                                <td style={{ padding: '10px 12px', color: '#6B7280', borderBottom: '1px solid #F3F4F6' }}>{row.waist}"</td>
-                                <td style={{ padding: '10px 12px', color: '#6B7280', borderBottom: '1px solid #F3F4F6' }}>{row.hip}"</td>
-                              </>
-                            ) : (
-                              <>
-                                <td style={{ padding: '10px 12px', color: '#6B7280', borderBottom: '1px solid #F3F4F6' }}>{row.chest}"</td>
-                                <td style={{ padding: '10px 12px', color: '#6B7280', borderBottom: '1px solid #F3F4F6' }}>{row.length}"</td>
-                                <td style={{ padding: '10px 12px', color: '#6B7280', borderBottom: '1px solid #F3F4F6' }}>{row.shoulder}"</td>
-                              </>
-                            )}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {/* Wash Guide */}
-              <div style={{ borderBottom: '1px solid #F3F4F6' }}>
-                <button
-                  onClick={() => setOpenAccordion(openAccordion === 'washguide' ? '' : 'washguide')}
-                  style={{
-                    width: '100%',
-                    padding: '16px 0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Wash Guide</span>
-                  <ChevronDown 
-                    size={18} 
-                    color="#6B7280"
-                    style={{ 
-                      transform: openAccordion === 'washguide' ? 'rotate(180deg)' : 'none',
-                      transition: 'transform 0.2s'
-                    }} 
-                  />
-                </button>
+              {/* Wash Guide - Only for clothing */}
+              {isClothingCategory && (
+                <div style={{ borderBottom: '1px solid #F3F4F6' }}>
+                  <button onClick={() => setOpenAccordion(openAccordion === 'washguide' ? '' : 'washguide')} style={{ width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Wash Guide</span>
+                    <ChevronDown size={18} color="#6B7280" style={{ transform: openAccordion === 'washguide' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                  </button>
                   {openAccordion === 'washguide' && (
-                    <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
-                      {product.wash_guide ? (
-                        product.wash_guide
-                      ) : (
+                    <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8 }}>
+                      {product.wash_guide || (
                         <ul style={{ margin: 0, paddingLeft: 18 }}>
                           <li style={{ marginBottom: 6 }}>Machine wash cold with similar colors</li>
                           <li style={{ marginBottom: 6 }}>Do not bleach</li>
@@ -704,55 +663,35 @@ export default function ProductDetailPage() {
                       )}
                     </div>
                   )}
-              </div>
+                </div>
+              )}
 
               {/* Delivery & Return */}
               <div style={{ borderBottom: '1px solid #F3F4F6' }}>
-                <button
-                  onClick={() => setOpenAccordion(openAccordion === 'delivery' ? '' : 'delivery')}
-                  style={{
-                    width: '100%',
-                    padding: '16px 0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
+                <button onClick={() => setOpenAccordion(openAccordion === 'delivery' ? '' : 'delivery')} style={{ width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
                   <span style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Delivery & Return</span>
-                  <ChevronDown 
-                    size={18} 
-                    color="#6B7280"
-                    style={{ 
-                      transform: openAccordion === 'delivery' ? 'rotate(180deg)' : 'none',
-                      transition: 'transform 0.2s'
-                    }} 
-                  />
+                  <ChevronDown size={18} color="#6B7280" style={{ transform: openAccordion === 'delivery' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
                 </button>
-                       {openAccordion === 'delivery' && (
-                    <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8, whiteSpace: 'pre-line' }}>
-                      {product.delivery_return ? (
-                        product.delivery_return
-                      ) : (
-                        <>
-                          <p style={{ margin: '0 0 12px 0', fontWeight: 500, color: '#0C0C0C' }}>Delivery:</p>
-                          <ul style={{ margin: '0 0 16px 0', paddingLeft: 18 }}>
-                            <li style={{ marginBottom: 6 }}>Dhaka City: 1-2 business days</li>
-                            <li style={{ marginBottom: 6 }}>Outside Dhaka: 3-5 business days</li>
-                            <li>Delivery charge: ৳70 (Dhaka) / ৳120 (Outside)</li>
-                          </ul>
-                          <p style={{ margin: '0 0 12px 0', fontWeight: 500, color: '#0C0C0C' }}>Return Policy:</p>
-                          <ul style={{ margin: 0, paddingLeft: 18 }}>
-                            <li style={{ marginBottom: 6 }}>7 days easy return</li>
-                            <li style={{ marginBottom: 6 }}>Product must be unused with tags</li>
-                            <li>Exchange available for size issues</li>
-                          </ul>
-                        </>
-                      )}
-                    </div>
-                  )}
+                {openAccordion === 'delivery' && (
+                  <div style={{ paddingBottom: 16, fontSize: 13, color: '#4B5563', lineHeight: 1.8 }}>
+                    {product.delivery_return || (
+                      <>
+                        <p style={{ margin: '0 0 12px 0', fontWeight: 500, color: '#0C0C0C' }}>Delivery:</p>
+                        <ul style={{ margin: '0 0 16px 0', paddingLeft: 18 }}>
+                          <li style={{ marginBottom: 6 }}>Dhaka City: 1-2 business days</li>
+                          <li style={{ marginBottom: 6 }}>Outside Dhaka: 3-5 business days</li>
+                          <li>Delivery charge: ৳70 (Dhaka) / ৳120 (Outside)</li>
+                        </ul>
+                        <p style={{ margin: '0 0 12px 0', fontWeight: 500, color: '#0C0C0C' }}>Return Policy:</p>
+                        <ul style={{ margin: 0, paddingLeft: 18 }}>
+                          <li style={{ marginBottom: 6 }}>7 days easy return</li>
+                          <li style={{ marginBottom: 6 }}>Product must be unused with tags</li>
+                          <li>Exchange available for size issues</li>
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -763,20 +702,10 @@ export default function ProductDetailPage() {
       {relatedProducts.length > 0 && (
         <div style={{ backgroundColor: '#FFFFFF', padding: '50px 0' }}>
           <div style={{ maxWidth: 1300, margin: '0 auto', padding: '0 40px' }}>
-            <h2 style={{ 
-              fontSize: 20, 
-              fontWeight: 500, 
-              letterSpacing: 3, 
-              textAlign: 'center', 
-              marginBottom: 32,
-              color: '#0C0C0C',
-              textTransform: 'uppercase'
-            }}>
-              Related Products
-            </h2>
+            <h2 style={{ fontSize: 20, fontWeight: 500, letterSpacing: 3, textAlign: 'center', marginBottom: 32, color: '#0C0C0C', textTransform: 'uppercase' }}>Related Products</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
-              {relatedProducts.map((product) => (
-                <ProductCard key={product._id} product={product} />
+              {relatedProducts.map((p) => (
+                <ProductCard key={p._id} product={p} />
               ))}
             </div>
           </div>
