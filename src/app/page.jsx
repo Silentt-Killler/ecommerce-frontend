@@ -51,11 +51,12 @@ export default function HomePage() {
 
   const heroSlide = settings?.hero_slides?.[0];
 
+  // Updated category link mapping
   const getCategoryLink = (slug) => {
     const linkMap = {
-      'watch': '/watch',
-      'menswear': '/menswear',
-      'womenswear': '/womenswear',
+      'original-pakistani': '/original-pakistani',
+      'inspired-pakistani': '/inspired-pakistani',
+      'premium-bag': '/premium-bag',
       'beauty': '/beauty',
     };
     return linkMap[slug] || `/shop?category=${slug}`;
@@ -199,7 +200,7 @@ export default function HomePage() {
           </div>
         )}
         
-        {/* Hero Buttons - Horizontal */}
+        {/* Hero Buttons - Updated Links */}
         <div style={{
           position: 'absolute',
           bottom: isMobile ? 60 : 80,
@@ -210,7 +211,7 @@ export default function HomePage() {
           gap: 12
         }}>
           <Link 
-            href="/womenswear"
+            href="/original-pakistani"
             style={{
               padding: isMobile ? '12px 24px' : '14px 36px',
               backgroundColor: '#FFFFFF',
@@ -223,10 +224,10 @@ export default function HomePage() {
               whiteSpace: 'nowrap'
             }}
           >
-            For Her
+            Original
           </Link>
           <Link 
-            href="/menswear"
+            href="/inspired-pakistani"
             style={{
               padding: isMobile ? '12px 24px' : '14px 36px',
               backgroundColor: '#FFFFFF',
@@ -239,7 +240,7 @@ export default function HomePage() {
               whiteSpace: 'nowrap'
             }}
           >
-            For Him
+            Inspired
           </Link>
         </div>
       </section>
