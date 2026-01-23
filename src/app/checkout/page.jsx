@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { Truck, CreditCard, Shield, ChevronDown, Package, CheckCircle, Tag, X } from 'lucide-react';
+import { Truck, ChevronDown, Check, X, Shield, CreditCard } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 import useAuthStore from '@/store/authStore';
 import { districts } from '@/data/bangladesh-locations';
@@ -12,8 +12,9 @@ import toast from 'react-hot-toast';
 
 function LoadingFallback() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ width: 40, height: 40, border: '3px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
+      <div style={{ width: 40, height: 40, border: '1px solid #A68A6C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
@@ -22,7 +23,7 @@ function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { items, getSubtotal, clearCart } = useCartStore();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user } = useAuthStore();
   
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -92,7 +93,7 @@ function CheckoutContent() {
       let discountAmount = coupon.type === 'percentage' ? (subtotal * coupon.value) / 100 : coupon.value;
       if (coupon.type === 'percentage' && coupon.max_discount && discountAmount > coupon.max_discount) discountAmount = coupon.max_discount;
       setDiscount(discountAmount);
-      toast.success('Coupon applied! You saved ৳' + discountAmount.toLocaleString());
+      toast.success('Coupon applied');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Invalid coupon code');
       setAppliedCoupon(null);
@@ -128,214 +129,276 @@ function CheckoutContent() {
   if (!mounted) return <LoadingFallback />;
   if (items.length === 0) { router.push('/cart'); return null; }
 
-  const inputStyle = { width: '100%', padding: isMobile ? '12px 14px' : '10px 14px', border: '1px solid #E0E0E0', borderRadius: 6, fontSize: 14, outline: 'none', boxSizing: 'border-box' };
-  const labelStyle = { display: 'block', fontSize: 12, fontWeight: 500, color: '#0C0C0C', marginBottom: 6 };
+  // STYLES
+  const serifFont = { fontFamily: '"Playfair Display", "Times New Roman", serif' };
+  const inputContainerStyle = { marginBottom: 20 };
+  const labelStyle = { display: 'block', fontSize: 11, fontWeight: 600, color: '#666', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '1px' };
+  const inputStyle = { 
+    width: '100%', 
+    padding: '16px', 
+    border: '1px solid #E5E5E5', 
+    borderRadius: 0, // Sharp corners
+    fontSize: 14, 
+    outline: 'none', 
+    boxSizing: 'border-box',
+    backgroundColor: '#FFF',
+    transition: 'border-color 0.2s',
+    color: '#111'
+  };
+  
+  const sectionHeaderStyle = { ...serifFont, fontSize: 18, color: '#111', marginBottom: 24, paddingBottom: 12, borderBottom: '1px solid #F0F0F0' };
 
   return (
-    <div style={{ backgroundColor: '#F7F7F7', minHeight: '100vh', paddingTop: isMobile ? 70 : 90, paddingBottom: isMobile ? 40 : 40 }}>
-      <div style={{ maxWidth: 1050, margin: '0 auto', padding: isMobile ? '0 16px' : '0 20px' }}>
-        <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: isMobile ? 600 : 400, letterSpacing: isMobile ? 2 : 4, textAlign: 'center', marginBottom: isMobile ? 20 : 30, color: '#0C0C0C', textTransform: 'uppercase' }}>Checkout</h1>
+    <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh', paddingTop: isMobile ? 80 : 100, paddingBottom: 60 }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '0 16px' : '0 40px' }}>
+        
+        <h1 style={{ ...serifFont, fontSize: isMobile ? 24 : 36, textAlign: 'center', marginBottom: isMobile ? 30 : 50, color: '#111', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          Secure Checkout
+        </h1>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ display: isMobile ? 'flex' : 'grid', flexDirection: 'column', gridTemplateColumns: '1fr 380px', gap: isMobile ? 16 : 24, alignItems: 'start' }}>
+          <div style={{ display: isMobile ? 'flex' : 'grid', flexDirection: 'column', gridTemplateColumns: '1.5fr 1fr', gap: 60, alignItems: 'start' }}>
             
-            {/* Left Column */}
+            {/* LEFT COLUMN: Form */}
             <div style={{ width: '100%' }}>
-              {/* Customer Info */}
-              <div style={{ backgroundColor: '#FFFFFF', borderRadius: 10, padding: isMobile ? '16px' : '20px 24px', marginBottom: 16 }}>
-                <h2 style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C', marginBottom: 16 }}>Customer Information</h2>
-                <div style={{ marginBottom: 14 }}>
-                  <label style={labelStyle}>Full Name <span style={{ color: '#DC2626' }}>*</span></label>
-                  <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter your name" required style={inputStyle} />
+              
+              {/* Shipping Address */}
+              <div style={{ marginBottom: 40 }}>
+                <h2 style={sectionHeaderStyle}>Shipping Address</h2>
+                
+                <div style={inputContainerStyle}>
+                  <label style={labelStyle}>Full Name</label>
+                  <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter full name" required style={inputStyle} onFocus={(e) => e.target.style.borderColor = '#111'} onBlur={(e) => e.target.style.borderColor = '#E5E5E5'} />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, marginBottom: 20 }}>
                   <div>
-                    <label style={labelStyle}>Phone Number <span style={{ color: '#DC2626' }}>*</span></label>
-                    <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="01XXX-XXXXXX" required style={inputStyle} />
+                    <label style={labelStyle}>Phone</label>
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="01XXX-XXXXXX" required style={inputStyle} onFocus={(e) => e.target.style.borderColor = '#111'} onBlur={(e) => e.target.style.borderColor = '#E5E5E5'} />
                   </div>
                   <div>
-                    <label style={labelStyle}>Email Address</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="your@email.com" style={inputStyle} />
+                    <label style={labelStyle}>Email (Optional)</label>
+                    <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="name@example.com" style={inputStyle} onFocus={(e) => e.target.style.borderColor = '#111'} onBlur={(e) => e.target.style.borderColor = '#E5E5E5'} />
                   </div>
                 </div>
-              </div>
 
-              {/* Delivery Address */}
-              <div style={{ backgroundColor: '#FFFFFF', borderRadius: 10, padding: isMobile ? '16px' : '20px 24px', marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <Truck size={18} style={{ color: '#B08B5C' }} />
-                  <h2 style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C', margin: 0 }}>Delivery Address</h2>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14, marginBottom: 14 }}>
-                  {/* District */}
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, marginBottom: 20 }}>
                   <div style={{ position: 'relative' }}>
-                    <label style={labelStyle}>District <span style={{ color: '#DC2626' }}>*</span></label>
+                    <label style={labelStyle}>District</label>
                     <div style={{ position: 'relative' }}>
-                      <input type="text" value={districtSearch} onChange={(e) => { setDistrictSearch(e.target.value); setShowDistrictDropdown(true); }} onFocus={() => setShowDistrictDropdown(true)} placeholder="Search district..." style={{ ...inputStyle, paddingRight: 36 }} />
-                      <ChevronDown size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#919191' }} />
+                      <input type="text" value={districtSearch} onChange={(e) => { setDistrictSearch(e.target.value); setShowDistrictDropdown(true); }} onFocus={() => { setShowDistrictDropdown(true); }} placeholder="Select District" style={{ ...inputStyle, paddingRight: 36 }} />
+                      <ChevronDown size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
                     </div>
                     {showDistrictDropdown && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 180, overflowY: 'auto', backgroundColor: '#FFFFFF', border: '1px solid #E0E0E0', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, marginTop: 4 }}>
-                        {filteredDistricts.slice(0, 8).map((d) => (
-                          <button type="button" key={d.id} onClick={() => handleDistrictSelect(d)} style={{ width: '100%', padding: '12px 14px', textAlign: 'left', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: 14, borderBottom: '1px solid #F0F0F0' }}>{d.name}</button>
+                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 200, overflowY: 'auto', backgroundColor: '#FFFFFF', border: '1px solid #111', zIndex: 20 }}>
+                        {filteredDistricts.slice(0, 10).map((d) => (
+                          <button type="button" key={d.id} onClick={() => handleDistrictSelect(d)} style={{ width: '100%', padding: '12px', textAlign: 'left', border: 'none', backgroundColor: '#FFF', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid #F5F5F5', transition: 'background 0.2s' }} onMouseOver={e => e.target.style.backgroundColor = '#F9F9F9'} onMouseOut={e => e.target.style.backgroundColor = '#FFF'}>
+                            {d.name}
+                          </button>
                         ))}
                       </div>
                     )}
                   </div>
-                  {/* Area */}
+                  
                   <div style={{ position: 'relative' }}>
-                    <label style={labelStyle}>Area <span style={{ color: '#DC2626' }}>*</span></label>
+                    <label style={labelStyle}>Area</label>
                     <div style={{ position: 'relative' }}>
-                      <input type="text" value={areaSearch} onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); }} onFocus={() => setShowAreaDropdown(true)} placeholder={selectedDistrict ? 'Select area...' : 'Select district first'} disabled={!selectedDistrict} style={{ ...inputStyle, paddingRight: 36, backgroundColor: selectedDistrict ? '#FFFFFF' : '#F5F5F5' }} />
-                      <ChevronDown size={16} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#919191' }} />
+                      <input type="text" value={areaSearch} onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); }} onFocus={() => setShowAreaDropdown(true)} placeholder={selectedDistrict ? "Select Area" : "Select District First"} disabled={!selectedDistrict} style={{ ...inputStyle, paddingRight: 36, opacity: selectedDistrict ? 1 : 0.5 }} />
+                      <ChevronDown size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
                     </div>
                     {showAreaDropdown && selectedDistrict && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 180, overflowY: 'auto', backgroundColor: '#FFFFFF', border: '1px solid #E0E0E0', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 20, marginTop: 4 }}>
+                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 200, overflowY: 'auto', backgroundColor: '#FFFFFF', border: '1px solid #111', zIndex: 20 }}>
                         {filteredAreas.map((a) => (
-                          <button type="button" key={a.id} onClick={() => handleAreaSelect(a)} style={{ width: '100%', padding: '12px 14px', textAlign: 'left', border: 'none', backgroundColor: 'transparent', cursor: 'pointer', fontSize: 14, borderBottom: '1px solid #F0F0F0' }}>{a.name}</button>
+                          <button type="button" key={a.id} onClick={() => handleAreaSelect(a)} style={{ width: '100%', padding: '12px', textAlign: 'left', border: 'none', backgroundColor: '#FFF', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid #F5F5F5' }} onMouseOver={e => e.target.style.backgroundColor = '#F9F9F9'} onMouseOut={e => e.target.style.backgroundColor = '#FFF'}>
+                            {a.name}
+                          </button>
                         ))}
                       </div>
                     )}
                   </div>
                 </div>
-                <div style={{ marginBottom: 14 }}>
-                  <label style={labelStyle}>Street Address <span style={{ color: '#DC2626' }}>*</span></label>
-                  <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="House, road, building, landmark..." required style={inputStyle} />
+
+                <div style={inputContainerStyle}>
+                  <label style={labelStyle}>Street Address</label>
+                  <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="House, Road, Block..." required style={inputStyle} onFocus={(e) => e.target.style.borderColor = '#111'} onBlur={(e) => e.target.style.borderColor = '#E5E5E5'} />
                 </div>
-                <div>
-                  <label style={labelStyle}>Delivery Note (Optional)</label>
-                  <input type="text" name="note" value={formData.note} onChange={handleInputChange} placeholder="Special instructions..." style={inputStyle} />
+                
+                <div style={inputContainerStyle}>
+                  <label style={labelStyle}>Note (Optional)</label>
+                  <input type="text" name="note" value={formData.note} onChange={handleInputChange} placeholder="Special instructions for delivery..." style={inputStyle} onFocus={(e) => e.target.style.borderColor = '#111'} onBlur={(e) => e.target.style.borderColor = '#E5E5E5'} />
                 </div>
               </div>
 
-              {/* Payment Type */}
-              <div style={{ backgroundColor: '#FFFFFF', borderRadius: 10, padding: isMobile ? '16px' : '20px 24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                  <CreditCard size={18} style={{ color: '#B08B5C' }} />
-                  <h2 style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C', margin: 0 }}>Payment Type</h2>
+              {/* Payment Options */}
+              <div style={{ marginBottom: 40 }}>
+                <h2 style={sectionHeaderStyle}>Payment Preference</h2>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+                  {/* Partial Payment Card */}
+                  <div 
+                    onClick={() => setPaymentType('partial')}
+                    style={{ 
+                      padding: 20, 
+                      border: paymentType === 'partial' ? '1px solid #111' : '1px solid #E5E5E5', 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      backgroundColor: paymentType === 'partial' ? '#FAFAFA' : '#FFF'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#111', textTransform: 'uppercase', letterSpacing: '1px' }}>Advance Payment</span>
+                      {paymentType === 'partial' && <div style={{ width: 8, height: 8, backgroundColor: '#111', borderRadius: '50%' }} />}
+                    </div>
+                    <p style={{ fontSize: 12, color: '#666', margin: 0 }}>Pay ৳{deliveryCharge} delivery charge now to confirm.</p>
+                  </div>
+
+                  {/* Full Payment Card */}
+                  <div 
+                    onClick={() => setPaymentType('full')}
+                    style={{ 
+                      padding: 20, 
+                      border: paymentType === 'full' ? '1px solid #111' : '1px solid #E5E5E5', 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      backgroundColor: paymentType === 'full' ? '#FAFAFA' : '#FFF',
+                      position: 'relative'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#111', textTransform: 'uppercase', letterSpacing: '1px' }}>Full Payment</span>
+                      {paymentType === 'full' && <div style={{ width: 8, height: 8, backgroundColor: '#111', borderRadius: '50%' }} />}
+                    </div>
+                    <p style={{ fontSize: 12, color: '#666', margin: 0 }}>Pay full amount now.</p>
+                    <span style={{ position: 'absolute', top: -10, right: 10, backgroundColor: '#A68A6C', color: '#FFF', fontSize: 10, padding: '2px 8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Free Delivery</span>
+                  </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <button type="button" onClick={() => setPaymentType('partial')} style={{ padding: isMobile ? '12px' : '14px 16px', border: paymentType === 'partial' ? '2px solid #B08B5C' : '1px solid #E0E0E0', borderRadius: 8, backgroundColor: paymentType === 'partial' ? '#FDF8F3' : '#FFFFFF', cursor: 'pointer', textAlign: 'left' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 600, color: '#0C0C0C' }}>Pay Advance</span>
-                      {paymentType === 'partial' && <CheckCircle size={16} style={{ color: '#B08B5C' }} />}
-                    </div>
-                    <p style={{ fontSize: 11, color: '#919191', margin: 0 }}>৳{deliveryCharge} now</p>
-                  </button>
-                  <button type="button" onClick={() => setPaymentType('full')} style={{ padding: isMobile ? '12px' : '14px 16px', border: paymentType === 'full' ? '2px solid #B08B5C' : '1px solid #E0E0E0', borderRadius: 8, backgroundColor: paymentType === 'full' ? '#FDF8F3' : '#FFFFFF', cursor: 'pointer', textAlign: 'left', position: 'relative' }}>
-                    <span style={{ position: 'absolute', top: -8, right: 8, padding: '2px 6px', backgroundColor: '#059669', color: '#FFFFFF', fontSize: 9, fontWeight: 600, borderRadius: 4 }}>FREE DELIVERY</span>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 600, color: '#0C0C0C' }}>Full Payment</span>
-                      {paymentType === 'full' && <CheckCircle size={16} style={{ color: '#B08B5C' }} />}
-                    </div>
-                    <p style={{ fontSize: 11, color: '#919191', margin: 0 }}>৳{(subtotal - discount).toLocaleString()} now</p>
-                  </button>
+
+                {/* Gateway Selection */}
+                <div style={{ marginTop: 24 }}>
+                  <label style={labelStyle}>Select Method</label>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    {['bkash', 'nagad', 'upay'].map((method) => (
+                      <button 
+                        key={method}
+                        type="button" 
+                        onClick={() => setPaymentMethod(method)} 
+                        style={{ 
+                          flex: 1, 
+                          padding: '12px', 
+                          border: paymentMethod === method ? '1px solid #111' : '1px solid #E5E5E5', 
+                          backgroundColor: paymentMethod === method ? '#111' : '#FFF', 
+                          color: paymentMethod === method ? '#FFF' : '#111',
+                          cursor: 'pointer',
+                          textTransform: 'uppercase',
+                          fontSize: 12,
+                          letterSpacing: '1px',
+                          fontWeight: 500,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {method}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column - Order Summary */}
-            <div style={{ backgroundColor: '#FFFFFF', borderRadius: 10, padding: isMobile ? 16 : 24, width: '100%', position: isMobile ? 'relative' : 'sticky', top: isMobile ? 'auto' : 90 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C', marginBottom: 16 }}>Order Summary</h2>
+            {/* RIGHT COLUMN: Summary */}
+            <div style={{ 
+              backgroundColor: '#FAFAFA', 
+              padding: isMobile ? 24 : 32, 
+              border: '1px solid #F0F0F0',
+              position: isMobile ? 'relative' : 'sticky', 
+              top: 100 
+            }}>
+              <h2 style={{ ...serifFont, fontSize: 20, color: '#111', marginBottom: 20 }}>Your Order</h2>
 
-              {/* Products */}
-              <div style={{ marginBottom: 16, maxHeight: isMobile ? 120 : 160, overflowY: 'auto' }}>
+              {/* Items */}
+              <div style={{ marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid #E5E5E5' }}>
                 {items.map((item, index) => (
-                  <div key={index} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
-                    <div style={{ position: 'relative', width: 48, height: 48, backgroundColor: '#F5F5F5', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
-                      {item.image ? <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} /> : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Package size={18} style={{ color: '#D0D0D0' }} /></div>}
-                      <span style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, backgroundColor: '#B08B5C', color: '#FFFFFF', fontSize: 9, fontWeight: 600, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.quantity}</span>
+                  <div key={index} style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+                    <div style={{ position: 'relative', width: 50, height: 60, backgroundColor: '#FFF', border: '1px solid #F5F5F5', flexShrink: 0 }}>
+                      {item.image && <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />}
+                      <span style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, backgroundColor: '#111', color: '#FFF', fontSize: 10, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.quantity}</span>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 500, color: '#0C0C0C', marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</p>
-                      <p style={{ fontSize: 12, color: '#919191', margin: 0 }}>৳{(item.price * item.quantity).toLocaleString()}</p>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: '#111', marginBottom: 4, lineHeight: 1.3 }}>{item.name}</p>
+                      <p style={{ fontSize: 12, color: '#666' }}>৳{(item.price * item.quantity).toLocaleString()}</p>
                     </div>
                   </div>
                 ))}
               </div>
 
               {/* Coupon */}
-              <div style={{ marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid #E8E8E8' }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>Have a coupon?</label>
+              <div style={{ marginBottom: 24 }}>
                 {appliedCoupon ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', backgroundColor: '#F0FDF4', borderRadius: 6, border: '1px solid #BBF7D0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', backgroundColor: '#F0F0F0', border: '1px solid #E5E5E5' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Tag size={16} style={{ color: '#059669' }} />
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#059669' }}>{appliedCoupon.code}</span>
-                      <span style={{ fontSize: 12, color: '#666' }}>(-৳{discount.toLocaleString()})</span>
+                       <span style={{ fontSize: 12, fontWeight: 600, color: '#111', letterSpacing: '1px' }}>{appliedCoupon.code}</span>
+                       <span style={{ fontSize: 12, color: '#666' }}>(-৳{discount})</span>
                     </div>
-                    <button type="button" onClick={handleRemoveCoupon} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><X size={16} style={{ color: '#DC2626' }} /></button>
+                    <button type="button" onClick={handleRemoveCoupon} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><X size={14} /></button>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="Enter code" style={{ flex: 1, padding: '10px 12px', border: '1px solid #E0E0E0', borderRadius: 6, fontSize: 13, outline: 'none', fontFamily: 'monospace' }} />
-                    <button type="button" onClick={handleApplyCoupon} disabled={couponLoading} style={{ padding: '10px 16px', backgroundColor: '#0C0C0C', color: '#FFFFFF', fontSize: 12, fontWeight: 500, border: 'none', borderRadius: 6, cursor: couponLoading ? 'not-allowed' : 'pointer', opacity: couponLoading ? 0.7 : 1 }}>{couponLoading ? '...' : 'Apply'}</button>
+                  <div style={{ display: 'flex', border: '1px solid #E5E5E5' }}>
+                    <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="COUPON CODE" style={{ flex: 1, padding: '12px', border: 'none', fontSize: 12, outline: 'none', backgroundColor: '#FFF', letterSpacing: '1px', textTransform: 'uppercase' }} />
+                    <button type="button" onClick={handleApplyCoupon} disabled={couponLoading} style={{ padding: '0 16px', backgroundColor: '#111', color: '#FFF', fontSize: 11, border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '1px' }}>Apply</button>
                   </div>
                 )}
               </div>
 
-              {/* Pricing */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              {/* Totals */}
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                   <span style={{ fontSize: 13, color: '#666' }}>Subtotal</span>
-                  <span style={{ fontSize: 13, color: '#0C0C0C' }}>৳{subtotal.toLocaleString()}</span>
+                  <span style={{ fontSize: 13, color: '#111' }}>৳{subtotal.toLocaleString()}</span>
                 </div>
                 {discount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ fontSize: 13, color: '#059669' }}>Discount</span>
-                    <span style={{ fontSize: 13, color: '#059669' }}>-৳{discount.toLocaleString()}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <span style={{ fontSize: 13, color: '#A68A6C' }}>Discount</span>
+                    <span style={{ fontSize: 13, color: '#A68A6C' }}>-৳{discount.toLocaleString()}</span>
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <span style={{ fontSize: 13, color: '#666' }}>Delivery</span>
-                  <span style={{ fontSize: 13, color: paymentType === 'full' ? '#059669' : '#0C0C0C' }}>{paymentType === 'full' ? 'FREE' : '৳' + deliveryCharge}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <span style={{ fontSize: 13, color: '#666' }}>Shipping</span>
+                  <span style={{ fontSize: 13, color: paymentType === 'full' ? '#A68A6C' : '#111' }}>{paymentType === 'full' ? 'FREE' : '৳' + deliveryCharge}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid #E8E8E8' }}>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C' }}>Total</span>
-                  <span style={{ fontSize: 17, fontWeight: 700, color: '#0C0C0C' }}>৳{total.toLocaleString()}</span>
-                </div>
-              </div>
-
-              {/* Payment Method */}
-              <div style={{ marginBottom: 16 }}>
-                <p style={{ fontSize: 12, fontWeight: 500, color: '#666', marginBottom: 10 }}>Payment Method</p>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" onClick={() => setPaymentMethod('bkash')} style={{ flex: 1, padding: '10px', border: paymentMethod === 'bkash' ? '2px solid #E2136E' : '1px solid #E0E0E0', borderRadius: 6, backgroundColor: paymentMethod === 'bkash' ? '#FDF2F8' : '#FFFFFF', cursor: 'pointer' }}><span style={{ fontSize: 12, fontWeight: 600, color: '#E2136E' }}>bKash</span></button>
-                  <button type="button" onClick={() => setPaymentMethod('nagad')} style={{ flex: 1, padding: '10px', border: paymentMethod === 'nagad' ? '2px solid #F6921E' : '1px solid #E0E0E0', borderRadius: 6, backgroundColor: paymentMethod === 'nagad' ? '#FFF7ED' : '#FFFFFF', cursor: 'pointer' }}><span style={{ fontSize: 12, fontWeight: 600, color: '#F6921E' }}>Nagad</span></button>
-                  <button type="button" onClick={() => setPaymentMethod('upay')} style={{ flex: 1, padding: '10px', border: paymentMethod === 'upay' ? '2px solid #00A651' : '1px solid #E0E0E0', borderRadius: 6, backgroundColor: paymentMethod === 'upay' ? '#F0FDF4' : '#FFFFFF', cursor: 'pointer' }}><span style={{ fontSize: 12, fontWeight: 600, color: '#00A651' }}>Upay</span></button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px solid #E5E5E5' }}>
+                  <span style={{ fontSize: 16, fontWeight: 600, color: '#111', textTransform: 'uppercase', letterSpacing: '1px' }}>Total</span>
+                  <span style={{ fontSize: 18, fontWeight: 600, color: '#111' }}>৳{total.toLocaleString()}</span>
                 </div>
               </div>
 
-              {/* Payment Breakdown */}
-              <div style={{ backgroundColor: '#FAFAFA', borderRadius: 6, padding: 12, marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, color: '#666' }}>Pay Now ({paymentMethod})</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#B08B5C' }}>৳{advanceAmount.toLocaleString()}</span>
+              {/* Breakdown Box */}
+              <div style={{ padding: 16, backgroundColor: '#FFF', border: '1px solid #E5E5E5', marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, color: '#666', textTransform: 'uppercase' }}>Pay Now via {paymentMethod}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#A68A6C' }}>৳{advanceAmount.toLocaleString()}</span>
                 </div>
                 {paymentType === 'partial' && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: 12, color: '#666' }}>Pay on Delivery</span>
-                    <span style={{ fontSize: 12, color: '#0C0C0C' }}>৳{codAmount.toLocaleString()}</span>
+                    <span style={{ fontSize: 12, color: '#666', textTransform: 'uppercase' }}>Cash on Delivery</span>
+                    <span style={{ fontSize: 12, color: '#111' }}>৳{codAmount.toLocaleString()}</span>
                   </div>
                 )}
               </div>
 
-              {/* Submit */}
-              <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', backgroundColor: '#B08B5C', color: '#FFFFFF', fontSize: 14, fontWeight: 600, border: 'none', borderRadius: 8, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1, textTransform: 'uppercase', letterSpacing: 1 }}>
-                {loading ? 'Processing...' : 'Pay ৳' + advanceAmount.toLocaleString() + ' & Place Order'}
+              <button type="submit" disabled={loading} style={{ width: '100%', padding: '18px', backgroundColor: '#111', color: '#FFFFFF', fontSize: 13, fontWeight: 600, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.8 : 1, textTransform: 'uppercase', letterSpacing: '2px', transition: 'background 0.3s' }} onMouseOver={e => !loading && (e.target.style.backgroundColor = '#333')} onMouseOut={e => !loading && (e.target.style.backgroundColor = '#111')}>
+                {loading ? 'Processing...' : 'Place Order'}
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 12 }}>
-                <Shield size={14} style={{ color: '#059669' }} />
-                <span style={{ fontSize: 11, color: '#919191' }}>Secure & encrypted payment</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 16 }}>
+                <Shield size={12} color="#666" />
+                <span style={{ fontSize: 11, color: '#666', letterSpacing: '0.5px' }}>Encrypted Payment</span>
               </div>
             </div>
+
           </div>
         </form>
       </div>
 
       {(showDistrictDropdown || showAreaDropdown) && <div onClick={() => { setShowDistrictDropdown(false); setShowAreaDropdown(false); }} style={{ position: 'fixed', inset: 0, zIndex: 10 }} />}
-      <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
