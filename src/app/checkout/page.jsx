@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronDown, Check, Lock, ArrowRight } from 'lucide-react';
+import { ChevronDown, ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 import useAuthStore from '@/store/authStore';
 import { districts } from '@/data/bangladesh-locations';
@@ -11,7 +11,7 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
 function LoadingFallback() {
-  return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFF' }}><div style={{ width: 40, height: 40, border: '1px solid #000', borderRadius: '50%', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }}/></div>;
+  return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FFF' }}><div style={{ width: 40, height: 40, border: '1px solid #111', borderRadius: '50%', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite' }}/></div>;
 }
 
 function CheckoutContent() {
@@ -23,15 +23,14 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
-  // States
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', district: '', area: '', address: '', note: '' });
-  const [paymentType, setPaymentType] = useState('partial'); // 'partial' | 'full'
+  const [paymentType, setPaymentType] = useState('partial');
   const [paymentMethod, setPaymentMethod] = useState('bkash');
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [discount, setDiscount] = useState(0);
   
-  // Dropdown Logic
+  // Dropdown states
   const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [districtSearch, setDistrictSearch] = useState('');
@@ -49,7 +48,6 @@ function CheckoutContent() {
     return () => window.removeEventListener('resize', checkMobile);
   }, [user]);
 
-  // Delivery Logic
   useEffect(() => {
     if (selectedDistrict) {
       setAreas(selectedDistrict.areas || []);
@@ -66,20 +64,17 @@ function CheckoutContent() {
   const total = subtotal - discount + finalDeliveryCharge;
   const advanceAmount = paymentType === 'full' ? (subtotal - discount) : deliveryCharge;
   
-  // Handlers
   const handleDistrictSelect = (d) => { setSelectedDistrict(d); setFormData(p => ({ ...p, district: d.name, area: '' })); setDistrictSearch(d.name); setShowDistrictDropdown(false); setAreaSearch(''); };
   const handleAreaSelect = (a) => { setFormData(p => ({ ...p, area: a.name })); setAreaSearch(a.name); setShowAreaDropdown(false); };
   const handleInputChange = (e) => setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
 
-  // Coupon
   const handleApplyCoupon = async () => {
     if (!couponCode) return;
     try {
       const res = await api.post('/coupons/validate', { code: couponCode.toUpperCase(), subtotal });
-      const coupon = res.data;
-      setAppliedCoupon(coupon);
-      let disc = coupon.type === 'percentage' ? (subtotal * coupon.value) / 100 : coupon.value;
-      if (coupon.max_discount && disc > coupon.max_discount) disc = coupon.max_discount;
+      setAppliedCoupon(res.data);
+      let disc = res.data.type === 'percentage' ? (subtotal * res.data.value) / 100 : res.data.value;
+      if (res.data.max_discount && disc > res.data.max_discount) disc = res.data.max_discount;
       setDiscount(disc);
       toast.success('Code applied');
     } catch (err) { toast.error('Invalid code'); setDiscount(0); }
@@ -87,7 +82,7 @@ function CheckoutContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone || !formData.district || !formData.address) { toast.error('Please fill all required fields'); return; }
+    if (!formData.name || !formData.phone || !formData.district || !formData.address) { toast.error('Please fill required fields'); return; }
     setLoading(true);
     try {
       const orderData = { 
@@ -97,156 +92,244 @@ function CheckoutContent() {
       const res = await api.post('/orders/guest', orderData);
       clearCart();
       router.push(`/order-success?order=${res.data.order_number}`);
-    } catch (err) { toast.error('Order failed. Try again.'); } finally { setLoading(false); }
+    } catch (err) { toast.error('Order failed'); } finally { setLoading(false); }
   };
 
   if (!mounted) return <LoadingFallback />;
   if (items.length === 0) { router.push('/cart'); return null; }
 
-  // STYLES
-  const inputStyle = { width: '100%', height: 50, padding: '0 16px', fontSize: 14, border: '1px solid #E0E0E0', borderRadius: 0, outline: 'none', backgroundColor: '#FFF', color: '#000', transition: 'border 0.2s', boxSizing: 'border-box' };
-  const labelStyle = { display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, color: '#000' };
-  const sectionTitle = { fontFamily: '"Playfair Display", serif', fontSize: 22, color: '#000', marginBottom: 30, borderBottom: '1px solid #000', paddingBottom: 10 };
+  // --- PREMIUM STYLES ---
+  const inputContainer = { marginBottom: 24 };
+  const labelStyle = { display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, color: '#333' };
+  
+  // New Input Style: Cleaner, Taller, Subtle Border
+  const inputStyle = { 
+    width: '100%', 
+    height: 52, // Taller for premium feel
+    padding: '0 16px', 
+    fontSize: 14, 
+    border: '1px solid #E5E5E5', // Very subtle default border
+    borderRadius: 0, 
+    outline: 'none', 
+    backgroundColor: '#fff', // White background
+    color: '#111', 
+    transition: 'all 0.2s ease',
+    boxSizing: 'border-box',
+    fontFamily: 'inherit'
+  };
+
+  // Helper to handle focus style via inline function wasn't ideal, using onFocus/onBlur in JSX or simple CSS class would be better.
+  // Here I'll use inline styles with state would be complex for all inputs. 
+  // Instead, I will rely on a simple cleaner look. *Note: In a real CSS file, I'd add :focus { border-color: #000 }*
+  // For inline, I will keep it clean gray.
+
+  const sectionTitle = { fontFamily: '"Playfair Display", serif', fontSize: 24, color: '#111', marginBottom: 32, paddingBottom: 12, borderBottom: '1px solid #F0F0F0' };
 
   return (
-    <div style={{ backgroundColor: '#FFF', minHeight: '100vh', paddingTop: isMobile ? 80 : 100 }}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: '100vh' }}>
+    <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh', paddingTop: isMobile ? 80 : 110 }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', maxWidth: 1400, margin: '0 auto' }}>
         
-        {/* LEFT SIDE: Form (Scrollable) */}
-        <div style={{ flex: 1, padding: isMobile ? '30px 20px' : '50px 80px', paddingBottom: 100 }}>
-           <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: 32, marginBottom: 50, letterSpacing: '-0.5px' }}>CHECKOUT</h1>
+        {/* LEFT: FORM AREA */}
+        <div style={{ flex: 1, padding: isMobile ? '30px 20px' : '0 80px 100px' }}>
+           <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: 36, marginBottom: 50, letterSpacing: '-0.5px' }}>CHECKOUT</h1>
            
-           {/* Contact & Shipping */}
+           {/* Section: Shipping */}
            <div style={{ marginBottom: 60 }}>
-              <h2 style={sectionTitle}>Shipping Details</h2>
+              <h2 style={sectionTitle}>Shipping Address</h2>
               
-              <div style={{ marginBottom: 24 }}>
+              <div style={inputContainer}>
                 <label style={labelStyle}>Full Name</label>
-                <input name="name" value={formData.name} onChange={handleInputChange} style={inputStyle} placeholder="Enter your name" required />
+                <input name="name" value={formData.name} onChange={handleInputChange} style={inputStyle} placeholder="e.g. John Doe" required />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, ...inputContainer }}>
                 <div>
                    <label style={labelStyle}>Phone Number</label>
                    <input name="phone" value={formData.phone} onChange={handleInputChange} style={inputStyle} placeholder="01XXXXXXXXX" required />
                 </div>
                 <div>
                    <label style={labelStyle}>Email (Optional)</label>
-                   <input name="email" value={formData.email} onChange={handleInputChange} style={inputStyle} placeholder="email@example.com" />
+                   <input name="email" value={formData.email} onChange={handleInputChange} style={inputStyle} placeholder="john@example.com" />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, ...inputContainer }}>
                 <div style={{ position: 'relative' }}>
                    <label style={labelStyle}>District</label>
-                   <input value={districtSearch} onChange={(e) => { setDistrictSearch(e.target.value); setShowDistrictDropdown(true); }} onFocus={() => setShowDistrictDropdown(true)} style={inputStyle} placeholder="Select District" />
+                   <div style={{ position: 'relative' }}>
+                      <input value={districtSearch} onChange={(e) => { setDistrictSearch(e.target.value); setShowDistrictDropdown(true); }} onFocus={() => setShowDistrictDropdown(true)} style={{...inputStyle, paddingRight: 30}} placeholder="Select District" />
+                      <ChevronDown size={16} style={{ position: 'absolute', right: 12, top: 18, color: '#999', pointerEvents: 'none' }} />
+                   </div>
                    {showDistrictDropdown && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 250, overflowY: 'auto', background: '#FFF', border: '1px solid #000', zIndex: 50 }}>
+                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 220, overflowY: 'auto', background: '#FFF', border: '1px solid #E5E5E5', zIndex: 50, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                          {districts.filter(d => d.name.toLowerCase().includes(districtSearch.toLowerCase())).map(d => (
-                           <div key={d.id} onClick={() => handleDistrictSelect(d)} style={{ padding: '12px 16px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid #F0F0F0', '&:hover': { background: '#F5F5F5'} }}>{d.name}</div>
+                           <div key={d.id} onClick={() => handleDistrictSelect(d)} style={{ padding: '12px 16px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid #FAFAFA', transition: 'background 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.background='#F9F9F9'} onMouseOut={(e)=>e.currentTarget.style.background='#FFF'}>{d.name}</div>
                          ))}
                       </div>
                    )}
                 </div>
                 <div style={{ position: 'relative' }}>
                    <label style={labelStyle}>Area</label>
-                   <input value={areaSearch} onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); }} onFocus={() => setShowAreaDropdown(true)} style={inputStyle} placeholder="Select Area" disabled={!selectedDistrict} />
+                   <div style={{ position: 'relative' }}>
+                      <input value={areaSearch} onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); }} onFocus={() => setShowAreaDropdown(true)} style={{...inputStyle, opacity: selectedDistrict ? 1 : 0.6}} placeholder="Select Area" disabled={!selectedDistrict} />
+                      <ChevronDown size={16} style={{ position: 'absolute', right: 12, top: 18, color: '#999', pointerEvents: 'none' }} />
+                   </div>
                    {showAreaDropdown && selectedDistrict && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 250, overflowY: 'auto', background: '#FFF', border: '1px solid #000', zIndex: 50 }}>
+                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 220, overflowY: 'auto', background: '#FFF', border: '1px solid #E5E5E5', zIndex: 50, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
                          {areas.filter(a => a.name.toLowerCase().includes(areaSearch.toLowerCase())).map(a => (
-                           <div key={a.id} onClick={() => handleAreaSelect(a)} style={{ padding: '12px 16px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid #F0F0F0' }}>{a.name}</div>
+                           <div key={a.id} onClick={() => handleAreaSelect(a)} style={{ padding: '12px 16px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid #FAFAFA' }} onMouseOver={(e)=>e.currentTarget.style.background='#F9F9F9'} onMouseOut={(e)=>e.currentTarget.style.background='#FFF'}>{a.name}</div>
                          ))}
                       </div>
                    )}
                 </div>
               </div>
 
-              <div style={{ marginBottom: 24 }}>
-                <label style={labelStyle}>Street Address</label>
-                <input name="address" value={formData.address} onChange={handleInputChange} style={inputStyle} placeholder="House no, Road no, Flat info..." required />
+              <div style={inputContainer}>
+                <label style={labelStyle}>Address</label>
+                <input name="address" value={formData.address} onChange={handleInputChange} style={inputStyle} placeholder="House, Road, Block etc." required />
               </div>
               
-              <div>
+              <div style={inputContainer}>
                 <label style={labelStyle}>Note (Optional)</label>
-                <input name="note" value={formData.note} onChange={handleInputChange} style={inputStyle} placeholder="Any special instructions" />
+                <input name="note" value={formData.note} onChange={handleInputChange} style={inputStyle} placeholder="Special delivery instructions" />
               </div>
            </div>
 
-           {/* Payment Method */}
+           {/* Section: Payment Type */}
            <div>
-              <h2 style={sectionTitle}>Payment</h2>
+              <h2 style={sectionTitle}>Payment Preference</h2>
               
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, marginBottom: 30 }}>
-                 <div onClick={() => setPaymentType('partial')} style={{ border: paymentType === 'partial' ? '1px solid #000' : '1px solid #E0E0E0', padding: 25, cursor: 'pointer', background: paymentType === 'partial' ? '#FAFAFA' : '#FFF' }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, textTransform: 'uppercase', marginBottom: 5 }}>Advance Payment</div>
-                    <div style={{ fontSize: 12, color: '#666' }}>Pay ৳{deliveryCharge} delivery charge now. Rest on delivery.</div>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, marginBottom: 40 }}>
+                 {/* Partial Card */}
+                 <div 
+                    onClick={() => setPaymentType('partial')} 
+                    style={{ 
+                      border: paymentType === 'partial' ? '2px solid #111' : '1px solid #E5E5E5', 
+                      padding: '24px', 
+                      cursor: 'pointer', 
+                      backgroundColor: paymentType === 'partial' ? '#FFF' : '#FCFCFC',
+                      transition: 'all 0.2s'
+                    }}
+                 >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                       <span style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Advance Payment</span>
+                       {paymentType === 'partial' && <CheckCircle2 size={18} color="#111" />}
+                    </div>
+                    <p style={{ fontSize: 13, color: '#666', margin: 0, lineHeight: 1.5 }}>Pay only ৳{deliveryCharge} now to confirm order.</p>
                  </div>
-                 <div onClick={() => setPaymentType('full')} style={{ border: paymentType === 'full' ? '1px solid #000' : '1px solid #E0E0E0', padding: 25, cursor: 'pointer', background: paymentType === 'full' ? '#FAFAFA' : '#FFF', position: 'relative' }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, textTransform: 'uppercase', marginBottom: 5 }}>Full Payment</div>
-                    <div style={{ fontSize: 12, color: '#666' }}>Pay full amount. Free Delivery.</div>
-                    <span style={{ position: 'absolute', top: 0, right: 0, background: '#000', color: '#FFF', fontSize: 10, padding: '4px 8px', textTransform: 'uppercase', fontWeight: 600 }}>Best Value</span>
+
+                 {/* Full Payment Card */}
+                 <div 
+                    onClick={() => setPaymentType('full')} 
+                    style={{ 
+                      border: paymentType === 'full' ? '2px solid #111' : '1px solid #E5E5E5', 
+                      padding: '24px', 
+                      cursor: 'pointer', 
+                      backgroundColor: paymentType === 'full' ? '#FFF' : '#FCFCFC',
+                      position: 'relative',
+                      transition: 'all 0.2s'
+                    }}
+                 >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                       <span style={{ fontSize: 14, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Full Payment</span>
+                       {paymentType === 'full' && <CheckCircle2 size={18} color="#111" />}
+                    </div>
+                    <p style={{ fontSize: 13, color: '#666', margin: 0, lineHeight: 1.5 }}>Pay full amount. <span style={{ color: '#009900', fontWeight: 600 }}>Get Free Delivery.</span></p>
                  </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 15 }}>
-                 {['bkash', 'nagad', 'upay'].map(m => (
-                    <div key={m} onClick={() => setPaymentMethod(m)} style={{ flex: 1, padding: 12, border: paymentMethod === m ? '1px solid #000' : '1px solid #E0E0E0', textAlign: 'center', cursor: 'pointer', textTransform: 'uppercase', fontSize: 12, fontWeight: 600, background: paymentMethod === m ? '#000' : '#FFF', color: paymentMethod === m ? '#FFF' : '#000' }}>
-                       {m}
-                    </div>
-                 ))}
+              {/* Gateway Selection */}
+              <div style={{ marginBottom: 40 }}>
+                 <label style={labelStyle}>Select Method</label>
+                 <div style={{ display: 'flex', gap: 12 }}>
+                    {['bkash', 'nagad', 'upay'].map(m => (
+                       <button 
+                          key={m} 
+                          type="button"
+                          onClick={() => setPaymentMethod(m)} 
+                          style={{ 
+                             flex: 1, 
+                             height: 48,
+                             border: paymentMethod === m ? '1px solid #111' : '1px solid #E5E5E5', 
+                             backgroundColor: paymentMethod === m ? '#111' : '#FFF', 
+                             color: paymentMethod === m ? '#FFF' : '#111',
+                             cursor: 'pointer', 
+                             textTransform: 'uppercase', 
+                             fontSize: 12, 
+                             fontWeight: 600, 
+                             letterSpacing: '1px',
+                             transition: 'all 0.2s'
+                          }}
+                       >
+                          {m}
+                       </button>
+                    ))}
+                 </div>
               </div>
            </div>
         </div>
 
-        {/* RIGHT SIDE: Summary (Sticky) */}
-        <div style={{ width: isMobile ? '100%' : 450, backgroundColor: '#F9F9F9', padding: isMobile ? '40px 20px' : '50px 40px', borderLeft: isMobile ? 'none' : '1px solid #E5E5E5' }}>
-           <div style={{ position: 'sticky', top: 120 }}>
-              <h3 style={{ fontSize: 16, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 30 }}>Your Order</h3>
+        {/* RIGHT: ORDER SUMMARY (STICKY) */}
+        <div style={{ width: isMobile ? '100%' : 420, backgroundColor: '#FAFAFA', borderLeft: isMobile ? 'none' : '1px solid #E5E5E5' }}>
+           <div style={{ position: isMobile ? 'relative' : 'sticky', top: 0, padding: isMobile ? '40px 20px' : '50px 40px', height: '100%' }}>
+              <h3 style={{ fontFamily: '"Playfair Display", serif', fontSize: 20, marginBottom: 30, letterSpacing: '0.5px' }}>YOUR ORDER</h3>
               
-              <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 30, paddingRight: 10 }}>
+              <div style={{ maxHeight: 300, overflowY: 'auto', marginBottom: 30, paddingRight: 5 }}>
                  {items.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', gap: 15, marginBottom: 20 }}>
-                       <div style={{ position: 'relative', width: 60, height: 75, background: '#FFF' }}>
+                    <div key={i} style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+                       <div style={{ position: 'relative', width: 60, height: 75, background: '#FFF', border: '1px solid #F0F0F0', flexShrink: 0 }}>
                           {item.image && <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />}
-                          <span style={{ position: 'absolute', top: -8, right: -8, background: '#000', color: '#FFF', fontSize: 10, width: 20, height: 20, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.quantity}</span>
+                          <span style={{ position: 'absolute', top: -6, right: -6, background: '#111', color: '#FFF', fontSize: 10, width: 18, height: 18, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.quantity}</span>
                        </div>
                        <div>
-                          <p style={{ fontSize: 13, fontWeight: 500, margin: 0, lineHeight: 1.4 }}>{item.name}</p>
-                          <p style={{ fontSize: 12, color: '#666', marginTop: 4 }}>৳{(item.price * item.quantity).toLocaleString()}</p>
+                          <p style={{ fontSize: 13, fontWeight: 600, margin: '0 0 4px 0', lineHeight: 1.3, color: '#111' }}>{item.name}</p>
+                          <p style={{ fontSize: 12, color: '#666', margin: 0 }}>৳{(item.price * item.quantity).toLocaleString()}</p>
                        </div>
                     </div>
                  ))}
               </div>
 
-              <div style={{ borderTop: '1px solid #E0E0E0', borderBottom: '1px solid #E0E0E0', padding: '20px 0', marginBottom: 30 }}>
+              <div style={{ borderTop: '1px solid #E5E5E5', borderBottom: '1px solid #E5E5E5', padding: '24px 0', marginBottom: 24 }}>
                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 13 }}>
-                    <span style={{ color: '#666' }}>Subtotal</span>
-                    <span>৳{subtotal.toLocaleString()}</span>
+                    <span style={{ color: '#555' }}>Subtotal</span>
+                    <span style={{ fontWeight: 500 }}>৳{subtotal.toLocaleString()}</span>
                  </div>
                  {discount > 0 && (
                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: 13 }}>
-                      <span style={{ color: '#666' }}>Discount</span>
-                      <span>- ৳{discount.toLocaleString()}</span>
+                      <span style={{ color: '#555' }}>Discount</span>
+                      <span style={{ color: '#111' }}>- ৳{discount.toLocaleString()}</span>
                    </div>
                  )}
                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: '#666' }}>Shipping</span>
+                    <span style={{ color: '#555' }}>Shipping</span>
                     <span>{paymentType === 'full' ? 'FREE' : `৳${deliveryCharge}`}</span>
                  </div>
               </div>
               
-              {/* Coupon */}
               <div style={{ display: 'flex', gap: 10, marginBottom: 30 }}>
-                <input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="COUPON CODE" style={{ ...inputStyle, height: 40, background: '#FFF', fontSize: 12, letterSpacing: '1px', textTransform: 'uppercase' }} />
-                <button type="button" onClick={handleApplyCoupon} style={{ padding: '0 20px', background: '#000', color: '#FFF', border: 'none', fontSize: 11, textTransform: 'uppercase', cursor: 'pointer', letterSpacing: '1px' }}>Apply</button>
+                <input value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="COUPON CODE" style={{ ...inputStyle, height: 44, fontSize: 12, textTransform: 'uppercase', letterSpacing: '1px' }} />
+                <button type="button" onClick={handleApplyCoupon} style={{ padding: '0 20px', background: '#111', color: '#FFF', border: 'none', fontSize: 11, textTransform: 'uppercase', cursor: 'pointer', letterSpacing: '1px', fontWeight: 600 }}>Apply</button>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 30 }}>
-                 <span style={{ fontSize: 16, fontWeight: 600, textTransform: 'uppercase' }}>Total</span>
-                 <span style={{ fontSize: 20, fontWeight: 600 }}>৳{total.toLocaleString()}</span>
+                 <span style={{ fontSize: 16, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>Total</span>
+                 <span style={{ fontSize: 20, fontWeight: 700 }}>৳{total.toLocaleString()}</span>
               </div>
 
-              <button type="submit" disabled={loading} style={{ width: '100%', height: 55, backgroundColor: '#000', color: '#FFF', fontSize: 13, fontWeight: 600, letterSpacing: '2px', border: 'none', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+              <div style={{ backgroundColor: '#FFF', padding: 16, border: '1px solid #E5E5E5', marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 12 }}>
+                  <span style={{ color: '#666', textTransform: 'uppercase' }}>To Pay Now</span>
+                  <span style={{ fontWeight: 700, fontSize: 14 }}>৳{advanceAmount.toLocaleString()}</span>
+                </div>
+                {paymentType === 'partial' && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
+                    <span style={{ color: '#666', textTransform: 'uppercase' }}>Cash on Delivery</span>
+                    <span>৳{(total - advanceAmount).toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+
+              <button type="submit" disabled={loading} style={{ width: '100%', height: 56, backgroundColor: '#111', color: '#FFF', fontSize: 13, fontWeight: 600, letterSpacing: '2px', border: 'none', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, transition: 'background 0.3s' }}>
                  {loading ? 'PROCESSING...' : (
                    <>
                      <span>PLACE ORDER</span>
@@ -255,15 +338,14 @@ function CheckoutContent() {
                  )}
               </button>
               
-              <div style={{ textAlign: 'center', marginTop: 15, fontSize: 11, color: '#999', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
-                 <Lock size={12}/> Secure SSL Payment
+              <div style={{ textAlign: 'center', marginTop: 20, fontSize: 11, color: '#999', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                 <Lock size={12}/> Secure SSL Encryption
               </div>
            </div>
         </div>
 
       </form>
       
-      {/* Overlay for dropdowns */}
       {(showDistrictDropdown || showAreaDropdown) && <div onClick={() => { setShowDistrictDropdown(false); setShowAreaDropdown(false); }} style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'transparent' }} />}
     </div>
   );
