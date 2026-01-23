@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Minus, Plus, X, ShoppingBag, ArrowLeft, Lock } from 'lucide-react';
+import { Minus, Plus, X, ShoppingBag, ArrowRight } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 
 export default function CartPage() {
@@ -21,179 +21,141 @@ export default function CartPage() {
 
   const formatPrice = (price) => '৳' + (price || 0).toLocaleString();
 
-  if (!mounted) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
-        <div style={{ width: 40, height: 40, border: '1px solid #A68A6C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-        <style jsx global>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </div>
-    );
-  }
+  if (!mounted) return null;
 
-  // Empty Cart Design
+  // Empty Cart State
   if (items.length === 0) {
     return (
-      <div style={{ backgroundColor: '#FFFFFF', minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 20px' }}>
-        <ShoppingBag size={48} strokeWidth={1} style={{ color: '#ccc', marginBottom: 24 }} />
-        <h1 style={{ fontFamily: 'serif', fontSize: 28, color: '#111', marginBottom: 12, letterSpacing: '0.05em' }}>Your Bag is Empty</h1>
-        <p style={{ fontSize: 14, color: '#666', marginBottom: 32, letterSpacing: '0.02em' }}>You have no items in your shopping bag.</p>
-        <Link href="/" style={{ padding: '16px 40px', backgroundColor: '#111', color: '#FFF', textDecoration: 'none', fontSize: 12, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', transition: '0.3s' }}>
-          Start Shopping
+      <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF' }}>
+        <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: 32, color: '#000', marginBottom: 16 }}>YOUR BAG IS EMPTY</h1>
+        <p style={{ fontSize: 13, color: '#666', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 40 }}>Add some items to get started</p>
+        <Link href="/" style={{ borderBottom: '1px solid #000', paddingBottom: 4, fontSize: 13, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', color: '#000', textDecoration: 'none' }}>
+          Continue Shopping
         </Link>
       </div>
     );
   }
 
   const subtotal = getSubtotal();
-  const itemCount = getItemCount();
-
-  // Shared Styles
-  const containerStyle = { maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 20px' : '0 40px' };
-  const serifFont = { fontFamily: '"Playfair Display", "Times New Roman", serif' };
-  const btnReset = { background: 'none', border: 'none', cursor: 'pointer', padding: 0 };
 
   return (
-    <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh', paddingTop: isMobile ? 80 : 120, paddingBottom: 100 }}>
-      <div style={containerStyle}>
+    <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh', paddingTop: isMobile ? 80 : 120, paddingBottom: 100, color: '#000' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '0 20px' : '0 50px' }}>
         
-        {/* Header */}
-        <div style={{ marginBottom: isMobile ? 40 : 60, textAlign: 'center' }}>
-          <h1 style={{ ...serifFont, fontSize: isMobile ? 28 : 42, fontWeight: 400, color: '#111', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-            Shopping Bag
+        {/* Page Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 60, borderBottom: '1px solid #000', paddingBottom: 20 }}>
+          <h1 style={{ fontFamily: '"Playfair Display", serif', fontSize: isMobile ? 28 : 42, fontWeight: 400, margin: 0, letterSpacing: '-0.5px' }}>
+            SHOPPING BAG
           </h1>
-          <p style={{ fontSize: 13, color: '#666', letterSpacing: '1px', textTransform: 'uppercase' }}>
-            {itemCount} {itemCount === 1 ? 'Item' : 'Items'}
-          </p>
+          <span style={{ fontSize: 13, letterSpacing: '1px', fontWeight: 500 }}>{items.length} ITEMS</span>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 400px', gap: isMobile ? 40 : 80, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2.5fr 1fr', gap: isMobile ? 50 : 80 }}>
           
-          {/* LEFT: Cart Items List */}
+          {/* LEFT: Items List */}
           <div>
-            {/* Desktop Header Row */}
+            {/* Desktop Table Header */}
             {!isMobile && (
-              <div style={{ display: 'grid', gridTemplateColumns: '4fr 1fr 1fr 1fr', paddingBottom: 16, borderBottom: '1px solid #111', marginBottom: 24, fontSize: 11, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', color: '#111' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr 1fr 1fr', paddingBottom: 15, borderBottom: '1px solid #E5E5E5', marginBottom: 20, fontSize: 11, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', color: '#999' }}>
                 <span>Product</span>
                 <span style={{ textAlign: 'center' }}>Price</span>
-                <span style={{ textAlign: 'center' }}>Qty</span>
+                <span style={{ textAlign: 'center' }}>Quantity</span>
                 <span style={{ textAlign: 'right' }}>Total</span>
               </div>
             )}
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 32 : 24 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
               {items.map((item, index) => (
-                <div key={item.productId + '-' + index} style={{ 
+                <div key={index} style={{ 
                   display: isMobile ? 'flex' : 'grid', 
-                  gridTemplateColumns: '4fr 1fr 1fr 1fr', 
+                  gridTemplateColumns: '3fr 1fr 1fr 1fr', 
                   alignItems: 'center', 
-                  gap: isMobile ? 20 : 0,
-                  paddingBottom: 24, 
-                  borderBottom: '1px solid #E5E5E5' 
+                  padding: '30px 0', 
+                  borderBottom: '1px solid #E5E5E5',
+                  gap: isMobile ? 20 : 0
                 }}>
                   
-                  {/* Product Info */}
-                  <div style={{ display: 'flex', gap: 20 }}>
-                    <div style={{ width: isMobile ? 100 : 100, height: isMobile ? 130 : 130, backgroundColor: '#F9F9F9', position: 'relative', flexShrink: 0 }}>
-                      {item.image ? (
-                        <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ShoppingBag size={20} color="#ccc" /></div>
-                      )}
+                  {/* Product Details */}
+                  <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+                    <div style={{ width: isMobile ? 90 : 100, height: isMobile ? 120 : 130, backgroundColor: '#F5F5F5', position: 'relative', flexShrink: 0 }}>
+                      {item.image && <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} />}
                     </div>
                     
-                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '4px 0' }}>
-                      <div>
-                        <h3 style={{ fontSize: 14, fontWeight: 500, color: '#111', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, lineHeight: 1.4 }}>{item.name}</h3>
-                        {item.variant && (
-                          <div style={{ fontSize: 12, color: '#666', lineHeight: 1.6 }}>
-                            {item.variant.size && <div style={{ textTransform: 'capitalize' }}>Size: {item.variant.size}</div>}
-                            {item.variant.color && <div style={{ textTransform: 'capitalize' }}>Color: {item.variant.color}</div>}
-                          </div>
-                        )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <h3 style={{ fontSize: 14, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', margin: 0, lineHeight: 1.4 }}>{item.name}</h3>
+                      <div style={{ fontSize: 12, color: '#666', lineHeight: 1.6, textTransform: 'capitalize' }}>
+                        {item.variant?.size && <span>Size: {item.variant.size}<br/></span>}
+                        {item.variant?.color && <span>Color: {item.variant.color}</span>}
                       </div>
                       
+                      {/* Mobile Only Controls */}
                       {isMobile && (
                         <div style={{ marginTop: 12 }}>
-                           <span style={{ fontSize: 14, color: '#111' }}>{formatPrice(item.price * item.quantity)}</span>
+                           <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 12 }}>{formatPrice(item.price * item.quantity)}</div>
+                           <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #DDD', width: 'fit-content' }}>
+                              <button onClick={() => item.quantity > 1 && updateQuantity(item.productId, item.quantity - 1, item.variant)} style={{ padding: '6px 10px', background: 'none', border: 'none' }}><Minus size={14}/></button>
+                              <span style={{ padding: '0 8px', fontSize: 13 }}>{item.quantity}</span>
+                              <button onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variant)} style={{ padding: '6px 10px', background: 'none', border: 'none' }}><Plus size={14}/></button>
+                           </div>
                         </div>
                       )}
 
                       {!isMobile && (
-                        <button onClick={() => removeItem(item.productId, item.variant)} style={{ ...btnReset, textAlign: 'left', fontSize: 10, textTransform: 'uppercase', borderBottom: '1px solid #999', width: 'fit-content', color: '#666', marginTop: 12 }}>
+                        <button onClick={() => removeItem(item.productId, item.variant)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left', fontSize: 10, textTransform: 'uppercase', borderBottom: '1px solid #999', width: 'fit-content', color: '#666', marginTop: 12, letterSpacing: '1px' }}>
                           Remove
                         </button>
                       )}
                     </div>
                   </div>
 
-                  {/* Desktop Columns */}
+                  {/* Desktop Columns: Price, Qty, Total */}
                   {!isMobile && (
                     <>
-                      <div style={{ textAlign: 'center', fontSize: 14, color: '#666' }}>{formatPrice(item.price)}</div>
+                      <div style={{ textAlign: 'center', fontSize: 14, fontFamily: 'serif' }}>{formatPrice(item.price)}</div>
                       
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
-                         <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #E5E5E5', height: 36 }}>
-                            <button onClick={() => item.quantity > 1 && updateQuantity(item.productId, item.quantity - 1, item.variant)} style={{ width: 32, height: '100%', ...btnReset, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Minus size={12} /></button>
-                            <span style={{ width: 32, textAlign: 'center', fontSize: 13 }}>{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variant)} style={{ width: 32, height: '100%', ...btnReset, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={12} /></button>
+                         <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #DDD', height: 40 }}>
+                            <button onClick={() => item.quantity > 1 && updateQuantity(item.productId, item.quantity - 1, item.variant)} style={{ width: 36, height: '100%', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Minus size={12} /></button>
+                            <span style={{ width: 30, textAlign: 'center', fontSize: 13 }}>{item.quantity}</span>
+                            <button onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variant)} style={{ width: 36, height: '100%', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={12} /></button>
                          </div>
                       </div>
 
-                      <div style={{ textAlign: 'right', fontSize: 14, fontWeight: 500 }}>{formatPrice(item.price * item.quantity)}</div>
+                      <div style={{ textAlign: 'right', fontSize: 15, fontWeight: 500 }}>{formatPrice(item.price * item.quantity)}</div>
                     </>
                   )}
-
-                  {/* Mobile Controls */}
+                  
                   {isMobile && (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'space-between', height: 130, padding: '4px 0' }}>
-                       <button onClick={() => removeItem(item.productId, item.variant)} style={btnReset}><X size={18} strokeWidth={1} /></button>
-                       
-                       <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #E5E5E5', height: 32 }}>
-                          <button onClick={() => item.quantity > 1 && updateQuantity(item.productId, item.quantity - 1, item.variant)} style={{ width: 28, height: '100%', ...btnReset, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Minus size={12} /></button>
-                          <span style={{ width: 28, textAlign: 'center', fontSize: 12 }}>{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.productId, item.quantity + 1, item.variant)} style={{ width: 28, height: '100%', ...btnReset, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={12} /></button>
-                       </div>
-                    </div>
+                    <button onClick={() => removeItem(item.productId, item.variant)} style={{ position: 'absolute', right: 0, top: 0, padding: 10, background: 'none', border: 'none' }}>
+                      <X size={18} strokeWidth={1} color="#666" />
+                    </button>
                   )}
                 </div>
               ))}
             </div>
-
-            <div style={{ marginTop: 40 }}>
-              <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 12, fontWeight: 500, color: '#111', textDecoration: 'none', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                <ArrowLeft size={16} strokeWidth={1.5} />
-                Continue Shopping
-              </Link>
-            </div>
           </div>
 
-          {/* RIGHT: Order Summary */}
-          <div style={{ backgroundColor: '#FAFAFA', padding: isMobile ? 24 : 40, border: '1px solid #F0F0F0', position: isMobile ? 'relative' : 'sticky', top: 120 }}>
-            <h2 style={{ ...serifFont, fontSize: 22, color: '#111', marginBottom: 24, borderBottom: '1px solid #E5E5E5', paddingBottom: 16 }}>Order Summary</h2>
+          {/* RIGHT: Summary */}
+          <div style={{ paddingTop: isMobile ? 0 : 50 }}>
+             <div style={{ backgroundColor: '#FAFAFA', padding: '40px 30px', border: '1px solid #E5E5E5' }}>
+                <h2 style={{ fontSize: 18, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 30, borderBottom: '1px solid #000', paddingBottom: 15 }}>Order Summary</h2>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <span style={{ fontSize: 13, textTransform: 'uppercase', letterSpacing: '1px', color: '#666' }}>Subtotal</span>
+                  <span style={{ fontSize: 14, fontWeight: 500 }}>{formatPrice(subtotal)}</span>
+                </div>
+                
+                <p style={{ fontSize: 12, color: '#999', fontStyle: 'italic', marginBottom: 30 }}>Shipping & taxes calculated at checkout.</p>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 30, paddingTop: 20, borderTop: '1px solid #DDD' }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, textTransform: 'uppercase' }}>Total</span>
+                  <span style={{ fontSize: 18, fontWeight: 600 }}>{formatPrice(subtotal)}</span>
+                </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <span style={{ fontSize: 13, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Subtotal</span>
-              <span style={{ fontSize: 13, color: '#111' }}>{formatPrice(subtotal)}</span>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid #E5E5E5' }}>
-              <span style={{ fontSize: 13, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Shipping</span>
-              <span style={{ fontSize: 12, color: '#999', fontStyle: 'italic' }}>Calculated at checkout</span>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 32 }}>
-              <span style={{ fontSize: 16, fontWeight: 500, color: '#111', textTransform: 'uppercase', letterSpacing: '1px' }}>Total</span>
-              <span style={{ fontSize: 18, fontWeight: 600, color: '#111' }}>{formatPrice(subtotal)}</span>
-            </div>
-
-            <Link href="/checkout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', padding: '18px', backgroundColor: '#111', color: '#FFFFFF', fontSize: 12, fontWeight: 600, letterSpacing: '2px', textDecoration: 'none', textTransform: 'uppercase', border: '1px solid #111', transition: 'all 0.3s' }}>
-              Checkout Now
-            </Link>
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 20 }}>
-              <Lock size={12} color="#999" />
-              <span style={{ fontSize: 11, color: '#999', textTransform: 'uppercase', letterSpacing: '1px' }}>Secure Checkout</span>
-            </div>
+                <Link href="/checkout" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: 50, backgroundColor: '#000', color: '#FFF', fontSize: 13, fontWeight: 600, letterSpacing: '2px', textDecoration: 'none', textTransform: 'uppercase', transition: 'opacity 0.3s' }}>
+                  Checkout
+                </Link>
+             </div>
           </div>
 
         </div>
