@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronDown, ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, ArrowRight, Lock, CheckCircle2, MapPin, ChevronLeft, Search, X } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 import useAuthStore from '@/store/authStore';
 import { districts } from '@/data/bangladesh-locations';
@@ -30,13 +30,12 @@ function CheckoutContent() {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [discount, setDiscount] = useState(0);
   
-  // Dropdown states
-  const [showDistrictDropdown, setShowDistrictDropdown] = useState(false);
-  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
-  const [districtSearch, setDistrictSearch] = useState('');
-  const [areaSearch, setAreaSearch] = useState('');
-  const [selectedDistrict, setSelectedDistrict] = useState(null);
-  const [areas, setAreas] = useState([]);
+  // --- NEW LOCATION SELECTOR STATES ---
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locationStep, setLocationStep] = useState('district'); // 'district' or 'area'
+  const [locationSearch, setLocationSearch] = useState('');
+  const [selectedDistrictObj, setSelectedDistrictObj] = useState(null);
+  const [availableAreas, setAvailableAreas] = useState([]);
   const [deliveryCharge, setDeliveryCharge] = useState(60);
 
   useEffect(() => {
@@ -48,25 +47,48 @@ function CheckoutContent() {
     return () => window.removeEventListener('resize', checkMobile);
   }, [user]);
 
+  // Delivery Charge Calculation logic based on District Zone
   useEffect(() => {
-    if (selectedDistrict) {
-      setAreas(selectedDistrict.areas || []);
-      const zone = selectedDistrict.delivery_zone;
+    if (selectedDistrictObj) {
+      setAvailableAreas(selectedDistrictObj.areas || []);
+      const zone = selectedDistrictObj.delivery_zone;
       if (zone === 'inside_dhaka') setDeliveryCharge(60);
       else if (zone === 'dhaka_suburban') setDeliveryCharge(80);
       else if (zone === 'chittagong_city') setDeliveryCharge(100);
       else setDeliveryCharge(120);
     }
-  }, [selectedDistrict]);
+  }, [selectedDistrictObj]);
 
   const subtotal = getSubtotal();
   const finalDeliveryCharge = paymentType === 'full' ? 0 : deliveryCharge;
   const total = subtotal - discount + finalDeliveryCharge;
   const advanceAmount = paymentType === 'full' ? (subtotal - discount) : deliveryCharge;
   
-  const handleDistrictSelect = (d) => { setSelectedDistrict(d); setFormData(p => ({ ...p, district: d.name, area: '' })); setDistrictSearch(d.name); setShowDistrictDropdown(false); setAreaSearch(''); };
-  const handleAreaSelect = (a) => { setFormData(p => ({ ...p, area: a.name })); setAreaSearch(a.name); setShowAreaDropdown(false); };
   const handleInputChange = (e) => setFormData(p => ({ ...p, [e.target.name]: e.target.value }));
+
+  // --- NEW LOCATION HANDLERS ---
+  const openLocationSelector = () => {
+    setShowLocationModal(true);
+    setLocationStep('district');
+    setLocationSearch('');
+  };
+
+  const selectDistrict = (d) => {
+    setSelectedDistrictObj(d);
+    setFormData(p => ({ ...p, district: d.name, area: '' }));
+    setLocationStep('area');
+    setLocationSearch(''); // Reset search for area step
+  };
+
+  const selectArea = (a) => {
+    setFormData(p => ({ ...p, area: a.name }));
+    setShowLocationModal(false);
+  };
+
+  const handleBackStep = () => {
+    setLocationStep('district');
+    setLocationSearch('');
+  };
 
   const handleApplyCoupon = async () => {
     if (!couponCode) return;
@@ -82,7 +104,10 @@ function CheckoutContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone || !formData.district || !formData.address) { toast.error('Please fill required fields'); return; }
+    if (!formData.name || !formData.phone || !formData.district || !formData.area || !formData.address) { 
+        toast.error('Please fill all required fields'); 
+        return; 
+    }
     setLoading(true);
     try {
       const orderData = { 
@@ -98,30 +123,36 @@ function CheckoutContent() {
   if (!mounted) return <LoadingFallback />;
   if (items.length === 0) { router.push('/cart'); return null; }
 
-  // --- PREMIUM STYLES ---
+  // --- STYLES ---
   const inputContainer = { marginBottom: 24 };
   const labelStyle = { display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8, color: '#333' };
   
-  // New Input Style: Cleaner, Taller, Subtle Border
   const inputStyle = { 
     width: '100%', 
-    height: 52, // Taller for premium feel
+    height: 52, 
     padding: '0 16px', 
     fontSize: 14, 
-    border: '1px solid #E5E5E5', // Very subtle default border
+    border: '1px solid #E5E5E5', 
     borderRadius: 0, 
     outline: 'none', 
-    backgroundColor: '#fff', // White background
+    backgroundColor: '#fff', 
     color: '#111', 
     transition: 'all 0.2s ease',
     boxSizing: 'border-box',
     fontFamily: 'inherit'
   };
 
-  // Helper to handle focus style via inline function wasn't ideal, using onFocus/onBlur in JSX or simple CSS class would be better.
-  // Here I'll use inline styles with state would be complex for all inputs. 
-  // Instead, I will rely on a simple cleaner look. *Note: In a real CSS file, I'd add :focus { border-color: #000 }*
-  // For inline, I will keep it clean gray.
+  // Pathao Style Location Box
+  const locationBoxStyle = {
+    ...inputStyle,
+    backgroundColor: '#F3F4F6', // Light gray background like Pathao
+    border: '1px solid #E5E7EB',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    color: formData.district ? '#111' : '#6B7280', // Dark text if selected, gray if placeholder
+    fontWeight: formData.district ? 500 : 400
+  };
 
   const sectionTitle = { fontFamily: '"Playfair Display", serif', fontSize: 24, color: '#111', marginBottom: 32, paddingBottom: 12, borderBottom: '1px solid #F0F0F0' };
 
@@ -153,40 +184,108 @@ function CheckoutContent() {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, ...inputContainer }}>
-                <div style={{ position: 'relative' }}>
-                   <label style={labelStyle}>District</label>
-                   <div style={{ position: 'relative' }}>
-                      <input value={districtSearch} onChange={(e) => { setDistrictSearch(e.target.value); setShowDistrictDropdown(true); }} onFocus={() => setShowDistrictDropdown(true)} style={{...inputStyle, paddingRight: 30}} placeholder="Select District" />
-                      <ChevronDown size={16} style={{ position: 'absolute', right: 12, top: 18, color: '#999', pointerEvents: 'none' }} />
-                   </div>
-                   {showDistrictDropdown && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 220, overflowY: 'auto', background: '#FFF', border: '1px solid #E5E5E5', zIndex: 50, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                         {districts.filter(d => d.name.toLowerCase().includes(districtSearch.toLowerCase())).map(d => (
-                           <div key={d.id} onClick={() => handleDistrictSelect(d)} style={{ padding: '12px 16px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid #FAFAFA', transition: 'background 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.background='#F9F9F9'} onMouseOut={(e)=>e.currentTarget.style.background='#FFF'}>{d.name}</div>
-                         ))}
-                      </div>
-                   )}
+              {/* --- PATHAO STYLE LOCATION SELECTOR --- */}
+              <div style={inputContainer}>
+                <label style={labelStyle}>Delivery Area</label>
+                <div onClick={openLocationSelector} style={locationBoxStyle}>
+                    {formData.district ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                             <span>{formData.district}</span>
+                             <ChevronDown size={14} style={{ transform: 'rotate(-90deg)', color: '#9CA3AF' }} />
+                             <span style={{ color: formData.area ? '#111' : '#9CA3AF' }}>{formData.area || 'Select Area'}</span>
+                        </div>
+                    ) : (
+                        <span>City &gt; Zone &gt; Area</span>
+                    )}
                 </div>
-                <div style={{ position: 'relative' }}>
-                   <label style={labelStyle}>Area</label>
-                   <div style={{ position: 'relative' }}>
-                      <input value={areaSearch} onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); }} onFocus={() => setShowAreaDropdown(true)} style={{...inputStyle, opacity: selectedDistrict ? 1 : 0.6}} placeholder="Select Area" disabled={!selectedDistrict} />
-                      <ChevronDown size={16} style={{ position: 'absolute', right: 12, top: 18, color: '#999', pointerEvents: 'none' }} />
-                   </div>
-                   {showAreaDropdown && selectedDistrict && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: 220, overflowY: 'auto', background: '#FFF', border: '1px solid #E5E5E5', zIndex: 50, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                         {areas.filter(a => a.name.toLowerCase().includes(areaSearch.toLowerCase())).map(a => (
-                           <div key={a.id} onClick={() => handleAreaSelect(a)} style={{ padding: '12px 16px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid #FAFAFA' }} onMouseOver={(e)=>e.currentTarget.style.background='#F9F9F9'} onMouseOut={(e)=>e.currentTarget.style.background='#FFF'}>{a.name}</div>
-                         ))}
-                      </div>
-                   )}
-                </div>
+
+                {/* Location Selection Modal / Dropdown */}
+                {showLocationModal && (
+                    <div style={{ 
+                        position: 'fixed', inset: 0, zIndex: 100, 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                        backgroundColor: 'rgba(0,0,0,0.5)', padding: 20 
+                    }}>
+                        <div style={{ 
+                            width: '100%', maxWidth: 450, backgroundColor: '#FFF', 
+                            borderRadius: 8, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+                            height: '80vh', display: 'flex', flexDirection: 'column'
+                        }}>
+                            {/* Header */}
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', gap: 12 }}>
+                                {locationStep === 'area' ? (
+                                    <button type="button" onClick={handleBackStep} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><ChevronLeft size={20}/></button>
+                                ) : (
+                                    <div style={{ width: 28 }} /> // Spacer
+                                )}
+                                <span style={{ flex: 1, textAlign: 'center', fontWeight: 600, fontSize: 15 }}>
+                                    {locationStep === 'district' ? 'Select City' : `Select Area in ${formData.district}`}
+                                </span>
+                                <button type="button" onClick={() => setShowLocationModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><X size={20}/></button>
+                            </div>
+
+                            {/* Search */}
+                            <div style={{ padding: 12, borderBottom: '1px solid #F0F0F0' }}>
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                    <Search size={16} style={{ position: 'absolute', left: 12, color: '#999' }} />
+                                    <input 
+                                        autoFocus
+                                        value={locationSearch}
+                                        onChange={(e) => setLocationSearch(e.target.value)}
+                                        placeholder={locationStep === 'district' ? "Search city..." : "Search area..."}
+                                        style={{ width: '100%', height: 40, paddingLeft: 36, paddingRight: 12, border: '1px solid #E5E5E5', borderRadius: 6, outline: 'none', fontSize: 13 }}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* List */}
+                            <div style={{ flex: 1, overflowY: 'auto' }}>
+                                {locationStep === 'district' ? (
+                                    // District List
+                                    districts
+                                        .filter(d => d.name.toLowerCase().includes(locationSearch.toLowerCase()))
+                                        .map(d => (
+                                            <div 
+                                                key={d.id} 
+                                                onClick={() => selectDistrict(d)}
+                                                style={{ padding: '14px 20px', borderBottom: '1px solid #FAFAFA', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                                onMouseOver={(e) => e.currentTarget.style.background = '#F9F9F9'}
+                                                onMouseOut={(e) => e.currentTarget.style.background = '#FFF'}
+                                            >
+                                                <span style={{ fontSize: 14 }}>{d.name}</span>
+                                                <ChevronDown size={14} style={{ transform: 'rotate(-90deg)', color: '#CCC' }} />
+                                            </div>
+                                        ))
+                                ) : (
+                                    // Area List
+                                    availableAreas
+                                        .filter(a => a.name.toLowerCase().includes(locationSearch.toLowerCase()))
+                                        .map(a => (
+                                            <div 
+                                                key={a.id} 
+                                                onClick={() => selectArea(a)}
+                                                style={{ padding: '14px 20px', borderBottom: '1px solid #FAFAFA', cursor: 'pointer' }}
+                                                onMouseOver={(e) => e.currentTarget.style.background = '#F9F9F9'}
+                                                onMouseOut={(e) => e.currentTarget.style.background = '#FFF'}
+                                            >
+                                                <span style={{ fontSize: 14 }}>{a.name}</span>
+                                            </div>
+                                        ))
+                                )}
+                                {/* Empty State */}
+                                {((locationStep === 'district' && districts.length === 0) || (locationStep === 'area' && availableAreas.length === 0)) && (
+                                    <div style={{ padding: 20, textAlign: 'center', color: '#999', fontSize: 13 }}>No results found</div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
               </div>
+              {/* --- END LOCATION SELECTOR --- */}
 
               <div style={inputContainer}>
-                <label style={labelStyle}>Address</label>
-                <input name="address" value={formData.address} onChange={handleInputChange} style={inputStyle} placeholder="House, Road, Block etc." required />
+                <label style={labelStyle}>Address Details</label>
+                <input name="address" value={formData.address} onChange={handleInputChange} style={inputStyle} placeholder="Enter full address" required />
               </div>
               
               <div style={inputContainer}>
@@ -346,7 +445,7 @@ function CheckoutContent() {
 
       </form>
       
-      {(showDistrictDropdown || showAreaDropdown) && <div onClick={() => { setShowDistrictDropdown(false); setShowAreaDropdown(false); }} style={{ position: 'fixed', inset: 0, zIndex: 40, background: 'transparent' }} />}
+      {showLocationModal && <div style={{ position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowLocationModal(false)} />}
     </div>
   );
 }
