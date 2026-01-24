@@ -1,4 +1,3 @@
-// components/Footer.jsx
 'use client';
 
 import { useState } from 'react';
@@ -6,8 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Facebook, Instagram, Youtube, Plus, Minus, Phone, Mail } from 'lucide-react';
 
-// TikTok Icon Component (Since it's often not in standard libraries)
-const TikTokIcon = ({ size = 20, className }) => (
+// TikTok Icon Component
+const TikTokIcon = ({ size = 18, className }) => (
   <svg
     width={size}
     height={size}
@@ -23,7 +22,7 @@ const TikTokIcon = ({ size = 20, className }) => (
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   
-  // State for mobile accordions
+  // Mobile Accordion State
   const [openSection, setOpenSection] = useState('');
 
   const toggleSection = (section) => {
@@ -31,129 +30,135 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-[#1a1a1a] text-white pt-16 pb-8 border-t border-gray-800">
-      <div className="container-custom px-6 md:px-12 mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 lg:gap-8">
+    <footer className="bg-[#1a1a1a] text-white pt-12 pb-6 border-t border-gray-800">
+      <div className="container mx-auto px-6 lg:px-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8">
           
-          {/* Column 1: Brand & About & Socials */}
-          <div className="flex flex-col space-y-6">
-            {/* Logo Image */}
+          {/* 1. BRAND SECTION (Logo + Text + Socials) - Spans 4 columns on Desktop */}
+          <div className="lg:col-span-4 flex flex-col space-y-6">
+            {/* Logo */}
             <Link href="/" className="inline-block">
-               {/* আপনার লোগো ইমেজের পাথ এখানে দিন */}
-              <div className="relative w-32 h-12">
-                {/* Placeholder image usage - Replace with your actual Image component */}
+              {/* Ensure you have a valid logo at public/logo.png */}
+              <div className="relative w-32 h-10">
                 <Image 
                   src="/logo.png" 
-                  alt="PRISMIN Logo" 
-                  fill
+                  alt="PRISMIN" 
+                  width={128}
+                  height={40}
                   className="object-contain object-left"
                 />
               </div>
             </Link>
             
             {/* About Text */}
-            <p className="text-gray-400 text-sm leading-relaxed text-justify">
+            <p className="text-gray-400 text-[13px] leading-relaxed pr-0 lg:pr-8 text-justify">
               PRISMIN is a luxury destination for women who dress with intention.
               We curate soulful fashion and beauty pieces that blend global inspiration with cultural grace—honoring every woman’s choice, comfort, and quiet confidence.
             </p>
 
-            {/* Connect With Us (Visible on both Mobile & Desktop here based on RISE design) */}
-            <div className="pt-4">
-              <h3 className="text-xs font-bold tracking-widest mb-4 uppercase text-white">Connect With Us</h3>
-              <div className="flex gap-4">
-                <a href="#" className="bg-white text-black p-2 rounded-full hover:bg-gray-200 transition-colors">
-                  <Facebook size={18} />
+            {/* Social Icons (Fixed: items-center prevents stretching) */}
+            <div className="pt-2">
+              <h3 className="text-[11px] font-bold tracking-[0.15em] mb-4 uppercase text-white">Connect With Us</h3>
+              <div className="flex flex-row gap-3 items-center"> 
+                <a href="#" className="flex items-center justify-center w-9 h-9 bg-white text-black rounded-full hover:bg-gray-200 transition-all">
+                  <Facebook size={16} />
                 </a>
-                <a href="#" className="bg-white text-black p-2 rounded-full hover:bg-gray-200 transition-colors">
-                  <Instagram size={18} />
+                <a href="#" className="flex items-center justify-center w-9 h-9 bg-white text-black rounded-full hover:bg-gray-200 transition-all">
+                  <Instagram size={16} />
                 </a>
-                <a href="#" className="bg-white text-black p-2 rounded-full hover:bg-gray-200 transition-colors">
-                  <TikTokIcon size={18} />
+                <a href="#" className="flex items-center justify-center w-9 h-9 bg-white text-black rounded-full hover:bg-gray-200 transition-all">
+                  <TikTokIcon size={16} />
                 </a>
-                <a href="#" className="bg-white text-black p-2 rounded-full hover:bg-gray-200 transition-colors">
-                  <Youtube size={18} />
+                <a href="#" className="flex items-center justify-center w-9 h-9 bg-white text-black rounded-full hover:bg-gray-200 transition-all">
+                  <Youtube size={16} />
                 </a>
               </div>
             </div>
           </div>
 
-          {/* Column 2: Customer Service (Static on Mobile per design) */}
-          <div className="lg:pl-8">
-            <h3 className="text-xs font-bold tracking-widest mb-6 uppercase text-white">
+          {/* 2. CUSTOMER SERVICE (Visible Desktop & Mobile) - Spans 3 columns */}
+          <div className="lg:col-span-3 lg:pl-4">
+            <h3 className="text-[11px] font-bold tracking-[0.15em] mb-5 uppercase text-white">
               Customer Service
             </h3>
-            <div className="space-y-4 text-sm text-gray-400">
-              <p>(10 AM – 6 PM)</p>
-              <p>(Except Weekend/Govt. Holidays)</p>
-              
-              <div className="flex items-center gap-3 pt-2 hover:text-white transition-colors">
-                <Phone size={16} />
-                <a href="tel:+8801XXXXXXXXX">+880 1XXX-XXXXXX</a>
+            <div className="space-y-3 text-[13px] text-gray-400">
+              <div className="mb-4">
+                <p>(10 AM – 6 PM)</p>
+                <p>(Except Weekend/Govt. Holidays)</p>
               </div>
               
-              <div className="flex items-center gap-3 hover:text-white transition-colors">
-                <Mail size={16} />
-                <a href="mailto:info@prismin.com">info@prismin.com</a>
+              <div className="flex items-center gap-3 group">
+                <Phone size={14} className="group-hover:text-white transition-colors"/>
+                <a href="tel:+8801708156699" className="hover:text-white transition-colors">+880 1708-156699</a>
+              </div>
+              
+              <div className="flex items-center gap-3 group">
+                <Mail size={14} className="group-hover:text-white transition-colors"/>
+                <a href="mailto:info@prismin.com" className="hover:text-white transition-colors">info@prismin.com</a>
               </div>
             </div>
           </div>
 
-          {/* Column 3: Information (Accordion on Mobile) */}
-          <div className="border-t border-gray-800 lg:border-none pt-4 lg:pt-0">
+          {/* 3. INFORMATION (Accordion on Mobile) - Spans 2 columns */}
+          <div className="lg:col-span-2 border-t border-gray-800 lg:border-none pt-4 lg:pt-0">
             <div 
-              className="flex justify-between items-center cursor-pointer lg:cursor-default"
+              className="flex justify-between items-center cursor-pointer lg:cursor-default select-none"
               onClick={() => toggleSection('info')}
             >
-              <h3 className="text-xs font-bold tracking-widest uppercase text-white mb-0 lg:mb-6">
+              <h3 className="text-[11px] font-bold tracking-[0.15em] uppercase text-white mb-0 lg:mb-5">
                 Information
               </h3>
-              {/* Mobile Toggle Icons */}
-              <span className="lg:hidden text-white">
+              {/* Mobile Icon */}
+              <span className="lg:hidden text-white transition-transform duration-300">
                 {openSection === 'info' ? <Minus size={16} /> : <Plus size={16} />}
               </span>
             </div>
 
-            <ul className={`space-y-3 mt-4 lg:mt-0 text-sm text-gray-400 overflow-hidden transition-all duration-300 ${
-              openSection === 'info' ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 lg:max-h-full lg:opacity-100'
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              openSection === 'info' ? 'max-h-48 opacity-100 mt-4' : 'max-h-0 opacity-0 lg:max-h-full lg:opacity-100 lg:mt-0'
             }`}>
-              <li><Link href="/about" className="hover:text-white transition-colors">About PRISMIN</Link></li>
-              <li><Link href="/safety" className="hover:text-white transition-colors">Safety Advisory</Link></li>
-              <li><Link href="/community" className="hover:text-white transition-colors">Community Guidelines</Link></li>
-              <li><Link href="/responsibility" className="hover:text-white transition-colors">Social Responsibility</Link></li>
-            </ul>
+              <ul className="space-y-2 text-[13px] text-gray-400">
+                <li><Link href="/about" className="hover:text-white transition-colors">About RISE</Link></li>
+                <li><Link href="/safety" className="hover:text-white transition-colors">Safety Advisory</Link></li>
+                <li><Link href="/community" className="hover:text-white transition-colors">Community Guidelines</Link></li>
+                <li><Link href="/responsibility" className="hover:text-white transition-colors">Social Responsibility</Link></li>
+              </ul>
+            </div>
           </div>
 
-          {/* Column 4: Policy (Accordion on Mobile) */}
-          <div className="border-t border-gray-800 lg:border-none pt-4 lg:pt-0">
+          {/* 4. POLICY (Accordion on Mobile) - Spans 3 columns */}
+          <div className="lg:col-span-3 border-t border-gray-800 lg:border-none pt-4 lg:pt-0">
             <div 
-              className="flex justify-between items-center cursor-pointer lg:cursor-default"
+              className="flex justify-between items-center cursor-pointer lg:cursor-default select-none"
               onClick={() => toggleSection('policy')}
             >
-              <h3 className="text-xs font-bold tracking-widest uppercase text-white mb-0 lg:mb-6">
+              <h3 className="text-[11px] font-bold tracking-[0.15em] uppercase text-white mb-0 lg:mb-5">
                 Policy
               </h3>
-              <span className="lg:hidden text-white">
+              <span className="lg:hidden text-white transition-transform duration-300">
                 {openSection === 'policy' ? <Minus size={16} /> : <Plus size={16} />}
               </span>
             </div>
 
-            <ul className={`space-y-3 mt-4 lg:mt-0 text-sm text-gray-400 overflow-hidden transition-all duration-300 ${
-              openSection === 'policy' ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 lg:max-h-full lg:opacity-100'
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              openSection === 'policy' ? 'max-h-48 opacity-100 mt-4' : 'max-h-0 opacity-0 lg:max-h-full lg:opacity-100 lg:mt-0'
             }`}>
-              <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/delivery-policy" className="hover:text-white transition-colors">Delivery Policy</Link></li>
-              <li><Link href="/return-policy" className="hover:text-white transition-colors">Return and Exchange Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-white transition-colors">Terms and Conditions</Link></li>
-            </ul>
+              <ul className="space-y-2 text-[13px] text-gray-400">
+                <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/delivery-policy" className="hover:text-white transition-colors">Delivery Policy</Link></li>
+                <li><Link href="/return-policy" className="hover:text-white transition-colors">Return and Exchange Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition-colors">Terms and Conditions</Link></li>
+              </ul>
+            </div>
           </div>
 
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="mt-16 border-t border-gray-800">
-        <div className="container-custom px-6 py-6 mx-auto text-center">
-          <p className="text-gray-500 text-xs tracking-wide">
+      {/* Copyright Bar */}
+      <div className="mt-12 border-t border-gray-800 bg-[#1a1a1a]">
+        <div className="container mx-auto px-6 py-6 text-center">
+          <p className="text-gray-500 text-[11px] tracking-wide">
             &copy; {currentYear} PRISMIN. All Rights Reserved.
           </p>
         </div>
