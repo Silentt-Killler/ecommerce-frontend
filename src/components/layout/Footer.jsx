@@ -1,4 +1,3 @@
-// components/Footer.jsx
 'use client';
 
 import { useState } from 'react';
@@ -13,7 +12,6 @@ const TikTokIcon = ({ size = 18 }) => (
     height={size}
     viewBox="0 0 24 24"
     fill="currentColor"
-    xmlns="http://www.w3.org/2000/svg"
   >
     <path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 0 1 3.183-4.51v-3.5a6.329 6.329 0 0 0-5.394 10.692 6.33 6.33 0 0 0 10.857-4.424V8.687a8.182 8.182 0 0 0 4.773 1.526V6.79a4.831 4.831 0 0 1-1.003-.104z" />
   </svg>
@@ -21,8 +19,6 @@ const TikTokIcon = ({ size = 18 }) => (
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  
-  // State for mobile accordions
   const [openSection, setOpenSection] = useState('');
 
   const toggleSection = (section) => {
@@ -30,166 +26,178 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-[#1a1a1a] text-white pt-16 pb-8 border-t border-gray-800">
-      <div className="container mx-auto px-6 md:px-12">
-        
-        {/* Desktop & Mobile Layout Combined */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 lg:gap-8">
+    <footer className="w-full bg-neutral-900 text-white">
+      {/* Main Footer Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           
-          {/* Column 1: Brand & About & Socials */}
-          <div className="flex flex-col space-y-6">
-            {/* Logo Image */}
-            <Link href="/" className="inline-block">
-              <div className="relative w-32 h-12">
-                <Image 
-                  src="/logo.png" 
-                  alt="PRISMIN Logo" 
-                  fill
-                  className="object-contain object-left"
-                />
-              </div>
+          {/* Column 1: Brand Section (4 columns on desktop) */}
+          <div className="lg:col-span-4">
+            {/* Logo */}
+            <Link href="/" className="inline-block mb-6">
+              <Image 
+                src="/logo.png" 
+                alt="PRISMIN" 
+                width={140}
+                height={45}
+                className="h-auto w-auto max-h-12"
+              />
             </Link>
             
-            {/* About Text */}
-            <p className="text-gray-400 text-sm leading-relaxed text-justify">
-              PRISMIN is a luxury destination for women who dress with intention.
-              We curate soulful fashion and beauty pieces that blend global inspiration with cultural grace—honoring every woman's choice, comfort, and quiet confidence.
+            {/* Description */}
+            <p className="text-neutral-400 text-sm leading-relaxed mb-8">
+              PRISMIN is a luxury destination for women who dress with intention. 
+              We curate soulful fashion and beauty pieces that blend global inspiration 
+              with cultural grace—honoring every woman's choice, comfort, and quiet confidence.
             </p>
 
-            {/* Connect With Us */}
-            <div className="pt-4">
-              <h3 className="text-xs font-bold tracking-widest mb-4 uppercase text-white">
+            {/* Social Media */}
+            <div>
+              <h3 className="text-white text-xs font-semibold tracking-wider uppercase mb-4">
                 Connect With Us
               </h3>
-              <div className="flex gap-4">
+              <div className="flex items-center gap-3">
                 <a 
                   href="#" 
-                  className="bg-white text-black p-2 rounded-full hover:bg-gray-200 transition-colors"
+                  className="w-9 h-9 rounded-full bg-white text-neutral-900 flex items-center justify-center hover:bg-neutral-200 transition-colors"
                   aria-label="Facebook"
                 >
-                  <Facebook size={18} />
+                  <Facebook size={16} />
                 </a>
                 <a 
                   href="#" 
-                  className="bg-white text-black p-2 rounded-full hover:bg-gray-200 transition-colors"
+                  className="w-9 h-9 rounded-full bg-white text-neutral-900 flex items-center justify-center hover:bg-neutral-200 transition-colors"
                   aria-label="Instagram"
                 >
-                  <Instagram size={18} />
+                  <Instagram size={16} />
                 </a>
                 <a 
                   href="#" 
-                  className="bg-white text-black p-2 rounded-full hover:bg-gray-200 transition-colors"
+                  className="w-9 h-9 rounded-full bg-white text-neutral-900 flex items-center justify-center hover:bg-neutral-200 transition-colors"
                   aria-label="TikTok"
                 >
-                  <TikTokIcon size={18} />
+                  <TikTokIcon size={16} />
                 </a>
                 <a 
                   href="#" 
-                  className="bg-white text-black p-2 rounded-full hover:bg-gray-200 transition-colors"
+                  className="w-9 h-9 rounded-full bg-white text-neutral-900 flex items-center justify-center hover:bg-neutral-200 transition-colors"
                   aria-label="YouTube"
                 >
-                  <Youtube size={18} />
+                  <Youtube size={16} />
                 </a>
               </div>
             </div>
           </div>
 
-          {/* Column 2: Customer Service */}
-          <div className="lg:pl-8">
-            <h3 className="text-xs font-bold tracking-widest mb-6 uppercase text-white">
+          {/* Column 2: Customer Service (3 columns on desktop) */}
+          <div className="lg:col-span-3">
+            <h3 className="text-white text-xs font-semibold tracking-wider uppercase mb-6">
               Customer Service
             </h3>
-            <div className="space-y-4 text-sm text-gray-400">
-              <p>(10 AM – 6 PM)</p>
-              <p>(Except Weekend/Govt. Holidays)</p>
-              
-              <div className="flex items-center gap-3 pt-2 hover:text-white transition-colors">
-                <Phone size={16} />
-                <a href="tel:+8801XXXXXXXXX">+880 1XXX-XXXXXX</a>
+            <div className="space-y-4">
+              <div className="text-neutral-400 text-sm space-y-1">
+                <p>(10 AM – 6 PM)</p>
+                <p>(Except Weekend/Govt. Holidays)</p>
               </div>
               
-              <div className="flex items-center gap-3 hover:text-white transition-colors">
-                <Mail size={16} />
-                <a href="mailto:info@prismin.com">info@prismin.com</a>
+              <div className="space-y-3">
+                <a 
+                  href="tel:+8801XXXXXXXXX" 
+                  className="flex items-center gap-2 text-neutral-400 text-sm hover:text-white transition-colors"
+                >
+                  <Phone size={14} className="flex-shrink-0" />
+                  <span>+880 1XXX-XXXXXX</span>
+                </a>
+                
+                <a 
+                  href="mailto:info@prismin.com" 
+                  className="flex items-center gap-2 text-neutral-400 text-sm hover:text-white transition-colors"
+                >
+                  <Mail size={14} className="flex-shrink-0" />
+                  <span>info@prismin.com</span>
+                </a>
               </div>
             </div>
           </div>
 
-          {/* Column 3: Information (Accordion on Mobile) */}
-          <div className="border-t border-gray-800 lg:border-none pt-4 lg:pt-0">
-            <div 
-              className="flex justify-between items-center cursor-pointer lg:cursor-default"
+          {/* Column 3: Information (2.5 columns on desktop) */}
+          <div className="lg:col-span-2 border-t border-neutral-800 lg:border-none pt-6 lg:pt-0">
+            <button 
+              className="w-full flex justify-between items-center lg:cursor-default lg:pointer-events-none"
               onClick={() => toggleSection('info')}
             >
-              <h3 className="text-xs font-bold tracking-widest uppercase text-white mb-0 lg:mb-6">
+              <h3 className="text-white text-xs font-semibold tracking-wider uppercase">
                 Information
               </h3>
-              {/* Mobile Toggle Icons */}
               <span className="lg:hidden text-white">
                 {openSection === 'info' ? <Minus size={16} /> : <Plus size={16} />}
               </span>
-            </div>
+            </button>
 
-            <ul className={`space-y-3 mt-4 lg:mt-0 text-sm text-gray-400 overflow-hidden transition-all duration-300 ${
-              openSection === 'info' ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 lg:max-h-full lg:opacity-100'
+            <ul className={`mt-6 space-y-3 text-sm transition-all duration-300 ease-in-out lg:!max-h-full lg:!opacity-100 ${
+              openSection === 'info' 
+                ? 'max-h-96 opacity-100' 
+                : 'max-h-0 opacity-0 overflow-hidden'
             }`}>
               <li>
-                <Link href="/about" className="hover:text-white transition-colors">
+                <Link href="/about" className="text-neutral-400 hover:text-white transition-colors">
                   About PRISMIN
                 </Link>
               </li>
               <li>
-                <Link href="/safety" className="hover:text-white transition-colors">
+                <Link href="/safety" className="text-neutral-400 hover:text-white transition-colors">
                   Safety Advisory
                 </Link>
               </li>
               <li>
-                <Link href="/community" className="hover:text-white transition-colors">
+                <Link href="/community" className="text-neutral-400 hover:text-white transition-colors">
                   Community Guidelines
                 </Link>
               </li>
               <li>
-                <Link href="/responsibility" className="hover:text-white transition-colors">
+                <Link href="/social-responsibility" className="text-neutral-400 hover:text-white transition-colors">
                   Social Responsibility
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 4: Policy (Accordion on Mobile) */}
-          <div className="border-t border-gray-800 lg:border-none pt-4 lg:pt-0">
-            <div 
-              className="flex justify-between items-center cursor-pointer lg:cursor-default"
+          {/* Column 4: Policy (2.5 columns on desktop) */}
+          <div className="lg:col-span-3 border-t border-neutral-800 lg:border-none pt-6 lg:pt-0">
+            <button 
+              className="w-full flex justify-between items-center lg:cursor-default lg:pointer-events-none"
               onClick={() => toggleSection('policy')}
             >
-              <h3 className="text-xs font-bold tracking-widest uppercase text-white mb-0 lg:mb-6">
+              <h3 className="text-white text-xs font-semibold tracking-wider uppercase">
                 Policy
               </h3>
               <span className="lg:hidden text-white">
                 {openSection === 'policy' ? <Minus size={16} /> : <Plus size={16} />}
               </span>
-            </div>
+            </button>
 
-            <ul className={`space-y-3 mt-4 lg:mt-0 text-sm text-gray-400 overflow-hidden transition-all duration-300 ${
-              openSection === 'policy' ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 lg:max-h-full lg:opacity-100'
+            <ul className={`mt-6 space-y-3 text-sm transition-all duration-300 ease-in-out lg:!max-h-full lg:!opacity-100 ${
+              openSection === 'policy' 
+                ? 'max-h-96 opacity-100' 
+                : 'max-h-0 opacity-0 overflow-hidden'
             }`}>
               <li>
-                <Link href="/privacy-policy" className="hover:text-white transition-colors">
+                <Link href="/privacy-policy" className="text-neutral-400 hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/delivery-policy" className="hover:text-white transition-colors">
+                <Link href="/delivery-policy" className="text-neutral-400 hover:text-white transition-colors">
                   Delivery Policy
                 </Link>
               </li>
               <li>
-                <Link href="/return-policy" className="hover:text-white transition-colors">
+                <Link href="/return-policy" className="text-neutral-400 hover:text-white transition-colors">
                   Return and Exchange Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-white transition-colors">
+                <Link href="/terms" className="text-neutral-400 hover:text-white transition-colors">
                   Terms and Conditions
                 </Link>
               </li>
@@ -199,11 +207,11 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="mt-16 border-t border-gray-800">
-        <div className="container mx-auto px-6 py-6 text-center">
-          <p className="text-gray-500 text-xs tracking-wide">
-            &copy; {currentYear} PRISMIN Brand. All Rights Reserved.
+      {/* Bottom Copyright Bar */}
+      <div className="border-t border-neutral-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <p className="text-neutral-500 text-xs text-center tracking-wide">
+            © {currentYear} PRISMIN Brand. All Rights Reserved.
           </p>
         </div>
       </div>
