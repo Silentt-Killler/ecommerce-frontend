@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { ShoppingBag, User, Search, Menu, X, Plus } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 import useCartStore from '@/store/cartStore';
 import MenuOverlay from './MenuOverlay';
 import SearchOverlay from './SearchOverlay';
+import api from '@/lib/api';
 
 export default function Header() {
   const pathname = usePathname();
@@ -20,6 +22,7 @@ export default function Header() {
   const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [settings, setSettings] = useState(null);
   
   const dropdownRef = useRef(null);
   const dropdownTimeoutRef = useRef(null);
@@ -29,6 +32,17 @@ export default function Header() {
 
   useEffect(() => {
     setMounted(true);
+    
+    // Fetch settings for logo
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get('/settings');
+        setSettings(res.data);
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      }
+    };
+    fetchSettings();
   }, []);
 
   useEffect(() => {
@@ -47,7 +61,6 @@ export default function Header() {
     };
   }, []);
 
-  // Hide header on admin pages
   if (isAdminPage) return null;
 
   const cartCount = mounted ? getItemCount() : 0;
@@ -59,27 +72,64 @@ export default function Header() {
   };
 
   const handleDropdownEnter = () => {
-    if (dropdownTimeoutRef.current) {
-      clearTimeout(dropdownTimeoutRef.current);
-    }
+    if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
     setShowDropdown(true);
   };
 
   const handleDropdownLeave = () => {
-    dropdownTimeoutRef.current = setTimeout(() => {
-      setShowDropdown(false);
-    }, 150);
+    dropdownTimeoutRef.current = setTimeout(() => setShowDropdown(false), 150);
   };
 
-  // Get text/icon color based on scroll state and page
   const getColor = () => {
     if (isHomePage && !isScrolled) return '#FFFFFF';
     return '#0C0C0C';
   };
 
+  // Get appropriate logo based on scroll state and page
+  const getLogo = () => {
+    if (isHomePage && !isScrolled) {
+      return settings?.header_logo_white || null;
+    }
+    return settings?.header_logo || null;
+  };
+
+  const logoUrl = getLogo();
+  const logoText = settings?.logo_text || 'PRISMIN';
+
+  // Logo Component
+  const Logo = ({ size = 'desktop' }) => {
+    const logoWidth = size === 'mobile' ? 100 : 130;
+    const logoHeight = size === 'mobile' ? 28 : 35;
+    const fontSize = size === 'mobile' ? 18 : 22;
+
+    if (logoUrl) {
+      return (
+        <Image
+          src={logoUrl}
+          alt={logoText}
+          width={logoWidth}
+          height={logoHeight}
+          style={{ height: 'auto', maxHeight: logoHeight, width: 'auto' }}
+          priority
+        />
+      );
+    }
+    
+    return (
+      <span style={{
+        fontSize,
+        fontWeight: 300,
+        letterSpacing: size === 'mobile' ? 4 : 6,
+        color: getColor(),
+        transition: 'color 0.3s'
+      }}>
+        {logoText}
+      </span>
+    );
+  };
+
   return (
     <>
-      {/* Main Header */}
       <header 
         style={{
           position: 'fixed',
@@ -95,12 +145,7 @@ export default function Header() {
       >
         {/* Desktop Header */}
         <div className="hidden md:block" style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            height: 60
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
             
             {/* Left - Contact Us */}
             <div style={{ flex: 1 }}>
@@ -129,35 +174,20 @@ export default function Header() {
                 position: 'absolute',
                 left: '50%',
                 transform: 'translateX(-50%)',
-                fontSize: 22,
-                fontWeight: 300,
-                letterSpacing: 6,
-                color: getColor(),
                 textDecoration: 'none',
-                transition: 'color 0.3s'
+                display: 'flex',
+                alignItems: 'center'
               }}
             >
-              PRISMIN
+              <Logo size="desktop" />
             </Link>
 
             {/* Right - Icons + MENU */}
-            <div style={{ 
-              flex: 1, 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'flex-end',
-              gap: 18 
-            }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 18 }}>
               {/* Cart */}
               <Link 
                 href="/cart" 
-                style={{ 
-                  position: 'relative',
-                  color: getColor(),
-                  transition: 'color 0.3s',
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
+                style={{ position: 'relative', color: getColor(), transition: 'color 0.3s', display: 'flex', alignItems: 'center' }}
               >
                 <ShoppingBag size={20} strokeWidth={1.5} />
                 {mounted && cartCount > 0 && (
@@ -190,16 +220,7 @@ export default function Header() {
                   onMouseLeave={handleDropdownLeave}
                 >
                   <button 
-                    style={{ 
-                      background: 'none', 
-                      border: 'none', 
-                      cursor: 'pointer',
-                      color: getColor(),
-                      transition: 'color 0.3s',
-                      padding: 4,
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: getColor(), transition: 'color 0.3s', padding: 4, display: 'flex', alignItems: 'center' }}
                   >
                     <User size={20} strokeWidth={1.5} />
                   </button>
@@ -220,100 +241,26 @@ export default function Header() {
                     onMouseEnter={handleDropdownEnter}
                     onMouseLeave={handleDropdownLeave}
                   >
-                    <div style={{
-                      width: 200,
-                      backgroundColor: '#FFFFFF',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-                      borderRadius: 8,
-                      overflow: 'hidden',
-                      border: '1px solid #E8E8E8'
-                    }}>
-                      {/* User Info */}
-                      <div style={{ 
-                        padding: '14px 16px', 
-                        borderBottom: '1px solid #E8E8E8',
-                        backgroundColor: '#FAFAFA'
-                      }}>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', margin: 0 }}>
-                          {user?.name || 'User'}
-                        </p>
-                        <p style={{ fontSize: 12, color: '#919191', margin: '4px 0 0 0' }}>
-                          {user?.email}
-                        </p>
+                    <div style={{ width: 200, backgroundColor: '#FFFFFF', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', borderRadius: 8, overflow: 'hidden', border: '1px solid #E8E8E8' }}>
+                      <div style={{ padding: '14px 16px', borderBottom: '1px solid #E8E8E8', backgroundColor: '#FAFAFA' }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', margin: 0 }}>{user?.name || 'User'}</p>
+                        <p style={{ fontSize: 12, color: '#919191', margin: '4px 0 0 0' }}>{user?.email}</p>
                       </div>
                       
-                      {/* Menu Items */}
                       <div style={{ padding: '8px 0' }}>
-                        <Link 
-                          href="/account" 
-                          style={{ 
-                            display: 'block', 
-                            padding: '10px 16px', 
-                            fontSize: 14, 
-                            color: '#0C0C0C', 
-                            textDecoration: 'none',
-                            transition: 'background 0.2s'
-                          }}
-                          onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'}
-                          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                        >
+                        <Link href="/account" style={{ display: 'block', padding: '10px 16px', fontSize: 14, color: '#0C0C0C', textDecoration: 'none', transition: 'background 0.2s' }} onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'} onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}>
                           My Profile
                         </Link>
-                        
-                        <Link 
-                          href="/account/orders" 
-                          style={{ 
-                            display: 'block', 
-                            padding: '10px 16px', 
-                            fontSize: 14, 
-                            color: '#0C0C0C', 
-                            textDecoration: 'none',
-                            transition: 'background 0.2s'
-                          }}
-                          onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'}
-                          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                        >
+                        <Link href="/account/orders" style={{ display: 'block', padding: '10px 16px', fontSize: 14, color: '#0C0C0C', textDecoration: 'none', transition: 'background 0.2s' }} onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'} onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}>
                           My Orders
                         </Link>
-                        
                         {user?.role === 'admin' && (
-                          <Link 
-                            href="/admin" 
-                            style={{ 
-                              display: 'block', 
-                              padding: '10px 16px', 
-                              fontSize: 14, 
-                              color: '#B08B5C', 
-                              fontWeight: 500,
-                              textDecoration: 'none',
-                              transition: 'background 0.2s'
-                            }}
-                            onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'}
-                            onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                          >
+                          <Link href="/admin" style={{ display: 'block', padding: '10px 16px', fontSize: 14, color: '#B08B5C', fontWeight: 500, textDecoration: 'none', transition: 'background 0.2s' }} onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'} onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}>
                             Admin Panel
                           </Link>
                         )}
-                        
                         <div style={{ height: 1, backgroundColor: '#E8E8E8', margin: '8px 0' }} />
-                        
-                        <button
-                          onClick={handleLogout}
-                          style={{ 
-                            display: 'block', 
-                            width: '100%', 
-                            textAlign: 'left',
-                            padding: '10px 16px', 
-                            fontSize: 14, 
-                            color: '#DC2626',
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            transition: 'background 0.2s'
-                          }}
-                          onMouseOver={(e) => e.target.style.backgroundColor = '#FEF2F2'}
-                          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                        >
+                        <button onClick={handleLogout} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 16px', fontSize: 14, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={(e) => e.target.style.backgroundColor = '#FEF2F2'} onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}>
                           Logout
                         </button>
                       </div>
@@ -321,51 +268,18 @@ export default function Header() {
                   </div>
                 </div>
               ) : (
-                <Link 
-                  href="/login" 
-                  style={{ 
-                    color: getColor(),
-                    transition: 'color 0.3s',
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}
-                >
+                <Link href="/login" style={{ color: getColor(), transition: 'color 0.3s', display: 'flex', alignItems: 'center' }}>
                   <User size={20} strokeWidth={1.5} />
                 </Link>
               )}
 
               {/* Search Button */}
-              <button 
-                onClick={() => setShowSearch(true)}
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  cursor: 'pointer',
-                  color: getColor(),
-                  transition: 'color 0.3s',
-                  padding: 0,
-                  display: 'flex',
-                  alignItems: 'center'
-                }}
-              >
+              <button onClick={() => setShowSearch(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: getColor(), transition: 'color 0.3s', padding: 0, display: 'flex', alignItems: 'center' }}>
                 <Search size={20} strokeWidth={1.5} />
               </button>
 
               {/* Menu Toggle */}
-              <button 
-                onClick={() => setShowMenu(true)}
-                style={{ 
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  background: 'none', 
-                  border: 'none', 
-                  cursor: 'pointer',
-                  color: getColor(),
-                  transition: 'color 0.3s',
-                  padding: 0
-                }}
-              >
+              <button onClick={() => setShowMenu(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: getColor(), transition: 'color 0.3s', padding: 0 }}>
                 <Menu size={20} strokeWidth={1.5} />
                 <span style={{ fontSize: 12, letterSpacing: 1 }}>MENU</span>
               </button>
@@ -375,42 +289,14 @@ export default function Header() {
 
         {/* Mobile Header */}
         <div className="md:hidden" style={{ padding: '0 16px' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            height: 56
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
             {/* Left - Logo */}
-            <Link 
-              href="/"
-              style={{
-                fontSize: 18,
-                fontWeight: 300,
-                letterSpacing: 4,
-                color: getColor(),
-                textDecoration: 'none',
-                transition: 'color 0.3s'
-              }}
-            >
-              PRISMIN
+            <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+              <Logo size="mobile" />
             </Link>
 
-            {/* Right - Hamburger Menu (same as desktop) */}
-            <button 
-              onClick={() => setShowMenu(true)}
-              style={{ 
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                background: 'none', 
-                border: 'none', 
-                cursor: 'pointer',
-                color: getColor(),
-                transition: 'color 0.3s',
-                padding: 8
-              }}
-            >
+            {/* Right - Hamburger Menu */}
+            <button onClick={() => setShowMenu(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: getColor(), transition: 'color 0.3s', padding: 8 }}>
               <Menu size={20} strokeWidth={1.5} />
               <span style={{ fontSize: 11, letterSpacing: 1 }}>MENU</span>
             </button>
@@ -418,10 +304,7 @@ export default function Header() {
         </div>
       </header>
 
-      {/* Search Overlay Component */}
       <SearchOverlay isOpen={showSearch} onClose={() => setShowSearch(false)} />
-
-      {/* Menu Overlay Component */}
       <MenuOverlay isOpen={showMenu} onClose={() => setShowMenu(false)} />
     </>
   );
