@@ -49,131 +49,56 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Get hero slide based on device type
   const getHeroSlide = () => {
     const slides = settings?.hero_slides || [];
     const deviceType = isMobile ? 'mobile' : 'desktop';
-    
-    // Find first active slide for current device type
     const deviceSlide = slides.find(s => (s.type || 'desktop') === deviceType && s.is_active !== false);
-    
-    // Fallback to any slide if no device-specific slide found
     if (!deviceSlide && slides.length > 0) {
       return slides.find(s => s.is_active !== false) || slides[0];
     }
-    
     return deviceSlide;
   };
 
   const heroSlide = getHeroSlide();
 
-  // Use category.url from database, fallback to /slug
   const getCategoryLink = (category) => {
-    if (category.url) {
-      return category.url;
-    }
+    if (category.url) return category.url;
     return '/' + category.slug;
   };
 
-  // Mobile Featured Section
   const MobileFeaturedSection = ({ title, products, viewAllLink }) => {
     if (!products || products.length === 0) return null;
-
     return (
       <section style={{ backgroundColor: '#FFFFFF', paddingTop: 40, paddingBottom: 24 }}>
-        <h2 style={{ 
-          fontSize: 20, 
-          fontWeight: 600, 
-          letterSpacing: 2, 
-          textAlign: 'center', 
-          marginBottom: 24,
-          color: '#0C0C0C',
-          textTransform: 'uppercase',
-          padding: '0 16px'
-        }}>
-          {title}
-        </h2>
-        
-        <div style={{ 
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 16,
-          padding: '0 16px'
-        }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, letterSpacing: 2, textAlign: 'center', marginBottom: 24, color: '#0C0C0C', textTransform: 'uppercase', padding: '0 16px' }}>{title}</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, padding: '0 16px' }}>
           {products.slice(0, 4).map((product) => (
             <ProductCard key={product._id} product={product} isMobile={true} />
           ))}
         </div>
-
         <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>
-          <Link 
-            href={viewAllLink}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              color: '#0C0C0C',
-              fontSize: 13,
-              fontWeight: 500,
-              textDecoration: 'none'
-            }}
-          >
-            View All
-            <ArrowRight size={16} strokeWidth={2} />
+          <Link href={viewAllLink} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#0C0C0C', fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>
+            View All <ArrowRight size={16} strokeWidth={2} />
           </Link>
         </div>
       </section>
     );
   };
 
-  // Desktop Featured Section
   const DesktopFeaturedSection = ({ title, products, viewAllLink }) => {
     if (!products || products.length === 0) return null;
-
     return (
       <section style={{ backgroundColor: '#FFFFFF', paddingTop: 60, paddingBottom: 60 }}>
         <div style={{ maxWidth: 1800, margin: '0 auto', padding: '0 50px' }}>
-          <h2 style={{ 
-            fontSize: 32, 
-            fontWeight: 400, 
-            lineHeight: '40px',
-            letterSpacing: 8, 
-            textAlign: 'center', 
-            marginBottom: 40,
-            color: '#0C0C0C',
-            textTransform: 'uppercase'
-          }}>
-            {title}
-          </h2>
-          
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: 30
-          }}>
+          <h2 style={{ fontSize: 32, fontWeight: 400, lineHeight: '40px', letterSpacing: 8, textAlign: 'center', marginBottom: 40, color: '#0C0C0C', textTransform: 'uppercase' }}>{title}</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 30 }}>
             {products.slice(0, 4).map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
-
           <div style={{ textAlign: 'center', marginTop: 40 }}>
-            <Link 
-              href={viewAllLink}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                color: '#0C0C0C',
-                fontSize: 13,
-                fontWeight: 500,
-                textDecoration: 'none',
-                transition: 'opacity 0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'}
-              onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
-            >
-              View All
-              <ArrowRight size={16} strokeWidth={2} />
+            <Link href={viewAllLink} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#0C0C0C', fontSize: 13, fontWeight: 500, textDecoration: 'none', transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
+              View All <ArrowRight size={16} strokeWidth={2} />
             </Link>
           </div>
         </div>
@@ -184,61 +109,19 @@ export default function HomePage() {
   return (
     <div style={{ backgroundColor: '#FFFFFF', paddingBottom: isMobile ? 90 : 0 }}>
       {/* Hero Section */}
-      <section style={{ 
-        position: 'relative', 
-        height: isMobile ? '85vh' : '100vh', 
-        width: '100%' 
-      }}>
+      <section style={{ position: 'relative', height: isMobile ? '85vh' : '100vh', width: '100%' }}>
         {heroSlide?.image_url ? (
-          <Image
-            src={heroSlide.image_url}
-            alt="PRISMIN"
-            fill
-            style={{ objectFit: 'cover' }}
-            priority
-          />
+          <Image src={heroSlide.image_url} alt="PRISMIN" fill style={{ objectFit: 'cover' }} priority />
         ) : (
-          <div style={{ 
-            position: 'absolute', 
-            inset: 0, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)'
-          }}>
-            <p style={{ color: '#666', fontSize: 14 }}>
-              {isMobile ? 'Upload mobile hero image from Admin Panel' : 'Upload desktop hero image from Admin Panel'}
-            </p>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)' }}>
+            <p style={{ color: '#666', fontSize: 14 }}>{isMobile ? 'Upload mobile hero image from Admin Panel' : 'Upload desktop hero image from Admin Panel'}</p>
           </div>
         )}
         
-        {/* Hero Buttons - Dynamic from first 2 categories */}
         {categories.length > 0 && (
-          <div style={{
-            position: 'absolute',
-            bottom: isMobile ? 60 : 80,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            flexDirection: 'row',
-            gap: 12
-          }}>
+          <div style={{ position: 'absolute', bottom: isMobile ? 60 : 80, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'row', gap: 12 }}>
             {categories.slice(0, 2).map((cat) => (
-              <Link 
-                key={cat._id}
-                href={getCategoryLink(cat)}
-                style={{
-                  padding: isMobile ? '12px 24px' : '14px 36px',
-                  backgroundColor: '#FFFFFF',
-                  color: '#0C0C0C',
-                  fontSize: isMobile ? 11 : 12,
-                  fontWeight: 500,
-                  letterSpacing: 2,
-                  textTransform: 'uppercase',
-                  textDecoration: 'none',
-                  whiteSpace: 'nowrap'
-                }}
-              >
+              <Link key={cat._id} href={getCategoryLink(cat)} style={{ padding: isMobile ? '12px 24px' : '14px 36px', backgroundColor: '#FFFFFF', color: '#0C0C0C', fontSize: isMobile ? 11 : 12, fontWeight: 500, letterSpacing: 2, textTransform: 'uppercase', textDecoration: 'none', whiteSpace: 'nowrap' }}>
                 {cat.name}
               </Link>
             ))}
@@ -247,136 +130,42 @@ export default function HomePage() {
       </section>
 
       {/* Category Section */}
-      <section style={{ 
-        backgroundColor: '#FFFFFF', 
-        paddingTop: isMobile ? 40 : 70, 
-        paddingBottom: isMobile ? 20 : 50 
-      }}>
-        <h2 style={{ 
-          fontSize: isMobile ? 20 : 32, 
-          fontWeight: isMobile ? 600 : 400, 
-          letterSpacing: isMobile ? 2 : 8, 
-          textAlign: 'center', 
-          marginBottom: isMobile ? 24 : 50,
-          color: '#0C0C0C',
-          textTransform: 'uppercase',
-          padding: isMobile ? '0 16px' : 0
-        }}>
+      <section style={{ backgroundColor: '#FFFFFF', paddingTop: isMobile ? 40 : 70, paddingBottom: isMobile ? 20 : 50 }}>
+        <h2 style={{ fontSize: isMobile ? 20 : 32, fontWeight: isMobile ? 600 : 400, letterSpacing: isMobile ? 2 : 8, textAlign: 'center', marginBottom: isMobile ? 24 : 50, color: '#0C0C0C', textTransform: 'uppercase', padding: isMobile ? '0 16px' : 0 }}>
           {isMobile ? 'EXPLORE THE NEW STYLES' : 'Explore Our Collection'}
         </h2>
         
-        {/* Mobile: 2x2 Grid */}
         {isMobile ? (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(2, 1fr)', 
-            gap: 2,
-            padding: '0 16px'
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, padding: '0 16px' }}>
             {categories.slice(0, 4).map((cat) => (
-              <Link 
-                key={cat._id} 
-                href={getCategoryLink(cat)}
-                style={{ textDecoration: 'none', display: 'block' }}
-              >
-                <div style={{ 
-                  position: 'relative', 
-                  aspectRatio: '1/1.2',
-                  backgroundColor: '#F5F5F5', 
-                  overflow: 'hidden'
-                }}>
+              <Link key={cat._id} href={getCategoryLink(cat)} style={{ textDecoration: 'none', display: 'block' }}>
+                <div style={{ position: 'relative', aspectRatio: '1/1.2', backgroundColor: '#F5F5F5', overflow: 'hidden' }}>
                   {cat.image ? (
-                    <Image
-                      src={cat.image}
-                      alt={cat.name}
-                      fill
-                      style={{ objectFit: 'cover' }}
-                    />
+                    <Image src={cat.image} alt={cat.name} fill style={{ objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ 
-                      position: 'absolute', 
-                      inset: 0, 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      backgroundColor: '#E8E8E8'
-                    }}>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#E8E8E8' }}>
                       <span style={{ color: '#999', fontSize: 12 }}>No Image</span>
                     </div>
                   )}
                 </div>
-                
-                <h3 style={{ 
-                  textAlign: 'center', 
-                  fontSize: 13, 
-                  fontWeight: 500, 
-                  color: '#0C0C0C',
-                  padding: '12px 8px',
-                  margin: 0
-                }}>
-                  {cat.name}
-                </h3>
+                <h3 style={{ textAlign: 'center', fontSize: 13, fontWeight: 500, color: '#0C0C0C', padding: '12px 8px', margin: 0 }}>{cat.name}</h3>
               </Link>
             ))}
           </div>
         ) : (
-          /* Desktop: Horizontal layout */
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center',
-            gap: 50
-          }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 50 }}>
             {categories.slice(0, 4).map((cat) => (
-              <Link 
-                key={cat._id} 
-                href={getCategoryLink(cat)}
-                style={{ textDecoration: 'none', display: 'block' }}
-              >
-                <div 
-                  style={{ 
-                    position: 'relative', 
-                    width: 405,
-                    height: 545,
-                    backgroundColor: '#E8E8E8', 
-                    overflow: 'hidden',
-                    marginBottom: 16
-                  }}
-                  className="category-image"
-                >
+              <Link key={cat._id} href={getCategoryLink(cat)} style={{ textDecoration: 'none', display: 'block' }}>
+                <div style={{ position: 'relative', width: 405, height: 545, backgroundColor: '#E8E8E8', overflow: 'hidden', marginBottom: 16 }} className="category-image">
                   {cat.image ? (
-                    <Image
-                      src={cat.image}
-                      alt={cat.name}
-                      fill
-                      style={{ 
-                        objectFit: 'cover',
-                        transition: 'transform 0.6s ease'
-                      }}
-                    />
+                    <Image src={cat.image} alt={cat.name} fill style={{ objectFit: 'cover', transition: 'transform 0.6s ease' }} />
                   ) : (
-                    <div style={{ 
-                      position: 'absolute', 
-                      inset: 0, 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      backgroundColor: '#E0E0E0'
-                    }}>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#E0E0E0' }}>
                       <span style={{ color: '#999', fontSize: 13 }}>No Image</span>
                     </div>
                   )}
                 </div>
-                
-                <h3 style={{ 
-                  textAlign: 'center', 
-                  fontSize: 16, 
-                  fontWeight: 500, 
-                  lineHeight: '24px',
-                  color: '#0C0C0C',
-                  margin: 0
-                }}>
-                  {cat.name}
-                </h3>
+                <h3 style={{ textAlign: 'center', fontSize: 16, fontWeight: 500, lineHeight: '24px', color: '#0C0C0C', margin: 0 }}>{cat.name}</h3>
               </Link>
             ))}
           </div>
@@ -386,96 +175,13 @@ export default function HomePage() {
       {/* Featured Sections */}
       {categories.slice(0, 4).map((cat) => (
         isMobile ? (
-          <MobileFeaturedSection 
-            key={cat._id}
-            title={'FEATURED ' + cat.name.toUpperCase()}
-            products={categoryProducts[cat.slug] || []}
-            viewAllLink={getCategoryLink(cat)}
-          />
+          <MobileFeaturedSection key={cat._id} title={'FEATURED ' + cat.name.toUpperCase()} products={categoryProducts[cat.slug] || []} viewAllLink={getCategoryLink(cat)} />
         ) : (
-          <DesktopFeaturedSection 
-            key={cat._id}
-            title={'Featured ' + cat.name}
-            products={categoryProducts[cat.slug] || []}
-            viewAllLink={getCategoryLink(cat)}
-          />
+          <DesktopFeaturedSection key={cat._id} title={'Featured ' + cat.name} products={categoryProducts[cat.slug] || []} viewAllLink={getCategoryLink(cat)} />
         )
       ))}
 
-      {/* Newsletter */}
-      <section style={{ 
-        backgroundColor: '#0C0C0C', 
-        padding: isMobile ? '50px 16px' : '70px 0' 
-      }}>
-        <div style={{ 
-          maxWidth: 550, 
-          margin: '0 auto', 
-          padding: isMobile ? 0 : '0 24px', 
-          textAlign: 'center' 
-        }}>
-          <h2 style={{ 
-            fontSize: isMobile ? 18 : 24, 
-            fontWeight: 400, 
-            letterSpacing: isMobile ? 3 : 6, 
-            marginBottom: 12,
-            color: '#FFFFFF',
-            textTransform: 'uppercase'
-          }}>
-            Stay Updated
-          </h2>
-          <p style={{ 
-            color: '#888', 
-            marginBottom: 24, 
-            fontSize: isMobile ? 12 : 13, 
-            letterSpacing: 1 
-          }}>
-            Subscribe to receive updates on new arrivals and special offers
-          </p>
-          
-          <form style={{ 
-            display: 'flex', 
-            flexDirection: isMobile ? 'column' : 'row',
-            gap: isMobile ? 12 : 0 
-          }}>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              style={{
-                flex: 1,
-                padding: '14px 20px',
-                backgroundColor: 'transparent',
-                border: '1px solid #444',
-                color: '#FFFFFF',
-                fontSize: 13,
-                outline: 'none'
-              }}
-            />
-            <button
-              type="submit"
-              style={{
-                padding: '14px 30px',
-                backgroundColor: '#FFFFFF',
-                color: '#0C0C0C',
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: 2,
-                textTransform: 'uppercase',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              Subscribe
-            </button>
-          </form>
-        </div>
-      </section>
-
-      {/* Styles */}
-      <style jsx global>{`
-        .category-image:hover img {
-          transform: scale(1.05);
-        }
-      `}</style>
+      <style jsx global>{`.category-image:hover img { transform: scale(1.05); }`}</style>
     </div>
   );
 }
