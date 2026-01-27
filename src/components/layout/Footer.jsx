@@ -4,15 +4,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Facebook, Instagram, Phone, Mail, ChevronDown } from 'lucide-react';
+import api from '@/lib/api';
 
-// TikTok icon
 const TikTokIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
     <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
   </svg>
 );
 
-// YouTube icon
 const YouTubeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
@@ -23,14 +22,24 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
   const [isMobile, setIsMobile] = useState(false);
   const [openSection, setOpenSection] = useState('');
-  
-  // Logo URL from backend/cloudinary - replace with actual URL
-  const logoUrl = process.env.NEXT_PUBLIC_LOGO_WHITE_URL || '/images/logo-white.png';
+  const [settings, setSettings] = useState(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    
+    // Fetch settings
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get('/settings');
+        setSettings(res.data);
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      }
+    };
+    fetchSettings();
+    
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
@@ -38,22 +47,23 @@ export default function Footer() {
     setOpenSection(openSection === section ? '' : section);
   };
 
+  // Get values from settings with fallbacks
+  const logoUrl = settings?.footer_logo || null;
+  const logoText = settings?.logo_text || 'PRISMIN';
+  const footerText = settings?.footer_text || 'PRISMIN is a luxury destination for women who dress with intention. We curate soulful fashion and beauty pieces that blend global inspiration with cultural grace—honoring every woman\'s choice, comfort, and quiet confidence.';
+  const phone = settings?.contact_phone || '+8801XXXXXXXXX';
+  const email = settings?.contact_email || 'info@prismin.com';
+  const facebookUrl = settings?.facebook_url || 'https://facebook.com';
+  const instagramUrl = settings?.instagram_url || 'https://instagram.com';
+  const tiktokUrl = settings?.tiktok_url || 'https://tiktok.com';
+  const youtubeUrl = settings?.youtube_url || 'https://youtube.com';
+
   const SocialIcon = ({ href, children }) => (
     <a 
       href={href} 
       target="_blank" 
       rel="noopener noreferrer" 
-      style={{ 
-        width: 42, 
-        height: 42, 
-        borderRadius: '50%', 
-        border: '1px solid #333', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        color: '#888', 
-        transition: 'all 0.2s' 
-      }}
+      style={{ width: 42, height: 42, borderRadius: '50%', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', transition: 'all 0.2s' }}
       onMouseOver={(e) => { e.currentTarget.style.borderColor = '#B08B5C'; e.currentTarget.style.color = '#B08B5C'; }}
       onMouseOut={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#888'; }}
     >
@@ -62,22 +72,30 @@ export default function Footer() {
   );
 
   const FooterLink = ({ href, children }) => (
-    <Link 
-      href={href} 
-      style={{ 
-        fontSize: 14, 
-        color: '#888', 
-        textDecoration: 'none', 
-        transition: 'color 0.2s',
-        display: 'block',
-        lineHeight: 1.8
-      }}
-      onMouseOver={(e) => e.currentTarget.style.color = '#FFF'}
-      onMouseOut={(e) => e.currentTarget.style.color = '#888'}
-    >
+    <Link href={href} style={{ fontSize: 14, color: '#888', textDecoration: 'none', transition: 'color 0.2s', display: 'block', lineHeight: 1.8 }} onMouseOver={(e) => e.currentTarget.style.color = '#FFF'} onMouseOut={(e) => e.currentTarget.style.color = '#888'}>
       {children}
     </Link>
   );
+
+  // Logo Component
+  const FooterLogo = () => {
+    if (logoUrl) {
+      return (
+        <Image
+          src={logoUrl}
+          alt={logoText}
+          width={140}
+          height={45}
+          style={{ height: 'auto', maxHeight: 45, width: 'auto' }}
+        />
+      );
+    }
+    return (
+      <span style={{ fontSize: 24, fontWeight: 300, letterSpacing: 6, color: '#FFFFFF' }}>
+        {logoText}
+      </span>
+    );
+  };
 
   // ========== MOBILE LAYOUT ==========
   if (isMobile) {
@@ -88,46 +106,34 @@ export default function Footer() {
           {/* Logo & About */}
           <div style={{ marginBottom: 28 }}>
             <Link href="/" style={{ display: 'inline-block', marginBottom: 16 }}>
-              <Image 
-                src={logoUrl}
-                alt="PRISMIN" 
-                width={120} 
-                height={40}
-                style={{ height: 'auto', maxHeight: 40 }}
-              />
+              <FooterLogo />
             </Link>
-            <p style={{ fontSize: 13, color: '#888', lineHeight: 1.8 }}>
-              PRISMIN is a luxury destination for women who dress with intention. We curate soulful fashion and beauty pieces that blend global inspiration with cultural grace—honoring every woman's choice, comfort, and quiet confidence.
-            </p>
+            <p style={{ fontSize: 13, color: '#888', lineHeight: 1.8 }}>{footerText}</p>
           </div>
 
           {/* Connect With Us */}
           <div style={{ marginBottom: 28 }}>
-            <h3 style={{ fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 16, textTransform: 'uppercase', color: '#FFF' }}>
-              Connect With Us
-            </h3>
+            <h3 style={{ fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 16, textTransform: 'uppercase', color: '#FFF' }}>Connect With Us</h3>
             <div style={{ display: 'flex', gap: 10 }}>
-              <SocialIcon href="https://facebook.com"><Facebook size={18} /></SocialIcon>
-              <SocialIcon href="https://instagram.com"><Instagram size={18} /></SocialIcon>
-              <SocialIcon href="https://tiktok.com"><TikTokIcon /></SocialIcon>
-              <SocialIcon href="https://youtube.com"><YouTubeIcon /></SocialIcon>
+              <SocialIcon href={facebookUrl}><Facebook size={18} /></SocialIcon>
+              <SocialIcon href={instagramUrl}><Instagram size={18} /></SocialIcon>
+              <SocialIcon href={tiktokUrl}><TikTokIcon /></SocialIcon>
+              <SocialIcon href={youtubeUrl}><YouTubeIcon /></SocialIcon>
             </div>
           </div>
 
           {/* Customer Service */}
           <div style={{ marginBottom: 28 }}>
-            <h3 style={{ fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 14, textTransform: 'uppercase', color: '#FFF' }}>
-              Customer Service
-            </h3>
+            <h3 style={{ fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 14, textTransform: 'uppercase', color: '#FFF' }}>Customer Service</h3>
             <p style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>(10 AM - 6 PM)</p>
             <p style={{ fontSize: 13, color: '#888', marginBottom: 14 }}>(Except Weekend/Govt. Holidays)</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <Phone size={15} style={{ color: '#888' }} />
-              <a href="tel:+8801XXXXXXXXX" style={{ fontSize: 14, color: '#FFF', textDecoration: 'none' }}>+8801XXXXXXXXX</a>
+              <a href={'tel:' + phone} style={{ fontSize: 14, color: '#FFF', textDecoration: 'none' }}>{phone}</a>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Mail size={15} style={{ color: '#888' }} />
-              <a href="mailto:info@prismin.com" style={{ fontSize: 14, color: '#FFF', textDecoration: 'underline' }}>info@prismin.com</a>
+              <a href={'mailto:' + email} style={{ fontSize: 14, color: '#FFF', textDecoration: 'underline' }}>{email}</a>
             </div>
           </div>
 
@@ -182,52 +188,37 @@ export default function Footer() {
           {/* Brand & About */}
           <div>
             <Link href="/" style={{ display: 'inline-block', marginBottom: 24 }}>
-              <Image 
-                src={logoUrl}
-                alt="PRISMIN" 
-                width={140} 
-                height={45}
-                style={{ height: 'auto', maxHeight: 45 }}
-              />
+              <FooterLogo />
             </Link>
-            <p style={{ fontSize: 14, color: '#888', lineHeight: 1.9, marginBottom: 32 }}>
-              PRISMIN is a luxury destination for women who dress with intention. We curate soulful fashion and beauty pieces that blend global inspiration with cultural grace—honoring every woman's choice, comfort, and quiet confidence.
-            </p>
+            <p style={{ fontSize: 14, color: '#888', lineHeight: 1.9, marginBottom: 32 }}>{footerText}</p>
             
-            {/* Connect With Us */}
-            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 18, textTransform: 'uppercase', color: '#FFF' }}>
-              Connect With Us
-            </h3>
+            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 18, textTransform: 'uppercase', color: '#FFF' }}>Connect With Us</h3>
             <div style={{ display: 'flex', gap: 12 }}>
-              <SocialIcon href="https://facebook.com"><Facebook size={18} /></SocialIcon>
-              <SocialIcon href="https://instagram.com"><Instagram size={18} /></SocialIcon>
-              <SocialIcon href="https://tiktok.com"><TikTokIcon /></SocialIcon>
-              <SocialIcon href="https://youtube.com"><YouTubeIcon /></SocialIcon>
+              <SocialIcon href={facebookUrl}><Facebook size={18} /></SocialIcon>
+              <SocialIcon href={instagramUrl}><Instagram size={18} /></SocialIcon>
+              <SocialIcon href={tiktokUrl}><TikTokIcon /></SocialIcon>
+              <SocialIcon href={youtubeUrl}><YouTubeIcon /></SocialIcon>
             </div>
           </div>
 
           {/* Customer Service */}
           <div>
-            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>
-              Customer Service
-            </h3>
+            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>Customer Service</h3>
             <p style={{ fontSize: 14, color: '#888', marginBottom: 4, lineHeight: 1.6 }}>(10 AM - 6 PM)</p>
             <p style={{ fontSize: 14, color: '#888', marginBottom: 22, lineHeight: 1.6 }}>(Except Weekend/Govt. Holidays)</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
               <Phone size={16} style={{ color: '#888' }} />
-              <a href="tel:+8801XXXXXXXXX" style={{ fontSize: 14, color: '#FFF', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = '#B08B5C'} onMouseOut={(e) => e.currentTarget.style.color = '#FFF'}>+8801XXXXXXXXX</a>
+              <a href={'tel:' + phone} style={{ fontSize: 14, color: '#FFF', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = '#B08B5C'} onMouseOut={(e) => e.currentTarget.style.color = '#FFF'}>{phone}</a>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Mail size={16} style={{ color: '#888' }} />
-              <a href="mailto:info@prismin.com" style={{ fontSize: 14, color: '#FFF', textDecoration: 'underline', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = '#B08B5C'} onMouseOut={(e) => e.currentTarget.style.color = '#FFF'}>info@prismin.com</a>
+              <a href={'mailto:' + email} style={{ fontSize: 14, color: '#FFF', textDecoration: 'underline', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = '#B08B5C'} onMouseOut={(e) => e.currentTarget.style.color = '#FFF'}>{email}</a>
             </div>
           </div>
 
           {/* Information */}
           <div>
-            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>
-              Information
-            </h3>
+            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>Information</h3>
             <FooterLink href="/about">About Prismin</FooterLink>
             <FooterLink href="/safety-advisory">Safety Advisory</FooterLink>
             <FooterLink href="/community-guidelines">Community Guidelines</FooterLink>
@@ -237,9 +228,7 @@ export default function Footer() {
 
           {/* Policy */}
           <div>
-            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>
-              Policy
-            </h3>
+            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>Policy</h3>
             <FooterLink href="/privacy-policy">Privacy Policy</FooterLink>
             <FooterLink href="/delivery-policy">Delivery Policy</FooterLink>
             <FooterLink href="/return-policy">Return and Exchange Policy</FooterLink>
