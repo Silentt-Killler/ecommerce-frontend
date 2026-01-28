@@ -1,423 +1,378 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  CheckCircle, Package, Truck, Phone, Mail, 
-  Download, ArrowRight, Home, Clock, MapPin 
-} from 'lucide-react';
-import api from '@/lib/api';
+import { CheckCircle, Package, Truck, Phone, Copy, ArrowRight, Home, ShoppingBag } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
-// Loading component
-function LoadingSpinner() {
+function LoadingFallback() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7F7F7' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F9FAFB' }}>
       <div style={{ width: 40, height: 40, border: '3px solid #B08B5C', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
     </div>
   );
 }
 
-// Main content
 function OrderSuccessContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get('order');
+  
   const [mounted, setMounted] = useState(false);
-  const [order, setOrder] = useState(null);
-  const [settings, setSettings] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    // Clear cart from localStorage after successful order
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    // Confetti animation on load
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('cart-storage');
+      setTimeout(() => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#B08B5C', '#10B981', '#F59E0B', '#3B82F6']
+        });
+      }, 300);
     }
 
-    // Fetch order details & settings
-    fetchData();
-  }, [orderNumber]);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  const fetchData = async () => {
-    try {
-      // Fetch order by order number
-      if (orderNumber) {
-        try {
-          const orderRes = await api.get(`/orders/track/${orderNumber}`);
-          setOrder(orderRes.data);
-        } catch (e) {
-          console.log('Could not fetch order details');
-        }
-      }
-
-      // Fetch site settings for contact info
-      try {
-        const settingsRes = await api.get('/settings');
-        setSettings(settingsRes.data);
-      } catch (e) {
-        console.log('Could not fetch settings');
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
+  const copyOrderNumber = () => {
+    if (orderNumber) {
+      navigator.clipboard.writeText(orderNumber);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  const handleDownloadInvoice = async () => {
-    try {
-      // Open invoice in new tab (backend will generate PDF)
-      window.open(`/api/orders/invoice/${orderNumber}`, '_blank');
-    } catch (error) {
-      console.error('Failed to download invoice');
-    }
-  };
+  if (!mounted) return <LoadingFallback />;
 
-  if (!mounted || loading) {
-    return <LoadingSpinner />;
-  }
-
-  const formatPrice = (price) => '৳' + (price || 0).toLocaleString();
-
-  return (
-    <div style={{ backgroundColor: '#F7F7F7', minHeight: '100vh', paddingTop: 100, paddingBottom: 60 }}>
-      <div style={{ maxWidth: 700, margin: '0 auto', padding: '0 20px' }}>
-        
-        {/* Success Header */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+  // ====================== MOBILE LAYOUT ======================
+  if (isMobile) {
+    return (
+      <div style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', paddingTop: 56, paddingBottom: 100 }}>
+        <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+          
+          {/* Success Icon */}
           <div style={{ 
-            width: 80, 
-            height: 80, 
-            backgroundColor: '#D1FAE5', 
+            width: 100, 
+            height: 100, 
             borderRadius: '50%', 
+            backgroundColor: '#ECFDF5', 
             display: 'flex', 
             alignItems: 'center', 
-            justifyContent: 'center',
-            margin: '0 auto 20px'
+            justifyContent: 'center', 
+            margin: '0 auto 24px',
+            animation: 'scaleIn 0.5s ease'
           }}>
-            <CheckCircle size={40} style={{ color: '#059669' }} />
+            <CheckCircle size={50} style={{ color: '#10B981' }} />
           </div>
-          
-          <h1 style={{ fontSize: 26, fontWeight: 600, color: '#0C0C0C', marginBottom: 8 }}>
-            Order Placed Successfully!
+
+          {/* Title */}
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0C0C0C', marginBottom: 8 }}>
+            Order Placed!
           </h1>
-          
-          <p style={{ fontSize: 15, color: '#666', lineHeight: 1.6 }}>
-            Thank you for your order. We've received your order and will process it shortly.
+          <p style={{ fontSize: 15, color: '#6B7280', marginBottom: 32, lineHeight: 1.6 }}>
+            Thank you for your order. We'll send you a confirmation shortly.
+          </p>
+
+          {/* Order Number Card */}
+          <div style={{ 
+            backgroundColor: '#FFF', 
+            borderRadius: 16, 
+            padding: 24, 
+            marginBottom: 20,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+          }}>
+            <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 8 }}>Order Number</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <span style={{ fontSize: 22, fontWeight: 700, color: '#0C0C0C', letterSpacing: 2 }}>
+                {orderNumber || 'N/A'}
+              </span>
+              <button 
+                onClick={copyOrderNumber}
+                style={{ 
+                  padding: 8, 
+                  backgroundColor: '#F3F4F6', 
+                  border: 'none', 
+                  borderRadius: 8, 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {copied ? <CheckCircle size={18} style={{ color: '#10B981' }} /> : <Copy size={18} style={{ color: '#6B7280' }} />}
+              </button>
+            </div>
+            {copied && <p style={{ fontSize: 12, color: '#10B981', marginTop: 8 }}>Copied!</p>}
+          </div>
+
+          {/* What's Next */}
+          <div style={{ 
+            backgroundColor: '#FFF', 
+            borderRadius: 16, 
+            padding: 24, 
+            marginBottom: 20,
+            textAlign: 'left',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+          }}>
+            <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0C0C0C', marginBottom: 20 }}>What's Next?</h3>
+            
+            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: '#FEF3E7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Phone size={20} style={{ color: '#B08B5C' }} />
+              </div>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', marginBottom: 4 }}>Confirmation Call</p>
+                <p style={{ fontSize: 13, color: '#6B7280', margin: 0, lineHeight: 1.5 }}>Our team will call you within 2 hours to confirm your order</p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Package size={20} style={{ color: '#6366F1' }} />
+              </div>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', marginBottom: 4 }}>Order Processing</p>
+                <p style={{ fontSize: 13, color: '#6B7280', margin: 0, lineHeight: 1.5 }}>We'll prepare and pack your items with care</p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 16 }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Truck size={20} style={{ color: '#10B981' }} />
+              </div>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', marginBottom: 4 }}>Fast Delivery</p>
+                <p style={{ fontSize: 13, color: '#6B7280', margin: 0, lineHeight: 1.5 }}>Expected delivery within 2-4 business days</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Link href="/account/orders" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: 8,
+              padding: '16px 24px', 
+              backgroundColor: '#B08B5C', 
+              color: '#FFF', 
+              fontSize: 15, 
+              fontWeight: 600, 
+              borderRadius: 12, 
+              textDecoration: 'none'
+            }}>
+              Track Order <ArrowRight size={18} />
+            </Link>
+            
+            <Link href="/" style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: 8,
+              padding: '16px 24px', 
+              backgroundColor: '#FFF', 
+              color: '#0C0C0C', 
+              fontSize: 15, 
+              fontWeight: 600, 
+              borderRadius: 12, 
+              textDecoration: 'none',
+              border: '1px solid #E5E7EB'
+            }}>
+              <Home size={18} /> Continue Shopping
+            </Link>
+          </div>
+
+          {/* Support */}
+          <p style={{ fontSize: 13, color: '#9CA3AF', marginTop: 32 }}>
+            Need help? Call us at <a href="tel:+8801XXXXXXXXX" style={{ color: '#B08B5C', textDecoration: 'none', fontWeight: 600 }}>+8801XXXXXXXXX</a>
           </p>
         </div>
+
+        <style jsx global>{`
+          @keyframes spin { to { transform: rotate(360deg); } }
+          @keyframes scaleIn { 
+            from { transform: scale(0); opacity: 0; } 
+            to { transform: scale(1); opacity: 1; } 
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // ====================== DESKTOP LAYOUT ======================
+  return (
+    <div style={{ backgroundColor: '#F9FAFB', minHeight: '100vh', paddingTop: 100, paddingBottom: 80 }}>
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
+        
+        {/* Success Icon */}
+        <div style={{ 
+          width: 120, 
+          height: 120, 
+          borderRadius: '50%', 
+          backgroundColor: '#ECFDF5', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          margin: '0 auto 32px',
+          animation: 'scaleIn 0.5s ease'
+        }}>
+          <CheckCircle size={60} style={{ color: '#10B981' }} />
+        </div>
+
+        {/* Title */}
+        <h1 style={{ fontSize: 32, fontWeight: 300, letterSpacing: 4, color: '#0C0C0C', marginBottom: 12, textTransform: 'uppercase' }}>
+          Order Confirmed
+        </h1>
+        <p style={{ fontSize: 16, color: '#6B7280', marginBottom: 40, lineHeight: 1.7 }}>
+          Thank you for shopping with PRISMIN.<br />Your order has been successfully placed.
+        </p>
 
         {/* Order Number Card */}
         <div style={{ 
-          backgroundColor: '#FFFFFF', 
-          borderRadius: 12, 
-          padding: 24, 
-          textAlign: 'center',
-          marginBottom: 20,
-          boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
+          backgroundColor: '#FFF', 
+          borderRadius: 20, 
+          padding: 32, 
+          marginBottom: 32,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.04)'
         }}>
-          <p style={{ fontSize: 12, color: '#919191', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-            Order Number
-          </p>
-          <p style={{ fontSize: 28, fontWeight: 700, color: '#0C0C0C', letterSpacing: 2, fontFamily: 'monospace' }}>
-            {orderNumber || 'N/A'}
-          </p>
-          <p style={{ fontSize: 12, color: '#919191', marginTop: 8 }}>
-            Please save this number for tracking your order
-          </p>
+          <p style={{ fontSize: 13, color: '#6B7280', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 2 }}>Order Number</p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+            <span style={{ fontSize: 28, fontWeight: 700, color: '#0C0C0C', letterSpacing: 3 }}>
+              {orderNumber || 'N/A'}
+            </span>
+            <button 
+              onClick={copyOrderNumber}
+              style={{ 
+                padding: 10, 
+                backgroundColor: '#F3F4F6', 
+                border: 'none', 
+                borderRadius: 10, 
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#E5E7EB'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#F3F4F6'}
+            >
+              {copied ? <CheckCircle size={20} style={{ color: '#10B981' }} /> : <Copy size={20} style={{ color: '#6B7280' }} />}
+            </button>
+          </div>
+          {copied && <p style={{ fontSize: 13, color: '#10B981', marginTop: 12 }}>Copied to clipboard!</p>}
         </div>
 
-        {/* Order Details */}
-        {order && (
-          <div style={{ 
-            backgroundColor: '#FFFFFF', 
-            borderRadius: 12, 
-            overflow: 'hidden',
-            marginBottom: 20,
-            boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
-          }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #F0F0F0', backgroundColor: '#FAFAFA' }}>
-              <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C' }}>Order Summary</h3>
-            </div>
-            
-            {/* Products */}
-            <div style={{ padding: 20 }}>
-              {order.items?.map((item, index) => (
-                <div key={index} style={{ 
-                  display: 'flex', 
-                  gap: 12, 
-                  padding: '10px 0',
-                  borderBottom: index < order.items.length - 1 ? '1px solid #F0F0F0' : 'none'
-                }}>
-                  <div style={{ 
-                    width: 50, 
-                    height: 50, 
-                    backgroundColor: '#F5F5F5', 
-                    borderRadius: 6,
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    {item.image ? (
-                      <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <Package size={20} style={{ color: '#D0D0D0' }} />
-                    )}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>{item.name}</p>
-                    <p style={{ fontSize: 12, color: '#919191' }}>Qty: {item.quantity}</p>
-                  </div>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C' }}>
-                      {formatPrice(item.price * item.quantity)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              {/* Totals */}
-              <div style={{ borderTop: '1px solid #F0F0F0', marginTop: 12, paddingTop: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, color: '#666' }}>Subtotal</span>
-                  <span style={{ fontSize: 13, color: '#0C0C0C' }}>{formatPrice(order.subtotal)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, color: '#666' }}>Delivery</span>
-                  <span style={{ fontSize: 13, color: order.delivery_charge === 0 ? '#059669' : '#0C0C0C' }}>
-                    {order.delivery_charge === 0 ? 'FREE' : formatPrice(order.delivery_charge)}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px dashed #E0E0E0' }}>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C' }}>Total</span>
-                  <span style={{ fontSize: 16, fontWeight: 700, color: '#0C0C0C' }}>{formatPrice(order.total)}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delivery Address */}
-        {order?.shipping_address && (
-          <div style={{ 
-            backgroundColor: '#FFFFFF', 
-            borderRadius: 12, 
-            padding: 20,
-            marginBottom: 20,
-            boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <MapPin size={18} style={{ color: '#B08B5C' }} />
-              <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C' }}>Delivery Address</h3>
-            </div>
-            <p style={{ fontSize: 14, color: '#0C0C0C', marginBottom: 4 }}>{order.shipping_address.name}</p>
-            <p style={{ fontSize: 13, color: '#666', marginBottom: 4 }}>{order.shipping_address.phone}</p>
-            <p style={{ fontSize: 13, color: '#666' }}>
-              {order.shipping_address.address}, {order.shipping_address.area}, {order.shipping_address.district}
-            </p>
-          </div>
-        )}
-
-        {/* What's Next */}
+        {/* Timeline */}
         <div style={{ 
-          backgroundColor: '#FFFFFF', 
-          borderRadius: 12, 
-          padding: 20,
-          marginBottom: 20,
-          boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
+          backgroundColor: '#FFF', 
+          borderRadius: 20, 
+          padding: 32, 
+          marginBottom: 32,
+          textAlign: 'left',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.04)'
         }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', marginBottom: 16 }}>What happens next?</h3>
+          <h3 style={{ fontSize: 18, fontWeight: 600, color: '#0C0C0C', marginBottom: 28, textAlign: 'center' }}>What Happens Next?</h3>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div style={{ 
-                width: 36, 
-                height: 36, 
-                backgroundColor: '#D1FAE5', 
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <CheckCircle size={18} style={{ color: '#059669' }} />
-              </div>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Order Confirmed</p>
-                <p style={{ fontSize: 12, color: '#919191' }}>Your order has been received and confirmed</p>
-              </div>
+          <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', backgroundColor: '#FEF3E7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Phone size={24} style={{ color: '#B08B5C' }} />
             </div>
-
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div style={{ 
-                width: 36, 
-                height: 36, 
-                backgroundColor: '#FEF3C7', 
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <Clock size={18} style={{ color: '#D97706' }} />
-              </div>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Processing</p>
-                <p style={{ fontSize: 12, color: '#919191' }}>We'll prepare your order for shipping</p>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 12 }}>
-              <div style={{ 
-                width: 36, 
-                height: 36, 
-                backgroundColor: '#E0E7FF', 
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>
-                <Truck size={18} style={{ color: '#4F46E5' }} />
-              </div>
-              <div>
-                <p style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C' }}>Shipping</p>
-                <p style={{ fontSize: 12, color: '#919191' }}>Your order will be shipped within 1-2 business days</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Contact & Download */}
-        <div style={{ 
-          backgroundColor: '#FFFFFF', 
-          borderRadius: 12, 
-          padding: 20,
-          marginBottom: 24,
-          boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
-        }}>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', marginBottom: 16 }}>Need Help?</h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 10,
-              padding: 12,
-              backgroundColor: '#FAFAFA',
-              borderRadius: 8
-            }}>
-              <Phone size={18} style={{ color: '#B08B5C' }} />
-              <div>
-                <p style={{ fontSize: 11, color: '#919191' }}>Call Us</p>
-                <p style={{ fontSize: 13, fontWeight: 500, color: '#0C0C0C' }}>
-                  {settings?.contact_phone || '+880 1XXX-XXXXXX'}
-                </p>
-              </div>
-            </div>
-
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 10,
-              padding: 12,
-              backgroundColor: '#FAFAFA',
-              borderRadius: 8
-            }}>
-              <Mail size={18} style={{ color: '#B08B5C' }} />
-              <div>
-                <p style={{ fontSize: 11, color: '#919191' }}>Email Us</p>
-                <p style={{ fontSize: 13, fontWeight: 500, color: '#0C0C0C' }}>
-                  {settings?.contact_email || 'support@prismin.com'}
-                </p>
-              </div>
+            <div style={{ paddingTop: 4 }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C', marginBottom: 6 }}>Confirmation Call</p>
+              <p style={{ fontSize: 14, color: '#6B7280', margin: 0, lineHeight: 1.6 }}>Our team will call you within 2 hours to confirm your order details and delivery schedule.</p>
             </div>
           </div>
 
-          {/* Download Invoice */}
-          <button
-            onClick={handleDownloadInvoice}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              padding: '12px',
-              backgroundColor: 'transparent',
-              border: '1px solid #E0E0E0',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontSize: 13,
-              fontWeight: 500,
-              color: '#0C0C0C'
-            }}
-          >
-            <Download size={16} />
-            Download Invoice (PDF)
-          </button>
+          <div style={{ display: 'flex', gap: 20, marginBottom: 24 }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', backgroundColor: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Package size={24} style={{ color: '#6366F1' }} />
+            </div>
+            <div style={{ paddingTop: 4 }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C', marginBottom: 6 }}>Order Processing</p>
+              <p style={{ fontSize: 14, color: '#6B7280', margin: 0, lineHeight: 1.6 }}>We'll carefully prepare and pack your items to ensure they arrive in perfect condition.</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 20 }}>
+            <div style={{ width: 52, height: 52, borderRadius: '50%', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Truck size={24} style={{ color: '#10B981' }} />
+            </div>
+            <div style={{ paddingTop: 4 }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: '#0C0C0C', marginBottom: 6 }}>Fast Delivery</p>
+              <p style={{ fontSize: 14, color: '#6B7280', margin: 0, lineHeight: 1.6 }}>Your order will be delivered within 2-4 business days. You'll receive tracking updates via SMS.</p>
+            </div>
+          </div>
         </div>
 
         {/* Action Buttons */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Link
-            href="/account/orders"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              padding: '14px',
-              backgroundColor: '#0C0C0C',
-              color: '#FFFFFF',
-              textDecoration: 'none',
-              borderRadius: 8,
-              fontSize: 14,
-              fontWeight: 500
-            }}
-          >
-            <Package size={18} />
-            Track Order
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+          <Link href="/account/orders" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: 10,
+            padding: '16px 32px', 
+            backgroundColor: '#B08B5C', 
+            color: '#FFF', 
+            fontSize: 14, 
+            fontWeight: 600, 
+            borderRadius: 12, 
+            textDecoration: 'none',
+            transition: 'background 0.2s'
+          }}>
+            <ShoppingBag size={18} /> View My Orders
           </Link>
-
-          <Link
-            href="/"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              padding: '14px',
-              backgroundColor: '#B08B5C',
-              color: '#FFFFFF',
-              textDecoration: 'none',
-              borderRadius: 8,
-              fontSize: 14,
-              fontWeight: 500
-            }}
-          >
-            <Home size={18} />
-            Back to Home
+          
+          <Link href="/" style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            gap: 10,
+            padding: '16px 32px', 
+            backgroundColor: '#FFF', 
+            color: '#0C0C0C', 
+            fontSize: 14, 
+            fontWeight: 600, 
+            borderRadius: 12, 
+            textDecoration: 'none',
+            border: '1px solid #E5E7EB',
+            transition: 'all 0.2s'
+          }}>
+            <Home size={18} /> Continue Shopping
           </Link>
         </div>
+
+        {/* Support */}
+        <p style={{ fontSize: 14, color: '#9CA3AF', marginTop: 40 }}>
+          Questions about your order? Contact us at{' '}
+          <a href="tel:+8801XXXXXXXXX" style={{ color: '#B08B5C', textDecoration: 'none', fontWeight: 600 }}>+8801XXXXXXXXX</a>
+          {' '}or{' '}
+          <a href="mailto:support@prismin.com" style={{ color: '#B08B5C', textDecoration: 'none', fontWeight: 600 }}>support@prismin.com</a>
+        </p>
       </div>
 
       <style jsx global>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes scaleIn { 
+          from { transform: scale(0); opacity: 0; } 
+          to { transform: scale(1); opacity: 1; } 
         }
       `}</style>
     </div>
   );
 }
 
-// Export with Suspense
 export default function OrderSuccessPage() {
-  return (
-    <Suspense fallback={<LoadingSpinner />}>
-      <OrderSuccessContent />
-    </Suspense>
-  );
+  return <Suspense fallback={<LoadingFallback />}><OrderSuccessContent /></Suspense>;
 }
