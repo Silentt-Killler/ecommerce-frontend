@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Package, Truck, Phone, Copy, ArrowRight, Home, ShoppingBag } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 function LoadingFallback() {
   return (
@@ -28,19 +27,6 @@ function OrderSuccessContent() {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener('resize', checkMobile);
-
-    // Confetti animation on load
-    if (typeof window !== 'undefined') {
-      setTimeout(() => {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-          colors: ['#B08B5C', '#10B981', '#F59E0B', '#3B82F6']
-        });
-      }, 300);
-    }
-
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
@@ -264,8 +250,8 @@ function OrderSuccessContent() {
                 justifyContent: 'center',
                 transition: 'background 0.2s'
               }}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#E5E7EB'}
-              onMouseOut={(e) => e.target.style.backgroundColor = '#F3F4F6'}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E5E7EB'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#F3F4F6'}
             >
               {copied ? <CheckCircle size={20} style={{ color: '#10B981' }} /> : <Copy size={20} style={{ color: '#6B7280' }} />}
             </button>
