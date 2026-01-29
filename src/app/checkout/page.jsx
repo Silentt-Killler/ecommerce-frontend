@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Package, CheckCircle, Tag, X, Search, MapPin, Phone, Shield, Home, Gift, Copy, ShoppingCart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Package, CheckCircle, Tag, X, Search, MapPin, Phone, Shield, Home, Gift, Copy, ShoppingCart, Lock } from 'lucide-react';
 import useCartStore from '@/store/cartStore';
 import useAuthStore from '@/store/authStore';
 import { districts } from '@/data/bangladesh-locations';
@@ -207,27 +207,101 @@ function CheckoutContent() {
   if (!mounted) return <LoadingFallback />;
   if (items.length === 0 && step !== 3) { router.push('/cart'); return null; }
 
+  // Input styles
+  const inputStyle = {
+    width: '100%',
+    height: 50,
+    padding: '0 16px',
+    backgroundColor: '#FFF',
+    border: '1px solid #E5E5E5',
+    borderRadius: 12,
+    fontSize: 15,
+    color: '#1a1a1a',
+    outline: 'none',
+    boxSizing: 'border-box'
+  };
+
   // ====================== MOBILE ======================
   if (isMobile) {
     return (
       <div style={{ backgroundColor: '#FFF', minHeight: '100vh' }}>
         
+        {/* Header with Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid #F0F0F0' }}>
+          <Link href="/" style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a', textDecoration: 'none', letterSpacing: 2 }}>PRISMIN</Link>
+          <Link href="/cart"><ShoppingCart size={22} style={{ color: '#1a1a1a' }} /></Link>
+        </div>
+
+        {/* Progress Steps - Below Header */}
+        {step < 3 && (
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #F0F0F0', backgroundColor: '#FAFAFA' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {/* Step 1 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ 
+                  width: 28, 
+                  height: 28, 
+                  borderRadius: '50%', 
+                  backgroundColor: '#B08B5C', 
+                  color: '#FFF', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  fontSize: 12, 
+                  fontWeight: 600 
+                }}>1</div>
+                <span style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>Address</span>
+              </div>
+              
+              {/* Line */}
+              <div style={{ width: 40, height: 2, backgroundColor: step >= 2 ? '#B08B5C' : '#E0E0E0', margin: '0 12px' }} />
+              
+              {/* Step 2 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ 
+                  width: 28, 
+                  height: 28, 
+                  borderRadius: '50%', 
+                  backgroundColor: step >= 2 ? '#B08B5C' : '#E0E0E0', 
+                  color: step >= 2 ? '#FFF' : '#999', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  fontSize: 12, 
+                  fontWeight: 600 
+                }}>2</div>
+                <span style={{ fontSize: 13, fontWeight: 500, color: step >= 2 ? '#1a1a1a' : '#999' }}>Payment</span>
+              </div>
+              
+              {/* Line */}
+              <div style={{ width: 40, height: 2, backgroundColor: step >= 3 ? '#B08B5C' : '#E0E0E0', margin: '0 12px' }} />
+              
+              {/* Step 3 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ 
+                  width: 28, 
+                  height: 28, 
+                  borderRadius: '50%', 
+                  backgroundColor: step >= 3 ? '#B08B5C' : '#E0E0E0', 
+                  color: step >= 3 ? '#FFF' : '#999', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  fontSize: 12, 
+                  fontWeight: 600 
+                }}>3</div>
+                <span style={{ fontSize: 13, fontWeight: 500, color: step >= 3 ? '#1a1a1a' : '#999' }}>Done</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ===== STEP 1: ADDRESS ===== */}
         {step === 1 && (
           <>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F0F0F0' }}>
-              <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <ChevronLeft size={24} style={{ color: '#1a1a1a' }} />
-              </button>
-              <span style={{ fontSize: 17, fontWeight: 600, color: '#1a1a1a' }}>Address</span>
-              <Link href="/cart"><ShoppingCart size={22} style={{ color: '#1a1a1a' }} /></Link>
-            </div>
-
-            {/* Content */}
             <div style={{ padding: '24px 20px', paddingBottom: 100 }}>
               {/* Receiver Details */}
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a', marginBottom: 12 }}>Receiver Details</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', marginBottom: 14 }}>Receiver Details</p>
               
               {/* Phone */}
               <div style={{ position: 'relative', marginBottom: 12 }}>
@@ -239,16 +313,10 @@ function CheckoutContent() {
                   placeholder="Phone Number"
                   disabled={otpVerified}
                   style={{
-                    width: '100%',
-                    height: 50,
-                    padding: '0 70px 0 16px',
-                    backgroundColor: otpVerified ? '#F8FFF8' : '#FFF',
-                    border: `1px solid ${otpVerified ? '#C6F6D5' : '#E8E8E8'}`,
-                    borderRadius: 12,
-                    fontSize: 15,
-                    color: '#1a1a1a',
-                    outline: 'none',
-                    boxSizing: 'border-box'
+                    ...inputStyle,
+                    paddingRight: 75,
+                    backgroundColor: otpVerified ? '#F0FFF4' : '#FFF',
+                    borderColor: otpVerified ? '#86EFAC' : '#E5E5E5'
                   }}
                 />
                 {otpVerified ? (
@@ -278,68 +346,23 @@ function CheckoutContent() {
               </div>
 
               {/* Name */}
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="Receiver's Name"
-                style={{
-                  width: '100%',
-                  height: 50,
-                  padding: '0 16px',
-                  backgroundColor: '#FFF',
-                  border: '1px solid #E8E8E8',
-                  borderRadius: 12,
-                  fontSize: 15,
-                  color: '#1a1a1a',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  marginBottom: 12
-                }}
-              />
+              <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Receiver's Name" style={{ ...inputStyle, marginBottom: 12 }} />
 
               {/* Email */}
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="Email (optional)"
-                style={{
-                  width: '100%',
-                  height: 50,
-                  padding: '0 16px',
-                  backgroundColor: '#FFF',
-                  border: '1px solid #E8E8E8',
-                  borderRadius: 12,
-                  fontSize: 15,
-                  color: '#1a1a1a',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  marginBottom: 28
-                }}
-              />
+              <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email (optional)" style={{ ...inputStyle, marginBottom: 28 }} />
 
               {/* Delivery Address */}
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a', marginBottom: 12 }}>Delivery Address</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', marginBottom: 14 }}>Delivery Address</p>
 
               {/* District & Area */}
               <div
                 onClick={() => { setShowLocationModal(true); setLocationStep('district'); setLocationSearch(''); }}
                 style={{
-                  width: '100%',
-                  height: 50,
-                  padding: '0 16px',
-                  backgroundColor: '#FFF',
-                  border: '1px solid #E8E8E8',
-                  borderRadius: 12,
-                  fontSize: 15,
+                  ...inputStyle,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   cursor: 'pointer',
-                  boxSizing: 'border-box',
                   marginBottom: 12
                 }}
               >
@@ -357,41 +380,17 @@ function CheckoutContent() {
                 placeholder="Enter full address"
                 rows={2}
                 style={{
-                  width: '100%',
+                  ...inputStyle,
+                  height: 'auto',
                   padding: '14px 16px',
-                  backgroundColor: '#FFF',
-                  border: '1px solid #E8E8E8',
-                  borderRadius: 12,
-                  fontSize: 15,
-                  color: '#1a1a1a',
-                  outline: 'none',
-                  boxSizing: 'border-box',
                   resize: 'none',
-                  lineHeight: 1.4,
+                  lineHeight: 1.5,
                   marginBottom: 12
                 }}
               />
 
               {/* Delivery Note */}
-              <input
-                type="text"
-                name="note"
-                value={formData.note}
-                onChange={handleInputChange}
-                placeholder="Delivery note (optional)"
-                style={{
-                  width: '100%',
-                  height: 50,
-                  padding: '0 16px',
-                  backgroundColor: '#FFF',
-                  border: '1px solid #E8E8E8',
-                  borderRadius: 12,
-                  fontSize: 15,
-                  color: '#1a1a1a',
-                  outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-              />
+              <input type="text" name="note" value={formData.note} onChange={handleInputChange} placeholder="Delivery note (optional)" style={inputStyle} />
             </div>
 
             {/* Bottom Button */}
@@ -423,27 +422,17 @@ function CheckoutContent() {
         {/* ===== STEP 2: PAYMENT ===== */}
         {step === 2 && (
           <>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F0F0F0' }}>
-              <button onClick={() => setStep(1)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                <ChevronLeft size={24} style={{ color: '#1a1a1a' }} />
-              </button>
-              <span style={{ fontSize: 17, fontWeight: 600, color: '#1a1a1a' }}>Payment</span>
-              <Link href="/cart"><ShoppingCart size={22} style={{ color: '#1a1a1a' }} /></Link>
-            </div>
-
-            {/* Content */}
             <div style={{ padding: '24px 20px', paddingBottom: 140 }}>
               
               {/* Payment Type */}
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a', marginBottom: 12 }}>Payment Type</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', marginBottom: 14 }}>Payment Type</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
                 <button 
                   onClick={() => setPaymentType('partial')} 
                   style={{ 
                     padding: 16, 
                     backgroundColor: paymentType === 'partial' ? '#FFF9F5' : '#FFF', 
-                    border: paymentType === 'partial' ? '2px solid #B08B5C' : '1px solid #E8E8E8', 
+                    border: paymentType === 'partial' ? '2px solid #B08B5C' : '1px solid #E5E5E5', 
                     borderRadius: 12, 
                     cursor: 'pointer', 
                     textAlign: 'left' 
@@ -453,14 +442,14 @@ function CheckoutContent() {
                     <span style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>Cash on Delivery</span>
                     {paymentType === 'partial' && <CheckCircle size={18} style={{ color: '#B08B5C' }} />}
                   </div>
-                  <p style={{ fontSize: 12, color: '#888', margin: 0 }}>৳{deliveryCharge} advance</p>
+                  <p style={{ fontSize: 12, color: '#666', margin: 0 }}>৳{deliveryCharge} advance</p>
                 </button>
                 <button 
                   onClick={() => setPaymentType('full')} 
                   style={{ 
                     padding: 16, 
                     backgroundColor: paymentType === 'full' ? '#FFF9F5' : '#FFF', 
-                    border: paymentType === 'full' ? '2px solid #B08B5C' : '1px solid #E8E8E8', 
+                    border: paymentType === 'full' ? '2px solid #B08B5C' : '1px solid #E5E5E5', 
                     borderRadius: 12, 
                     cursor: 'pointer', 
                     textAlign: 'left',
@@ -472,12 +461,12 @@ function CheckoutContent() {
                     <span style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>Full Payment</span>
                     {paymentType === 'full' && <CheckCircle size={18} style={{ color: '#B08B5C' }} />}
                   </div>
-                  <p style={{ fontSize: 12, color: '#888', margin: 0 }}>৳{(subtotal - discount).toLocaleString()}</p>
+                  <p style={{ fontSize: 12, color: '#666', margin: 0 }}>৳{(subtotal - discount).toLocaleString()}</p>
                 </button>
               </div>
 
               {/* Payment Method */}
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a', marginBottom: 12 }}>Payment Method</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', marginBottom: 14 }}>Payment Method</p>
               <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
                 {[
                   { id: 'bkash', name: 'bKash', color: '#E2136E', bg: '#FFF0F6' },
@@ -490,7 +479,7 @@ function CheckoutContent() {
                       flex: 1, 
                       padding: 14, 
                       backgroundColor: paymentMethod === m.id ? m.bg : '#FFF', 
-                      border: paymentMethod === m.id ? `2px solid ${m.color}` : '1px solid #E8E8E8', 
+                      border: paymentMethod === m.id ? `2px solid ${m.color}` : '1px solid #E5E5E5', 
                       borderRadius: 12, 
                       cursor: 'pointer' 
                     }}
@@ -501,73 +490,42 @@ function CheckoutContent() {
               </div>
 
               {/* Coupon */}
-              <p style={{ fontSize: 13, fontWeight: 600, color: '#1a1a1a', marginBottom: 12 }}>Promo Code</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a', marginBottom: 14 }}>Promo Code</p>
               {appliedCoupon ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: '#F0FFF4', borderRadius: 12, border: '1px solid #C6F6D5', marginBottom: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', backgroundColor: '#F0FFF4', borderRadius: 12, border: '1px solid #86EFAC', marginBottom: 24 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <Tag size={16} style={{ color: '#22C55E' }} />
                     <span style={{ fontSize: 14, fontWeight: 600, color: '#22C55E' }}>{appliedCoupon.code}</span>
-                    <span style={{ fontSize: 13, color: '#888' }}>-৳{discount}</span>
+                    <span style={{ fontSize: 13, color: '#666' }}>-৳{discount}</span>
                   </div>
                   <button onClick={() => { setAppliedCoupon(null); setDiscount(0); setCouponCode(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} style={{ color: '#EF4444' }} /></button>
                 </div>
               ) : (
                 <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-                  <input 
-                    value={couponCode} 
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())} 
-                    placeholder="Enter code" 
-                    style={{
-                      flex: 1,
-                      height: 50,
-                      padding: '0 16px',
-                      backgroundColor: '#FFF',
-                      border: '1px solid #E8E8E8',
-                      borderRadius: 12,
-                      fontSize: 15,
-                      outline: 'none',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                  <button 
-                    onClick={handleApplyCoupon} 
-                    disabled={couponLoading}
-                    style={{ 
-                      padding: '0 20px', 
-                      height: 50, 
-                      backgroundColor: '#1a1a1a', 
-                      color: '#FFF', 
-                      fontSize: 14, 
-                      fontWeight: 600, 
-                      border: 'none', 
-                      borderRadius: 12, 
-                      cursor: 'pointer' 
-                    }}
-                  >
-                    {couponLoading ? '...' : 'Apply'}
-                  </button>
+                  <input value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="Enter code" style={{ ...inputStyle, flex: 1 }} />
+                  <button onClick={handleApplyCoupon} disabled={couponLoading} style={{ padding: '0 20px', height: 50, backgroundColor: '#1a1a1a', color: '#FFF', fontSize: 14, fontWeight: 600, border: 'none', borderRadius: 12, cursor: 'pointer' }}>{couponLoading ? '...' : 'Apply'}</button>
                 </div>
               )}
 
               {/* Order Summary */}
               <div style={{ borderTop: '1px solid #F0F0F0', paddingTop: 20 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span style={{ fontSize: 14, color: '#888' }}>Subtotal</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <span style={{ fontSize: 14, color: '#666' }}>Subtotal</span>
                   <span style={{ fontSize: 14, color: '#1a1a1a' }}>৳{subtotal.toLocaleString()}</span>
                 </div>
                 {discount > 0 && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                     <span style={{ fontSize: 14, color: '#22C55E' }}>Discount</span>
                     <span style={{ fontSize: 14, color: '#22C55E' }}>-৳{discount}</span>
                   </div>
                 )}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-                  <span style={{ fontSize: 14, color: '#888' }}>Delivery</span>
+                  <span style={{ fontSize: 14, color: '#666' }}>Delivery</span>
                   <span style={{ fontSize: 14, color: paymentType === 'full' ? '#22C55E' : '#1a1a1a' }}>{paymentType === 'full' ? 'Free' : '৳' + deliveryCharge}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px solid #F0F0F0' }}>
                   <span style={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a' }}>Total</span>
-                  <span style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>৳{total.toLocaleString()}</span>
+                  <span style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a' }}>৳{total.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -575,7 +533,7 @@ function CheckoutContent() {
             {/* Bottom Button */}
             <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', backgroundColor: '#FFF', borderTop: '1px solid #F0F0F0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <span style={{ fontSize: 14, color: '#888' }}>Pay Now</span>
+                <span style={{ fontSize: 14, color: '#666' }}>Pay Now</span>
                 <span style={{ fontSize: 20, fontWeight: 700, color: '#1a1a1a' }}>৳{advanceAmount.toLocaleString()}</span>
               </div>
               <button
@@ -606,64 +564,40 @@ function CheckoutContent() {
 
         {/* ===== STEP 3: SUCCESS ===== */}
         {step === 3 && (
-          <>
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid #F0F0F0' }}>
-              <div style={{ width: 24 }} />
-              <span style={{ fontSize: 17, fontWeight: 600, color: '#1a1a1a' }}>Thank You</span>
-              <Link href="/cart"><ShoppingCart size={22} style={{ color: '#1a1a1a' }} /></Link>
+          <div style={{ padding: '60px 24px', textAlign: 'center', minHeight: 'calc(100vh - 60px)' }}>
+            {/* Success Icon */}
+            <div style={{ width: 80, height: 80, borderRadius: '50%', backgroundColor: '#F0FFF4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+              <CheckCircle size={40} style={{ color: '#22C55E' }} />
             </div>
 
-            {/* Content */}
-            <div style={{ padding: '60px 24px', textAlign: 'center' }}>
-              <p style={{ fontSize: 15, color: '#666', marginBottom: 8 }}>Your order has been placed! You will</p>
-              <p style={{ fontSize: 15, color: '#666', marginBottom: 40 }}>receive a confirmation call shortly.</p>
+            <h1 style={{ fontSize: 24, fontWeight: 600, color: '#1a1a1a', marginBottom: 8 }}>Successful!</h1>
+            <p style={{ fontSize: 15, color: '#666', marginBottom: 8 }}>Your order number is <span style={{ color: '#B08B5C', fontWeight: 600 }}>#{orderNumber}</span></p>
+            <p style={{ fontSize: 14, color: '#888', marginBottom: 40 }}>You will receive the order<br/>confirmation call shortly.</p>
 
-              {/* Gift Icon */}
-              <div style={{ marginBottom: 40 }}>
-                <div style={{ width: 100, height: 100, margin: '0 auto', position: 'relative' }}>
-                  <div style={{ width: 80, height: 80, backgroundColor: '#FFF5EB', borderRadius: 16, position: 'absolute', top: 10, left: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Gift size={40} style={{ color: '#B08B5C' }} />
-                  </div>
-                  <div style={{ position: 'absolute', top: 0, right: 15, width: 20, height: 20, backgroundColor: '#FFE4CC', borderRadius: '50%' }} />
-                  <div style={{ position: 'absolute', bottom: 5, left: 5, width: 12, height: 12, backgroundColor: '#FFE4CC', borderRadius: '50%' }} />
-                </div>
-              </div>
+            <p style={{ fontSize: 15, color: '#1a1a1a', marginBottom: 40 }}>Thank you for shopping with us</p>
 
-              {/* Order Number */}
-              <p style={{ fontSize: 14, color: '#888', marginBottom: 8 }}>Order Number</p>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 50 }}>
-                <span style={{ fontSize: 22, fontWeight: 700, color: '#B08B5C' }}>#{orderNumber}</span>
-                <button onClick={copyOrder} style={{ padding: 6, backgroundColor: '#F5F5F5', border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex' }}>
-                  {copied ? <CheckCircle size={16} style={{ color: '#22C55E' }} /> : <Copy size={16} style={{ color: '#888' }} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Bottom Button */}
-            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '16px 20px', backgroundColor: '#FFF' }}>
-              <Link
-                href="/"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                  width: '100%',
-                  height: 52,
-                  backgroundColor: '#B08B5C',
-                  color: '#FFF',
-                  fontSize: 15,
-                  fontWeight: 600,
-                  border: 'none',
-                  borderRadius: 26,
-                  textDecoration: 'none'
-                }}
-              >
-                <ChevronLeft size={18} /> Back to Home
-              </Link>
-            </div>
-          </>
+            <Link
+              href="/"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                width: '100%',
+                maxWidth: 300,
+                height: 52,
+                backgroundColor: '#B08B5C',
+                color: '#FFF',
+                fontSize: 15,
+                fontWeight: 600,
+                border: 'none',
+                borderRadius: 26,
+                textDecoration: 'none'
+              }}
+            >
+              Continue Shopping
+            </Link>
+          </div>
         )}
 
         {/* OTP Modal */}
@@ -675,54 +609,19 @@ function CheckoutContent() {
                 <Phone size={26} style={{ color: '#B08B5C' }} />
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 6 }}>Verify Phone</h3>
-              <p style={{ fontSize: 14, color: '#888', marginBottom: 24 }}>Enter 6-digit code sent to <strong>{formData.phone}</strong></p>
+              <p style={{ fontSize: 14, color: '#666', marginBottom: 24 }}>Enter 6-digit code sent to <strong>{formData.phone}</strong></p>
               
               <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 24 }}>
                 {otpValues.map((val, i) => (
-                  <input 
-                    key={i} 
-                    ref={el => otpRefs.current[i] = el} 
-                    type="text" 
-                    inputMode="numeric" 
-                    maxLength={1} 
-                    value={val} 
-                    onChange={(e) => handleOtpChange(i, e.target.value)} 
-                    onKeyDown={(e) => handleOtpKeyDown(i, e)} 
-                    style={{ 
-                      width: 48, 
-                      height: 54, 
-                      textAlign: 'center', 
-                      fontSize: 22, 
-                      fontWeight: 600, 
-                      border: `2px solid ${val ? '#B08B5C' : '#E8E8E8'}`, 
-                      borderRadius: 12, 
-                      outline: 'none', 
-                      backgroundColor: val ? '#FFF9F5' : '#FFF' 
-                    }} 
-                  />
+                  <input key={i} ref={el => otpRefs.current[i] = el} type="text" inputMode="numeric" maxLength={1} value={val} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleOtpKeyDown(i, e)} style={{ width: 48, height: 54, textAlign: 'center', fontSize: 22, fontWeight: 600, border: `2px solid ${val ? '#B08B5C' : '#E5E5E5'}`, borderRadius: 12, outline: 'none', backgroundColor: val ? '#FFF9F5' : '#FFF' }} />
                 ))}
               </div>
 
-              <button 
-                onClick={verifyOtp} 
-                disabled={loading} 
-                style={{ 
-                  width: '100%', 
-                  height: 52, 
-                  backgroundColor: '#B08B5C', 
-                  color: '#FFF', 
-                  fontSize: 15, 
-                  fontWeight: 600, 
-                  border: 'none', 
-                  borderRadius: 26, 
-                  cursor: 'pointer', 
-                  marginBottom: 16 
-                }}
-              >
+              <button onClick={verifyOtp} disabled={loading} style={{ width: '100%', height: 52, backgroundColor: '#B08B5C', color: '#FFF', fontSize: 15, fontWeight: 600, border: 'none', borderRadius: 26, cursor: 'pointer', marginBottom: 16 }}>
                 {loading ? 'Verifying...' : 'Verify'}
               </button>
 
-              <p style={{ fontSize: 14, color: '#888' }}>
+              <p style={{ fontSize: 14, color: '#666' }}>
                 {otpTimer > 0 ? `Resend in ${otpTimer}s` : <button onClick={sendOtp} style={{ background: 'none', border: 'none', color: '#B08B5C', fontWeight: 600, cursor: 'pointer' }}>Resend OTP</button>}
               </p>
             </div>
@@ -741,26 +640,10 @@ function CheckoutContent() {
             <div style={{ padding: 16 }}>
               <div style={{ position: 'relative' }}>
                 <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
-                <input 
-                  value={locationSearch} 
-                  onChange={(e) => setLocationSearch(e.target.value)} 
-                  placeholder="Search..." 
-                  style={{
-                    width: '100%',
-                    height: 50,
-                    padding: '0 16px 0 44px',
-                    backgroundColor: '#FFF',
-                    border: '1px solid #E8E8E8',
-                    borderRadius: 12,
-                    fontSize: 15,
-                    outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
-                  autoFocus 
-                />
+                <input value={locationSearch} onChange={(e) => setLocationSearch(e.target.value)} placeholder="Search..." style={{ ...inputStyle, paddingLeft: 44 }} autoFocus />
               </div>
             </div>
-            <div style={{ height: 'calc(100vh - 130px)', overflowY: 'auto' }}>
+            <div style={{ height: 'calc(100vh - 140px)', overflowY: 'auto' }}>
               {locationStep === 'district' ? (
                 districts.filter(d => d.name.toLowerCase().includes(locationSearch.toLowerCase())).map(d => (
                   <div key={d.id} onClick={() => selectDistrict(d)} style={{ padding: '16px 20px', borderBottom: '1px solid #F8F8F8', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -784,122 +667,319 @@ function CheckoutContent() {
     );
   }
 
-  // ====================== DESKTOP SINGLE PAGE ======================
+  // ====================== DESKTOP - PROFESSIONAL CHECKOUT ======================
   return (
-    <div style={{ backgroundColor: '#F8F8F8', minHeight: '100vh', paddingTop: 90, paddingBottom: 60 }}>
-      <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 24px' }}>
-        <h1 style={{ fontSize: 24, fontWeight: 400, letterSpacing: 3, textAlign: 'center', marginBottom: 36, color: '#1a1a1a', textTransform: 'uppercase' }}>Checkout</h1>
+    <div style={{ backgroundColor: '#F5F5F5', minHeight: '100vh' }}>
+      {/* Header */}
+      <div style={{ backgroundColor: '#FFF', borderBottom: '1px solid #E5E5E5', padding: '20px 0' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link href="/" style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a', textDecoration: 'none', letterSpacing: 3 }}>PRISMIN</Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#22C55E' }}>
+            <Lock size={16} />
+            <span style={{ fontSize: 13, fontWeight: 500 }}>Secure Checkout</span>
+          </div>
+        </div>
+      </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24, alignItems: 'start' }}>
-          {/* Left */}
-          <div>
-            {/* Contact */}
-            <div style={{ backgroundColor: '#FFF', borderRadius: 16, padding: 24, marginBottom: 16 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a', marginBottom: 20 }}>Receiver Details</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                <div style={{ position: 'relative' }}>
-                  <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Phone Number" disabled={otpVerified} style={{ width: '100%', height: 48, padding: '0 75px 0 16px', backgroundColor: otpVerified ? '#F8FFF8' : '#FAFAFA', border: `1px solid ${otpVerified ? '#C6F6D5' : '#E8E8E8'}`, borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-                  {otpVerified ? <CheckCircle size={18} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: '#22C55E' }} /> : <button onClick={sendOtp} disabled={otpSending} style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', padding: '7px 12px', backgroundColor: '#1a1a1a', color: '#FFF', fontSize: 11, fontWeight: 600, border: 'none', borderRadius: 6, cursor: 'pointer' }}>{otpSending ? '...' : 'Verify'}</button>}
-                </div>
-                <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Receiver's Name" style={{ width: '100%', height: 48, padding: '0 16px', backgroundColor: '#FAFAFA', border: '1px solid #E8E8E8', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-              </div>
-              <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email (optional)" style={{ width: '100%', height: 48, padding: '0 16px', backgroundColor: '#FAFAFA', border: '1px solid #E8E8E8', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-            </div>
+      {/* Progress Bar */}
+      <div style={{ backgroundColor: '#FFF', borderBottom: '1px solid #E5E5E5', padding: '20px 0' }}>
+        <div style={{ maxWidth: 600, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#B08B5C', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600 }}>1</div>
+            <span style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a' }}>Information</span>
+          </div>
+          <div style={{ width: 80, height: 2, backgroundColor: '#B08B5C', margin: '0 16px' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#B08B5C', color: '#FFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600 }}>2</div>
+            <span style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a' }}>Payment</span>
+          </div>
+          <div style={{ width: 80, height: 2, backgroundColor: '#E0E0E0', margin: '0 16px' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#E0E0E0', color: '#999', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600 }}>3</div>
+            <span style={{ fontSize: 14, fontWeight: 500, color: '#999' }}>Confirmation</span>
+          </div>
+        </div>
+      </div>
 
-            {/* Address */}
-            <div style={{ backgroundColor: '#FFF', borderRadius: 16, padding: 24, marginBottom: 16 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a', marginBottom: 20 }}>Delivery Address</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                <div onClick={() => { setShowLocationModal(true); setLocationStep('district'); setLocationSearch(''); }} style={{ width: '100%', height: 48, padding: '0 16px', backgroundColor: '#FAFAFA', border: '1px solid #E8E8E8', borderRadius: 10, fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', boxSizing: 'border-box' }}>
-                  <span style={{ color: formData.district ? '#1a1a1a' : '#999' }}>{formData.district && formData.area ? `${formData.district} › ${formData.area}` : 'District & Area'}</span>
-                  <MapPin size={16} style={{ color: '#B08B5C' }} />
-                </div>
-                <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="Full Address" style={{ width: '100%', height: 48, padding: '0 16px', backgroundColor: '#FAFAFA', border: '1px solid #E8E8E8', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-              </div>
-              <input type="text" name="note" value={formData.note} onChange={handleInputChange} placeholder="Delivery note (optional)" style={{ width: '100%', height: 48, padding: '0 16px', backgroundColor: '#FAFAFA', border: '1px solid #E8E8E8', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-            </div>
-
-            {/* Payment */}
-            <div style={{ backgroundColor: '#FFF', borderRadius: 16, padding: 24 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a', marginBottom: 20 }}>Payment</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-                <button onClick={() => setPaymentType('partial')} style={{ padding: 16, backgroundColor: paymentType === 'partial' ? '#FFF9F5' : '#FAFAFA', border: paymentType === 'partial' ? '2px solid #B08B5C' : '1px solid #E8E8E8', borderRadius: 12, cursor: 'pointer', textAlign: 'left' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}><span style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>Cash on Delivery</span>{paymentType === 'partial' && <CheckCircle size={18} style={{ color: '#B08B5C' }} />}</div>
-                  <p style={{ fontSize: 12, color: '#888', margin: 0 }}>Pay ৳{deliveryCharge} advance</p>
-                </button>
-                <button onClick={() => setPaymentType('full')} style={{ padding: 16, backgroundColor: paymentType === 'full' ? '#FFF9F5' : '#FAFAFA', border: paymentType === 'full' ? '2px solid #B08B5C' : '1px solid #E8E8E8', borderRadius: 12, cursor: 'pointer', textAlign: 'left', position: 'relative' }}>
-                  <span style={{ position: 'absolute', top: -8, right: 10, padding: '3px 8px', backgroundColor: '#22C55E', color: '#FFF', fontSize: 9, fontWeight: 600, borderRadius: 4 }}>FREE DELIVERY</span>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}><span style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>Full Payment</span>{paymentType === 'full' && <CheckCircle size={18} style={{ color: '#B08B5C' }} />}</div>
-                  <p style={{ fontSize: 12, color: '#888', margin: 0 }}>Pay ৳{(subtotal - discount).toLocaleString()} now</p>
-                </button>
-              </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                {[{ id: 'bkash', name: 'bKash', color: '#E2136E', bg: '#FFF0F6' }, { id: 'nagad', name: 'Nagad', color: '#F6921E', bg: '#FFF8F0' }].map(m => (
-                  <button key={m.id} onClick={() => setPaymentMethod(m.id)} style={{ flex: 1, padding: 14, backgroundColor: paymentMethod === m.id ? m.bg : '#FAFAFA', border: paymentMethod === m.id ? `2px solid ${m.color}` : '1px solid #E8E8E8', borderRadius: 12, cursor: 'pointer' }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: m.color }}>{m.name}</span>
+      {/* Main Content */}
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px', display: 'grid', gridTemplateColumns: '1fr 420px', gap: 40 }}>
+        
+        {/* Left Column - Forms */}
+        <div>
+          {/* Contact Information */}
+          <div style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 32, marginBottom: 24 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 24 }}>Contact Information</h2>
+            
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#333', marginBottom: 8 }}>Phone Number *</label>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  value={formData.phone} 
+                  onChange={handleInputChange} 
+                  placeholder="01XXXXXXXXX" 
+                  disabled={otpVerified}
+                  style={{ 
+                    width: '100%', 
+                    height: 52, 
+                    padding: '0 100px 0 16px', 
+                    backgroundColor: otpVerified ? '#F0FFF4' : '#FFF', 
+                    border: `1px solid ${otpVerified ? '#86EFAC' : '#E0E0E0'}`, 
+                    borderRadius: 8, 
+                    fontSize: 15, 
+                    outline: 'none', 
+                    boxSizing: 'border-box' 
+                  }} 
+                />
+                {otpVerified ? (
+                  <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 6, color: '#22C55E' }}>
+                    <CheckCircle size={18} />
+                    <span style={{ fontSize: 13, fontWeight: 500 }}>Verified</span>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={sendOtp} 
+                    disabled={otpSending}
+                    style={{ 
+                      position: 'absolute', 
+                      right: 8, 
+                      top: '50%', 
+                      transform: 'translateY(-50%)',
+                      padding: '10px 16px',
+                      backgroundColor: '#1a1a1a',
+                      color: '#FFF',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      border: 'none',
+                      borderRadius: 6,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {otpSending ? 'Sending...' : 'Verify'}
                   </button>
-                ))}
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#333', marginBottom: 8 }}>Full Name *</label>
+                <input type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter your name" style={{ width: '100%', height: 52, padding: '0 16px', backgroundColor: '#FFF', border: '1px solid #E0E0E0', borderRadius: 8, fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#333', marginBottom: 8 }}>Email (Optional)</label>
+                <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Enter your email" style={{ width: '100%', height: 52, padding: '0 16px', backgroundColor: '#FFF', border: '1px solid #E0E0E0', borderRadius: 8, fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
               </div>
             </div>
           </div>
 
-          {/* Right - Summary */}
-          <div style={{ position: 'sticky', top: 100 }}>
-            <div style={{ backgroundColor: '#FFF', borderRadius: 16, padding: 24 }}>
-              <h2 style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a', marginBottom: 16 }}>Order Summary</h2>
-              
-              <div style={{ maxHeight: 150, overflowY: 'auto', marginBottom: 16 }}>
-                {items.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                    <div style={{ width: 48, height: 48, borderRadius: 8, backgroundColor: '#FAFAFA', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
-                      {item.image ? <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} /> : <Package size={18} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', color: '#CCC' }} />}
-                      <span style={{ position: 'absolute', top: -4, right: -4, width: 18, height: 18, backgroundColor: '#B08B5C', color: '#FFF', fontSize: 10, fontWeight: 600, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.quantity}</span>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a', margin: 0, marginBottom: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</p>
-                      <p style={{ fontSize: 13, color: '#888', margin: 0 }}>৳{(item.price * item.quantity).toLocaleString()}</p>
-                    </div>
-                  </div>
-                ))}
+          {/* Shipping Address */}
+          <div style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 32, marginBottom: 24 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 24 }}>Shipping Address</h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#333', marginBottom: 8 }}>District & Area *</label>
+                <div 
+                  onClick={() => { setShowLocationModal(true); setLocationStep('district'); setLocationSearch(''); }} 
+                  style={{ 
+                    width: '100%', 
+                    height: 52, 
+                    padding: '0 16px', 
+                    backgroundColor: '#FFF', 
+                    border: '1px solid #E0E0E0', 
+                    borderRadius: 8, 
+                    fontSize: 15, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    cursor: 'pointer', 
+                    boxSizing: 'border-box' 
+                  }}
+                >
+                  <span style={{ color: formData.district ? '#1a1a1a' : '#999' }}>{formData.district && formData.area ? `${formData.district} › ${formData.area}` : 'Select location'}</span>
+                  <MapPin size={18} style={{ color: '#B08B5C' }} />
+                </div>
               </div>
-
-              {/* Coupon */}
-              <div style={{ paddingTop: 12, paddingBottom: 12, borderTop: '1px solid #F0F0F0', borderBottom: '1px solid #F0F0F0', marginBottom: 12 }}>
-                {appliedCoupon ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', backgroundColor: '#F0FFF4', borderRadius: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Tag size={14} style={{ color: '#22C55E' }} /><span style={{ fontSize: 13, fontWeight: 600, color: '#22C55E' }}>{appliedCoupon.code}</span><span style={{ fontSize: 12, color: '#888' }}>-৳{discount}</span></div>
-                    <button onClick={() => { setAppliedCoupon(null); setDiscount(0); setCouponCode(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={14} style={{ color: '#EF4444' }} /></button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <input value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="Promo code" style={{ flex: 1, height: 40, padding: '0 12px', backgroundColor: '#FAFAFA', border: '1px solid #E8E8E8', borderRadius: 8, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
-                    <button onClick={handleApplyCoupon} disabled={couponLoading} style={{ padding: '0 14px', height: 40, backgroundColor: '#1a1a1a', color: '#FFF', fontSize: 12, fontWeight: 600, border: 'none', borderRadius: 8, cursor: 'pointer' }}>{couponLoading ? '...' : 'Apply'}</button>
-                  </div>
-                )}
+              <div>
+                <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#333', marginBottom: 8 }}>Street Address *</label>
+                <input type="text" name="address" value={formData.address} onChange={handleInputChange} placeholder="House, road, building" style={{ width: '100%', height: 52, padding: '0 16px', backgroundColor: '#FFF', border: '1px solid #E0E0E0', borderRadius: 8, fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
               </div>
+            </div>
 
-              {/* Pricing */}
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span style={{ fontSize: 13, color: '#888' }}>Subtotal</span><span style={{ fontSize: 13, color: '#1a1a1a' }}>৳{subtotal.toLocaleString()}</span></div>
-                {discount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span style={{ fontSize: 13, color: '#22C55E' }}>Discount</span><span style={{ fontSize: 13, color: '#22C55E' }}>-৳{discount}</span></div>}
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}><span style={{ fontSize: 13, color: '#888' }}>Delivery</span><span style={{ fontSize: 13, color: paymentType === 'full' ? '#22C55E' : '#1a1a1a' }}>{paymentType === 'full' ? 'Free' : '৳' + deliveryCharge}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid #F0F0F0' }}><span style={{ fontSize: 14, fontWeight: 600, color: '#1a1a1a' }}>Total</span><span style={{ fontSize: 18, fontWeight: 700, color: '#1a1a1a' }}>৳{total.toLocaleString()}</span></div>
-              </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#333', marginBottom: 8 }}>Delivery Note (Optional)</label>
+              <input type="text" name="note" value={formData.note} onChange={handleInputChange} placeholder="Any special instructions" style={{ width: '100%', height: 52, padding: '0 16px', backgroundColor: '#FFF', border: '1px solid #E0E0E0', borderRadius: 8, fontSize: 15, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+          </div>
 
-              {/* Pay Summary */}
-              <div style={{ backgroundColor: '#FAFAFA', borderRadius: 10, padding: 12, marginBottom: 14 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}><span style={{ fontSize: 12, color: '#888' }}>Pay Now ({paymentMethod})</span><span style={{ fontSize: 14, fontWeight: 700, color: '#B08B5C' }}>৳{advanceAmount.toLocaleString()}</span></div>
-                {paymentType === 'partial' && <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 12, color: '#888' }}>Pay on Delivery</span><span style={{ fontSize: 12, color: '#1a1a1a' }}>৳{codAmount.toLocaleString()}</span></div>}
-              </div>
-
-              <button onClick={handleSubmit} disabled={loading || !otpVerified} style={{ width: '100%', height: 48, backgroundColor: otpVerified ? '#B08B5C' : '#E5E5E5', color: '#FFF', fontSize: 14, fontWeight: 600, border: 'none', borderRadius: 24, cursor: (loading || !otpVerified) ? 'not-allowed' : 'pointer' }}>
-                {loading ? 'Processing...' : (otpVerified ? 'Place Order' : 'Verify Phone First')}
+          {/* Payment Method */}
+          <div style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 32 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 24 }}>Payment Method</h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+              <button 
+                onClick={() => setPaymentType('partial')} 
+                style={{ 
+                  padding: 20, 
+                  backgroundColor: paymentType === 'partial' ? '#FFF9F5' : '#FFF', 
+                  border: paymentType === 'partial' ? '2px solid #B08B5C' : '1px solid #E0E0E0', 
+                  borderRadius: 10, 
+                  cursor: 'pointer', 
+                  textAlign: 'left' 
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a' }}>Cash on Delivery</span>
+                  {paymentType === 'partial' && <CheckCircle size={20} style={{ color: '#B08B5C' }} />}
+                </div>
+                <p style={{ fontSize: 13, color: '#666', margin: 0 }}>Pay ৳{deliveryCharge} advance, rest on delivery</p>
               </button>
+              <button 
+                onClick={() => setPaymentType('full')} 
+                style={{ 
+                  padding: 20, 
+                  backgroundColor: paymentType === 'full' ? '#FFF9F5' : '#FFF', 
+                  border: paymentType === 'full' ? '2px solid #B08B5C' : '1px solid #E0E0E0', 
+                  borderRadius: 10, 
+                  cursor: 'pointer', 
+                  textAlign: 'left',
+                  position: 'relative'
+                }}
+              >
+                <span style={{ position: 'absolute', top: -10, right: 12, padding: '4px 10px', backgroundColor: '#22C55E', color: '#FFF', fontSize: 11, fontWeight: 600, borderRadius: 4 }}>FREE DELIVERY</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: '#1a1a1a' }}>Full Payment</span>
+                  {paymentType === 'full' && <CheckCircle size={20} style={{ color: '#B08B5C' }} />}
+                </div>
+                <p style={{ fontSize: 13, color: '#666', margin: 0 }}>Pay full amount now</p>
+              </button>
+            </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14 }}>
-                <Shield size={14} style={{ color: '#22C55E' }} />
-                <span style={{ fontSize: 11, color: '#999' }}>Secure checkout</span>
+            <div style={{ display: 'flex', gap: 12 }}>
+              {[
+                { id: 'bkash', name: 'bKash', color: '#E2136E', bg: '#FFF0F6' },
+                { id: 'nagad', name: 'Nagad', color: '#F6921E', bg: '#FFF8F0' }
+              ].map(m => (
+                <button 
+                  key={m.id} 
+                  onClick={() => setPaymentMethod(m.id)} 
+                  style={{ 
+                    flex: 1, 
+                    padding: 16, 
+                    backgroundColor: paymentMethod === m.id ? m.bg : '#FFF', 
+                    border: paymentMethod === m.id ? `2px solid ${m.color}` : '1px solid #E0E0E0', 
+                    borderRadius: 10, 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  <span style={{ fontSize: 15, fontWeight: 600, color: m.color }}>{m.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Order Summary */}
+        <div>
+          <div style={{ backgroundColor: '#FFF', borderRadius: 12, padding: 32, position: 'sticky', top: 40 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 24 }}>Order Summary</h2>
+            
+            {/* Products */}
+            <div style={{ maxHeight: 240, overflowY: 'auto', marginBottom: 24 }}>
+              {items.map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: 16, marginBottom: 16 }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 8, backgroundColor: '#F5F5F5', overflow: 'hidden', position: 'relative', flexShrink: 0 }}>
+                    {item.image ? <Image src={item.image} alt={item.name} fill style={{ objectFit: 'cover' }} /> : <Package size={24} style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', color: '#CCC' }} />}
+                    <span style={{ position: 'absolute', top: -6, right: -6, width: 22, height: 22, backgroundColor: '#B08B5C', color: '#FFF', fontSize: 11, fontWeight: 600, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.quantity}</span>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 14, fontWeight: 500, color: '#1a1a1a', margin: 0, marginBottom: 4 }}>{item.name}</p>
+                    <p style={{ fontSize: 14, color: '#666', margin: 0 }}>৳{(item.price * item.quantity).toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Coupon */}
+            <div style={{ paddingBottom: 20, borderBottom: '1px solid #F0F0F0', marginBottom: 20 }}>
+              {appliedCoupon ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: '#F0FFF4', borderRadius: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Tag size={16} style={{ color: '#22C55E' }} />
+                    <span style={{ fontSize: 14, fontWeight: 600, color: '#22C55E' }}>{appliedCoupon.code}</span>
+                    <span style={{ fontSize: 13, color: '#666' }}>-৳{discount}</span>
+                  </div>
+                  <button onClick={() => { setAppliedCoupon(null); setDiscount(0); setCouponCode(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={16} style={{ color: '#EF4444' }} /></button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <input value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="Discount code" style={{ flex: 1, height: 48, padding: '0 16px', backgroundColor: '#FFF', border: '1px solid #E0E0E0', borderRadius: 8, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+                  <button onClick={handleApplyCoupon} disabled={couponLoading} style={{ padding: '0 20px', height: 48, backgroundColor: '#1a1a1a', color: '#FFF', fontSize: 14, fontWeight: 600, border: 'none', borderRadius: 8, cursor: 'pointer' }}>{couponLoading ? '...' : 'Apply'}</button>
+                </div>
+              )}
+            </div>
+
+            {/* Pricing */}
+            <div style={{ marginBottom: 24 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 14, color: '#666' }}>Subtotal</span>
+                <span style={{ fontSize: 14, color: '#1a1a1a' }}>৳{subtotal.toLocaleString()}</span>
               </div>
+              {discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <span style={{ fontSize: 14, color: '#22C55E' }}>Discount</span>
+                  <span style={{ fontSize: 14, color: '#22C55E' }}>-৳{discount}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                <span style={{ fontSize: 14, color: '#666' }}>Shipping</span>
+                <span style={{ fontSize: 14, color: paymentType === 'full' ? '#22C55E' : '#1a1a1a' }}>{paymentType === 'full' ? 'Free' : '৳' + deliveryCharge}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px solid #F0F0F0' }}>
+                <span style={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a' }}>Total</span>
+                <span style={{ fontSize: 22, fontWeight: 700, color: '#1a1a1a' }}>৳{total.toLocaleString()}</span>
+              </div>
+            </div>
+
+            {/* Payment Info Box */}
+            <div style={{ backgroundColor: '#F8F8F8', borderRadius: 8, padding: 16, marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontSize: 14, color: '#666' }}>Pay Now ({paymentMethod})</span>
+                <span style={{ fontSize: 16, fontWeight: 700, color: '#B08B5C' }}>৳{advanceAmount.toLocaleString()}</span>
+              </div>
+              {paymentType === 'partial' && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 13, color: '#888' }}>Pay on Delivery</span>
+                  <span style={{ fontSize: 13, color: '#1a1a1a' }}>৳{codAmount.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <button 
+              onClick={handleSubmit} 
+              disabled={loading || !otpVerified}
+              style={{ 
+                width: '100%', 
+                height: 56, 
+                backgroundColor: otpVerified ? '#B08B5C' : '#E0E0E0', 
+                color: '#FFF', 
+                fontSize: 16, 
+                fontWeight: 600, 
+                border: 'none', 
+                borderRadius: 8, 
+                cursor: (loading || !otpVerified) ? 'not-allowed' : 'pointer',
+                marginBottom: 16
+              }}
+            >
+              {loading ? 'Processing...' : (otpVerified ? `Pay ৳${advanceAmount.toLocaleString()} & Place Order` : 'Verify Phone to Continue')}
+            </button>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Shield size={16} style={{ color: '#22C55E' }} />
+              <span style={{ fontSize: 13, color: '#888' }}>Your payment is secure and encrypted</span>
             </div>
           </div>
         </div>
@@ -908,18 +988,18 @@ function CheckoutContent() {
       {/* Desktop OTP Modal */}
       {showOtpModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ backgroundColor: '#FFF', borderRadius: 20, padding: 36, width: 380, textAlign: 'center', position: 'relative' }}>
-            <button onClick={() => setShowOtpModal(false)} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} style={{ color: '#999' }} /></button>
-            <div style={{ width: 60, height: 60, borderRadius: '50%', backgroundColor: '#FFF5EB', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}><Phone size={28} style={{ color: '#B08B5C' }} /></div>
-            <h3 style={{ fontSize: 20, fontWeight: 600, color: '#1a1a1a', marginBottom: 8 }}>Verify Phone</h3>
-            <p style={{ fontSize: 14, color: '#888', marginBottom: 28 }}>Enter 6-digit code sent to<br /><strong>{formData.phone}</strong></p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 28 }}>
+          <div style={{ backgroundColor: '#FFF', borderRadius: 16, padding: 40, width: 420, textAlign: 'center', position: 'relative' }}>
+            <button onClick={() => setShowOtpModal(false)} style={{ position: 'absolute', top: 16, right: 16, background: 'none', border: 'none', cursor: 'pointer' }}><X size={22} style={{ color: '#999' }} /></button>
+            <div style={{ width: 70, height: 70, borderRadius: '50%', backgroundColor: '#FFF5EB', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}><Phone size={32} style={{ color: '#B08B5C' }} /></div>
+            <h3 style={{ fontSize: 22, fontWeight: 600, color: '#1a1a1a', marginBottom: 8 }}>Verify Your Phone</h3>
+            <p style={{ fontSize: 15, color: '#666', marginBottom: 32 }}>Enter the 6-digit code sent to<br /><strong>{formData.phone}</strong></p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 32 }}>
               {otpValues.map((val, i) => (
-                <input key={i} ref={el => otpRefs.current[i] = el} type="text" inputMode="numeric" maxLength={1} value={val} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleOtpKeyDown(i, e)} style={{ width: 48, height: 54, textAlign: 'center', fontSize: 22, fontWeight: 600, border: `2px solid ${val ? '#B08B5C' : '#E8E8E8'}`, borderRadius: 12, outline: 'none', backgroundColor: val ? '#FFF9F5' : '#FFF' }} />
+                <input key={i} ref={el => otpRefs.current[i] = el} type="text" inputMode="numeric" maxLength={1} value={val} onChange={(e) => handleOtpChange(i, e.target.value)} onKeyDown={(e) => handleOtpKeyDown(i, e)} style={{ width: 52, height: 60, textAlign: 'center', fontSize: 24, fontWeight: 600, border: `2px solid ${val ? '#B08B5C' : '#E0E0E0'}`, borderRadius: 10, outline: 'none', backgroundColor: val ? '#FFF9F5' : '#FFF' }} />
               ))}
             </div>
-            <button onClick={verifyOtp} disabled={loading} style={{ width: '100%', height: 50, backgroundColor: '#B08B5C', color: '#FFF', fontSize: 15, fontWeight: 600, border: 'none', borderRadius: 25, cursor: 'pointer', marginBottom: 16 }}>{loading ? 'Verifying...' : 'Verify'}</button>
-            <p style={{ fontSize: 14, color: '#888' }}>{otpTimer > 0 ? `Resend in ${otpTimer}s` : <button onClick={sendOtp} style={{ background: 'none', border: 'none', color: '#B08B5C', fontWeight: 600, cursor: 'pointer' }}>Resend OTP</button>}</p>
+            <button onClick={verifyOtp} disabled={loading} style={{ width: '100%', height: 54, backgroundColor: '#B08B5C', color: '#FFF', fontSize: 16, fontWeight: 600, border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 20 }}>{loading ? 'Verifying...' : 'Verify & Continue'}</button>
+            <p style={{ fontSize: 14, color: '#666' }}>{otpTimer > 0 ? `Resend code in ${otpTimer}s` : <button onClick={sendOtp} style={{ background: 'none', border: 'none', color: '#B08B5C', fontWeight: 600, cursor: 'pointer' }}>Resend OTP</button>}</p>
           </div>
         </div>
       )}
@@ -927,30 +1007,30 @@ function CheckoutContent() {
       {/* Desktop Location Modal */}
       {showLocationModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ backgroundColor: '#FFF', borderRadius: 16, width: 420, maxHeight: '65vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', gap: 12 }}>
-              {locationStep === 'area' && <button onClick={() => { setLocationStep('district'); setLocationSearch(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><ChevronLeft size={20} /></button>}
-              <span style={{ flex: 1, fontSize: 16, fontWeight: 600, color: '#1a1a1a' }}>{locationStep === 'district' ? 'Select District' : 'Select Area'}</span>
-              <button onClick={() => setShowLocationModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+          <div style={{ backgroundColor: '#FFF', borderRadius: 12, width: 480, maxHeight: '70vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', gap: 14 }}>
+              {locationStep === 'area' && <button onClick={() => { setLocationStep('district'); setLocationSearch(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><ChevronLeft size={22} /></button>}
+              <span style={{ flex: 1, fontSize: 18, fontWeight: 600, color: '#1a1a1a' }}>{locationStep === 'district' ? 'Select District' : 'Select Area'}</span>
+              <button onClick={() => setShowLocationModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={22} /></button>
             </div>
-            <div style={{ padding: 12 }}>
+            <div style={{ padding: 16 }}>
               <div style={{ position: 'relative' }}>
-                <Search size={18} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
-                <input value={locationSearch} onChange={(e) => setLocationSearch(e.target.value)} placeholder="Search..." style={{ width: '100%', height: 48, padding: '0 16px 0 44px', backgroundColor: '#FAFAFA', border: '1px solid #E8E8E8', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} autoFocus />
+                <Search size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+                <input value={locationSearch} onChange={(e) => setLocationSearch(e.target.value)} placeholder="Search..." style={{ width: '100%', height: 52, padding: '0 16px 0 48px', backgroundColor: '#FFF', border: '1px solid #E0E0E0', borderRadius: 8, fontSize: 15, outline: 'none', boxSizing: 'border-box' }} autoFocus />
               </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {locationStep === 'district' ? (
                 districts.filter(d => d.name.toLowerCase().includes(locationSearch.toLowerCase())).map(d => (
-                  <div key={d.id} onClick={() => selectDistrict(d)} style={{ padding: '14px 20px', borderBottom: '1px solid #F8F8F8', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 14, color: '#1a1a1a' }}>{d.name}</span>
-                    <ChevronRight size={16} style={{ color: '#CCC' }} />
+                  <div key={d.id} onClick={() => selectDistrict(d)} style={{ padding: '16px 24px', borderBottom: '1px solid #F8F8F8', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 15, color: '#1a1a1a' }}>{d.name}</span>
+                    <ChevronRight size={18} style={{ color: '#CCC' }} />
                   </div>
                 ))
               ) : (
                 availableAreas.filter(a => a.name.toLowerCase().includes(locationSearch.toLowerCase())).map(a => (
-                  <div key={a.id} onClick={() => selectArea(a)} style={{ padding: '14px 20px', borderBottom: '1px solid #F8F8F8', cursor: 'pointer' }}>
-                    <span style={{ fontSize: 14, color: '#1a1a1a' }}>{a.name}</span>
+                  <div key={a.id} onClick={() => selectArea(a)} style={{ padding: '16px 24px', borderBottom: '1px solid #F8F8F8', cursor: 'pointer' }}>
+                    <span style={{ fontSize: 15, color: '#1a1a1a' }}>{a.name}</span>
                   </div>
                 ))
               )}
