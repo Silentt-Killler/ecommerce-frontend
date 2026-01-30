@@ -17,7 +17,8 @@ import {
   X,
   LogOut,
   FolderOpen,
-  UserPlus
+  UserPlus,
+  CreditCard
 } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 import { Layers } from 'lucide-react';
