@@ -28,6 +28,7 @@ const menuItems = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+  { name: 'Payments', href: '/admin/payments', icon: CreditCard },
   { name: 'Leads', href: '/admin/leads', icon: UserPlus },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Brands', href: '/admin/brands', icon: Tag },
