@@ -1,142 +1,239 @@
-'use client';
+// src/app/blog/page.jsx
+// Blog Listing Page - SEO Optimized
 
-import { useState, useEffect } from 'react';
+import { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Calendar, Clock, ArrowRight } from 'lucide-react';
 
-// Sample blog data - replace with API call later
-const sampleBlogs = [
-  {
-    _id: '1',
-    slug: 'pakistani-fashion-trends-2026',
-    title: 'Pakistani Fashion Trends to Watch in 2026',
-    excerpt: 'Discover the latest trends in Pakistani fashion that are taking the world by storm. From traditional craftsmanship to modern silhouettes.',
-    image: '/images/blog/blog-1.jpg',
-    category: 'Fashion',
-    author: 'PRISMIN Team',
-    date: '2026-01-20',
-    readTime: '5 min read'
+export const metadata = {
+  title: 'Blog - Tips, Guides & News | PRISMIN',
+  description: 'Discover the latest fashion tips, watch guides, beauty secrets, and lifestyle articles. Expert advice for Bangladesh shoppers.',
+  keywords: ['blog', 'fashion tips', 'watch guide', 'beauty tips', 'bangladesh shopping'],
+  openGraph: {
+    title: 'Blog - Tips, Guides & News | PRISMIN',
+    description: 'Discover the latest fashion tips, watch guides, beauty secrets, and lifestyle articles.',
+    type: 'website',
+    url: 'https://prismin.com/blog',
   },
-  {
-    _id: '2',
-    slug: 'skincare-routine-for-winter',
-    title: 'Essential Skincare Routine for Winter',
-    excerpt: 'Keep your skin glowing and healthy during the cold months with our expert-recommended skincare routine and product picks.',
-    image: '/images/blog/blog-2.jpg',
-    category: 'Beauty',
-    author: 'PRISMIN Team',
-    date: '2026-01-15',
-    readTime: '4 min read'
-  },
-  {
-    _id: '3',
-    slug: 'styling-tips-for-formal-occasions',
-    title: 'Styling Tips for Formal Occasions',
-    excerpt: 'Learn how to put together the perfect outfit for weddings, parties, and formal events with our comprehensive styling guide.',
-    image: '/images/blog/blog-3.jpg',
-    category: 'Style Guide',
-    author: 'PRISMIN Team',
-    date: '2026-01-10',
-    readTime: '6 min read'
+  alternates: {
+    canonical: 'https://prismin.com/blog'
   }
-];
+};
 
-export default function BlogPage() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [blogs, setBlogs] = useState(sampleBlogs);
+async function getPosts(page = 1, category = null) {
+  try {
+    let url = `${process.env.NEXT_PUBLIC_API_URL}/blog/posts?page=${page}&limit=12`;
+    if (category) url += `&category=${category}`;
+    
+    const res = await fetch(url, { 
+      next: { revalidate: 300 } // Revalidate every 5 minutes
+    });
+    return res.json();
+  } catch (error) {
+    return { posts: [], total: 0, pages: 1 };
+  }
+}
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+async function getCategories() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/categories`, {
+      next: { revalidate: 3600 }
+    });
+    return res.json();
+  } catch (error) {
+    return [];
+  }
+}
 
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+async function getRecentPosts() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/recent?limit=5`, {
+      next: { revalidate: 300 }
+    });
+    return res.json();
+  } catch (error) {
+    return [];
+  }
+}
+
+export default async function BlogPage({ searchParams }) {
+  const page = Number(searchParams?.page) || 1;
+  const category = searchParams?.category || null;
+  
+  const [postsData, categories, recentPosts] = await Promise.all([
+    getPosts(page, category),
+    getCategories(),
+    getRecentPosts()
+  ]);
+
+  const { posts, total, pages } = postsData;
+
+  // JSON-LD Schema
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "PRISMIN Blog",
+    "description": "Tips, guides, and news about fashion, watches, and beauty",
+    "url": "https://prismin.com/blog",
+    "publisher": {
+      "@type": "Organization",
+      "name": "PRISMIN",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://prismin.com/logo.png"
+      }
+    }
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
-      {/* Header Spacer */}
-      <div style={{ height: isMobile ? 56 : 70 }} />
-
-      {/* Hero Section */}
-      <div style={{ backgroundColor: '#F9FAFB', padding: isMobile ? '40px 16px' : '60px 40px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 300, letterSpacing: isMobile ? 4 : 8, color: '#0C0C0C', marginBottom: 12, textTransform: 'uppercase' }}>
-          Blog
-        </h1>
-        <p style={{ fontSize: isMobile ? 14 : 16, color: '#6B7280', maxWidth: 600, margin: '0 auto' }}>
-          Fashion insights, beauty tips, and style inspiration curated for the modern woman
-        </p>
-      </div>
-
-      {/* Blog Grid */}
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: isMobile ? '30px 16px 60px' : '50px 40px 80px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? 24 : 32 }}>
-          {blogs.map((blog) => (
-            <Link key={blog._id} href={'/blog/' + blog.slug} style={{ textDecoration: 'none', display: 'block' }}>
-              <article style={{ backgroundColor: '#FFFFFF', borderRadius: 12, overflow: 'hidden', border: '1px solid #F3F4F6', transition: 'all 0.3s' }}>
-                {/* Image */}
-                <div style={{ position: 'relative', aspectRatio: '16/10', backgroundColor: '#F3F4F6', overflow: 'hidden' }}>
-                  {blog.image ? (
-                    <Image src={blog.image} alt={blog.title} fill style={{ objectFit: 'cover', transition: 'transform 0.3s' }} />
-                  ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D1D5DB' }}>
-                      No Image
-                    </div>
-                  )}
-                  {/* Category Badge */}
-                  <span style={{ position: 'absolute', top: 12, left: 12, padding: '6px 12px', backgroundColor: '#0C0C0C', color: '#FFFFFF', fontSize: 11, fontWeight: 500, borderRadius: 4, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                    {blog.category}
-                  </span>
-                </div>
-
-                {/* Content */}
-                <div style={{ padding: isMobile ? 16 : 20 }}>
-                  {/* Meta */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#9CA3AF', fontSize: 12 }}>
-                      <Calendar size={14} />
-                      <span>{formatDate(blog.date)}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#9CA3AF', fontSize: 12 }}>
-                      <Clock size={14} />
-                      <span>{blog.readTime}</span>
-                    </div>
-                  </div>
-
-                  {/* Title */}
-                  <h2 style={{ fontSize: isMobile ? 16 : 18, fontWeight: 600, color: '#0C0C0C', marginBottom: 10, lineHeight: 1.4 }}>
-                    {blog.title}
-                  </h2>
-
-                  {/* Excerpt */}
-                  <p style={{ fontSize: 14, color: '#6B7280', lineHeight: 1.6, marginBottom: 16, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {blog.excerpt}
-                  </p>
-
-                  {/* Read More */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#B08B5C', fontSize: 13, fontWeight: 500 }}>
-                    <span>Read More</span>
-                    <ArrowRight size={14} />
-                  </div>
-                </div>
-              </article>
-            </Link>
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {blogs.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-            <h3 style={{ fontSize: 18, fontWeight: 500, color: '#1F2937', marginBottom: 8 }}>No blog posts yet</h3>
-            <p style={{ fontSize: 14, color: '#6B7280' }}>Check back soon for fashion tips and style inspiration</p>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
+      
+      <main style={{ backgroundColor: '#F7F7F7', minHeight: '100vh' }}>
+        {/* Hero Section */}
+        <section style={{ backgroundColor: '#0C0C0C', padding: '60px 20px', textAlign: 'center' }}>
+          <div style={{ maxWidth: 800, margin: '0 auto' }}>
+            <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', marginBottom: 16 }}>
+              Our Blog
+            </h1>
+            <p style={{ fontSize: 16, color: '#9ca3af', lineHeight: 1.6 }}>
+              Expert tips, guides, and insights about fashion, watches, beauty, and lifestyle
+            </p>
           </div>
-        )}
-      </div>
-    </div>
+        </section>
+
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 40 }}>
+            {/* Main Content */}
+            <div>
+              {/* Category Filter */}
+              {categories.length > 0 && (
+                <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
+                  <Link href="/blog" style={{ padding: '8px 16px', backgroundColor: !category ? '#0C0C0C' : '#fff', color: !category ? '#fff' : '#0C0C0C', borderRadius: 20, fontSize: 14, textDecoration: 'none', border: '1px solid #E0E0E0' }}>
+                    All
+                  </Link>
+                  {categories.map(cat => (
+                    <Link key={cat.name} href={`/blog?category=${cat.name}`} style={{ padding: '8px 16px', backgroundColor: category === cat.name ? '#0C0C0C' : '#fff', color: category === cat.name ? '#fff' : '#0C0C0C', borderRadius: 20, fontSize: 14, textDecoration: 'none', border: '1px solid #E0E0E0' }}>
+                      {cat.name} ({cat.count})
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* Posts Grid */}
+              {posts.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
+                  {posts.map(post => (
+                    <article key={post._id} style={{ backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                      <Link href={`/blog/${post.slug}`} style={{ textDecoration: 'none' }}>
+                        <div style={{ aspectRatio: '16/9', backgroundColor: '#f3f4f6', position: 'relative' }}>
+                          {post.featured_image && (
+                            <img 
+                              src={post.featured_image} 
+                              alt={post.featured_image_alt || post.title}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              loading="lazy"
+                            />
+                          )}
+                        </div>
+                        <div style={{ padding: 20 }}>
+                          {post.category && (
+                            <span style={{ fontSize: 12, color: '#B08B5C', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                              {post.category}
+                            </span>
+                          )}
+                          <h2 style={{ fontSize: 18, fontWeight: 600, color: '#0C0C0C', margin: '8px 0', lineHeight: 1.4 }}>
+                            {post.title}
+                          </h2>
+                          <p style={{ fontSize: 14, color: '#919191', lineHeight: 1.6, marginBottom: 12 }}>
+                            {post.excerpt?.substring(0, 120)}...
+                          </p>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#919191' }}>
+                            <span>{new Date(post.published_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                            <span>{post.reading_time || 3} min read</span>
+                          </div>
+                        </div>
+                      </Link>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: 60, backgroundColor: '#fff', borderRadius: 12 }}>
+                  <p style={{ color: '#919191' }}>No posts found</p>
+                </div>
+              )}
+
+              {/* Pagination */}
+              {pages > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 40 }}>
+                  {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
+                    <Link
+                      key={p}
+                      href={`/blog?page=${p}${category ? `&category=${category}` : ''}`}
+                      style={{
+                        width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        backgroundColor: p === page ? '#0C0C0C' : '#fff',
+                        color: p === page ? '#fff' : '#0C0C0C',
+                        borderRadius: 8, textDecoration: 'none', fontSize: 14,
+                        border: '1px solid #E0E0E0'
+                      }}
+                    >
+                      {p}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <aside>
+              {/* Recent Posts */}
+              <div style={{ backgroundColor: '#fff', borderRadius: 12, padding: 24, marginBottom: 24 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0C0C0C', marginBottom: 16, paddingBottom: 12, borderBottom: '2px solid #B08B5C' }}>
+                  Recent Posts
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {recentPosts.map(post => (
+                    <Link key={post._id} href={`/blog/${post.slug}`} style={{ display: 'flex', gap: 12, textDecoration: 'none' }}>
+                      <div style={{ width: 60, height: 60, backgroundColor: '#f3f4f6', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
+                        {post.featured_image && (
+                          <img src={post.featured_image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                      </div>
+                      <div>
+                        <h4 style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 4, lineHeight: 1.4 }}>
+                          {post.title.substring(0, 50)}...
+                        </h4>
+                        <span style={{ fontSize: 12, color: '#919191' }}>
+                          {new Date(post.published_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Categories */}
+              <div style={{ backgroundColor: '#fff', borderRadius: 12, padding: 24 }}>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0C0C0C', marginBottom: 16, paddingBottom: 12, borderBottom: '2px solid #B08B5C' }}>
+                  Categories
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {categories.map(cat => (
+                    <Link key={cat.name} href={`/blog?category=${cat.name}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', color: '#0C0C0C', textDecoration: 'none', borderBottom: '1px solid #f3f4f6' }}>
+                      <span style={{ fontSize: 14 }}>{cat.name}</span>
+                      <span style={{ fontSize: 12, color: '#919191' }}>({cat.count})</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </main>
+    </>
   );
 }
