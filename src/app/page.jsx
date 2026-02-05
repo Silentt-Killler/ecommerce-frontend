@@ -181,7 +181,7 @@ export default function HomePage() {
             {heroSlides.length > 1 && (
               <div style={{
                 position: 'absolute',
-                bottom: isMobile ? 130 : 150,
+                bottom: isMobile ? 150 : 170,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 display: 'flex',
@@ -208,7 +208,7 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* Desktop Navigation Arrows */}
+            {/* Navigation Arrows - Desktop Only */}
             {!isMobile && heroSlides.length > 1 && (
               <>
                 <button
@@ -273,42 +273,53 @@ export default function HomePage() {
         {/* CTA Section - Tagline + Buttons */}
         <div style={{
           position: 'absolute',
-          bottom: isMobile ? 45 : 60,
+          bottom: isMobile ? 50 : 70,
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: isMobile ? 14 : 18,
+          gap: isMobile ? 18 : 24,
           zIndex: 10
         }}>
-          {/* Tagline */}
-          <p style={{
-            fontSize: isMobile ? 11 : 13,
-            fontWeight: 300,
-            letterSpacing: isMobile ? 2 : 4,
+          {/* Tagline - BIGGER NOW */}
+          <h2 style={{
+            fontSize: isMobile ? 16 : 22,
+            fontWeight: 400,
+            letterSpacing: isMobile ? 3 : 6,
             color: '#FFFFFF',
             textTransform: 'uppercase',
-            textShadow: '0 2px 10px rgba(0,0,0,0.4)',
-            margin: 0
+            textShadow: '0 2px 15px rgba(0,0,0,0.5)',
+            margin: 0,
+            textAlign: 'center',
+            lineHeight: 1.4
           }}>
-            Two Expressions · One Signature
-          </p>
+            Two Expressions \C2\B7 One Signature
+          </h2>
 
-          {/* Buttons */}
-          <div style={{ display: 'flex', gap: isMobile ? 10 : 14 }}>
+          {/* Buttons - BOTH WHITE BACKGROUND, BIGGER TEXT */}
+          <div style={{ display: 'flex', gap: isMobile ? 12 : 16 }}>
             <Link 
               href={original ? getCategoryLink(original) : (categories[0] ? getCategoryLink(categories[0]) : '/shop')} 
               style={{
-                padding: isMobile ? '11px 26px' : '13px 36px',
+                padding: isMobile ? '14px 32px' : '16px 44px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
-                fontSize: isMobile ? 10 : 11,
+                fontSize: isMobile ? 13 : 14,
                 fontWeight: 600,
                 letterSpacing: 2,
                 textTransform: 'uppercase',
                 textDecoration: 'none',
-                transition: 'all 0.3s'
+                transition: 'all 0.3s',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#0C0C0C';
+                e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFFFFF';
+                e.currentTarget.style.color = '#0C0C0C';
               }}
             >
               Original
@@ -316,16 +327,24 @@ export default function HomePage() {
             <Link 
               href={inspired ? getCategoryLink(inspired) : (categories[1] ? getCategoryLink(categories[1]) : '/shop')} 
               style={{
-                padding: isMobile ? '11px 26px' : '13px 36px',
-                backgroundColor: 'transparent',
-                color: '#FFFFFF',
-                fontSize: isMobile ? 10 : 11,
+                padding: isMobile ? '14px 32px' : '16px 44px',
+                backgroundColor: '#FFFFFF',
+                color: '#0C0C0C',
+                fontSize: isMobile ? 13 : 14,
                 fontWeight: 600,
                 letterSpacing: 2,
                 textTransform: 'uppercase',
                 textDecoration: 'none',
-                border: '1px solid #FFFFFF',
-                transition: 'all 0.3s'
+                transition: 'all 0.3s',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#0C0C0C';
+                e.currentTarget.style.color = '#FFFFFF';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = '#FFFFFF';
+                e.currentTarget.style.color = '#0C0C0C';
               }}
             >
               Inspired
