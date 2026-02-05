@@ -15,8 +15,7 @@ export default function HomePage() {
   const [isMobile, setIsMobile] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Auto slider interval
-  const SLIDE_INTERVAL = 5000; // 5 seconds
+  const SLIDE_INTERVAL = 5000;
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -53,7 +52,6 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Get slides for current device
   const getHeroSlides = useCallback(() => {
     const slides = settings?.hero_slides || [];
     const deviceType = isMobile ? 'mobile' : 'desktop';
@@ -67,7 +65,6 @@ export default function HomePage() {
 
   const heroSlides = getHeroSlides();
 
-  // Auto slide
   useEffect(() => {
     if (heroSlides.length <= 1) return;
 
@@ -78,7 +75,6 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [heroSlides.length]);
 
-  // Reset slide when device changes
   useEffect(() => {
     setCurrentSlide(0);
   }, [isMobile]);
@@ -96,7 +92,6 @@ export default function HomePage() {
     return '/' + category.slug;
   };
 
-  // Find Original and Inspired categories for buttons
   const getButtonCategories = () => {
     const original = categories.find(c => 
       c.slug?.toLowerCase().includes('original') || c.name?.toLowerCase().includes('original')
@@ -113,14 +108,25 @@ export default function HomePage() {
     if (!products || products.length === 0) return null;
     return (
       <section style={{ backgroundColor: '#FFFFFF', paddingTop: 40, paddingBottom: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, letterSpacing: 2, textAlign: 'center', marginBottom: 24, color: '#0C0C0C', textTransform: 'uppercase', padding: '0 16px' }}>{title}</h2>
+        <h2 style={{ 
+          fontSize: 18, 
+          fontWeight: 600, 
+          letterSpacing: 2, 
+          textAlign: 'center', 
+          marginBottom: 24, 
+          color: '#0C0C0C', 
+          textTransform: 'uppercase', 
+          padding: '0 16px' 
+        }}>
+          {title}
+        </h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, padding: '0 16px' }}>
           {products.slice(0, 4).map((product) => (
             <ProductCard key={product._id} product={product} isMobile={true} />
           ))}
         </div>
         <div style={{ textAlign: 'center', marginTop: 24, padding: '0 16px' }}>
-          <Link href={viewAllLink} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#0C0C0C', fontSize: 13, fontWeight: 500, textDecoration: 'none' }}>
+          <Link href={viewAllLink} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#0C0C0C', fontSize: 14, fontWeight: 500, textDecoration: 'none' }}>
             View All <ArrowRight size={16} strokeWidth={2} />
           </Link>
         </div>
@@ -133,14 +139,25 @@ export default function HomePage() {
     return (
       <section style={{ backgroundColor: '#FFFFFF', paddingTop: 60, paddingBottom: 60 }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 40px' }}>
-          <h2 style={{ fontSize: 28, fontWeight: 400, lineHeight: '36px', letterSpacing: 6, textAlign: 'center', marginBottom: 40, color: '#0C0C0C', textTransform: 'uppercase' }}>{title}</h2>
+          <h2 style={{ 
+            fontSize: 28, 
+            fontWeight: 400, 
+            lineHeight: '36px', 
+            letterSpacing: 6, 
+            textAlign: 'center', 
+            marginBottom: 40, 
+            color: '#0C0C0C', 
+            textTransform: 'uppercase' 
+          }}>
+            {title}
+          </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
             {products.slice(0, 4).map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
           </div>
           <div style={{ textAlign: 'center', marginTop: 40 }}>
-            <Link href={viewAllLink} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#0C0C0C', fontSize: 13, fontWeight: 500, textDecoration: 'none', transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
+            <Link href={viewAllLink} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: '#0C0C0C', fontSize: 14, fontWeight: 500, textDecoration: 'none', transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>
               View All <ArrowRight size={16} strokeWidth={2} />
             </Link>
           </div>
@@ -151,9 +168,8 @@ export default function HomePage() {
 
   return (
     <div style={{ backgroundColor: '#FFFFFF', paddingBottom: isMobile ? 90 : 0 }}>
-      {/* Hero Section with Auto Slider */}
+      {/* Hero Section */}
       <section style={{ position: 'relative', height: isMobile ? '62vh' : '100vh', width: '100%', overflow: 'hidden' }}>
-        {/* Slides */}
         {heroSlides.length > 0 ? (
           <>
             {heroSlides.map((slide, index) => (
@@ -208,7 +224,7 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* Navigation Arrows - Desktop Only */}
+            {/* Desktop Arrows */}
             {!isMobile && heroSlides.length > 1 && (
               <>
                 <button
@@ -231,8 +247,6 @@ export default function HomePage() {
                     zIndex: 10,
                     transition: 'all 0.3s'
                   }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.9)'}
                 >
                   <ChevronLeft size={24} color="#0C0C0C" />
                 </button>
@@ -256,8 +270,6 @@ export default function HomePage() {
                     zIndex: 10,
                     transition: 'all 0.3s'
                   }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.9)'}
                 >
                   <ChevronRight size={24} color="#0C0C0C" />
                 </button>
@@ -270,39 +282,40 @@ export default function HomePage() {
           </div>
         )}
         
-        {/* CTA Section - Tagline + Buttons */}
+        {/* CTA Section */}
         <div style={{
           position: 'absolute',
-          bottom: isMobile ? 50 : 70,
+          bottom: isMobile ? 40 : 55,
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: isMobile ? 18 : 24,
-          zIndex: 10
+          gap: isMobile ? 16 : 22,
+          zIndex: 10,
+          width: '100%',
+          padding: '0 20px'
         }}>
-          {/* Tagline - BIGGER NOW */}
+          {/* Tagline - Bigger Heading */}
           <h2 style={{
-            fontSize: isMobile ? 16 : 22,
-            fontWeight: 400,
+            fontSize: isMobile ? 18 : 26,
+            fontWeight: 500,
             letterSpacing: isMobile ? 3 : 6,
             color: '#FFFFFF',
             textTransform: 'uppercase',
             textShadow: '0 2px 15px rgba(0,0,0,0.5)',
             margin: 0,
-            textAlign: 'center',
-            lineHeight: 1.4
+            textAlign: 'center'
           }}>
-            Two Expressions \C2\B7 One Signature
+            Two Expressions · One Signature
           </h2>
 
-          {/* Buttons - BOTH WHITE BACKGROUND, BIGGER TEXT */}
+          {/* Buttons - Both White */}
           <div style={{ display: 'flex', gap: isMobile ? 12 : 16 }}>
             <Link 
               href={original ? getCategoryLink(original) : (categories[0] ? getCategoryLink(categories[0]) : '/shop')} 
               style={{
-                padding: isMobile ? '14px 32px' : '16px 44px',
+                padding: isMobile ? '14px 32px' : '16px 48px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
                 fontSize: isMobile ? 13 : 14,
@@ -312,14 +325,6 @@ export default function HomePage() {
                 textDecoration: 'none',
                 transition: 'all 0.3s',
                 boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#0C0C0C';
-                e.currentTarget.style.color = '#FFFFFF';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.color = '#0C0C0C';
               }}
             >
               Original
@@ -327,7 +332,7 @@ export default function HomePage() {
             <Link 
               href={inspired ? getCategoryLink(inspired) : (categories[1] ? getCategoryLink(categories[1]) : '/shop')} 
               style={{
-                padding: isMobile ? '14px 32px' : '16px 44px',
+                padding: isMobile ? '14px 32px' : '16px 48px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
                 fontSize: isMobile ? 13 : 14,
@@ -337,14 +342,6 @@ export default function HomePage() {
                 textDecoration: 'none',
                 transition: 'all 0.3s',
                 boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = '#0C0C0C';
-                e.currentTarget.style.color = '#FFFFFF';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.color = '#0C0C0C';
               }}
             >
               Inspired
@@ -353,14 +350,14 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Category Section - Responsive */}
+      {/* Category Section */}
       <section style={{ backgroundColor: '#FFFFFF', paddingTop: isMobile ? 40 : 70, paddingBottom: isMobile ? 24 : 50 }}>
         <h2 style={{
-          fontSize: isMobile ? 16 : 24,
+          fontSize: isMobile ? 20 : 28,
           fontWeight: 600,
           letterSpacing: isMobile ? 2 : 5,
           textAlign: 'center',
-          marginBottom: isMobile ? 24 : 45,
+          marginBottom: isMobile ? 28 : 50,
           color: '#0C0C0C',
           textTransform: 'uppercase',
           padding: isMobile ? '0 16px' : 0
@@ -369,7 +366,6 @@ export default function HomePage() {
         </h2>
         
         {isMobile ? (
-          /* Mobile: 2 column grid */
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, padding: '0 16px' }}>
             {categories.slice(0, 4).map((cat) => (
               <Link key={cat._id} href={getCategoryLink(cat)} style={{ textDecoration: 'none', display: 'block' }}>
@@ -382,12 +378,21 @@ export default function HomePage() {
                     </div>
                   )}
                 </div>
-                <h3 style={{ textAlign: 'center', fontSize: 13, fontWeight: 600, color: '#0C0C0C', padding: '14px 8px', margin: 0, letterSpacing: 1 }}>{cat.name}</h3>
+                <h3 style={{ 
+                  textAlign: 'center', 
+                  fontSize: 14, 
+                  fontWeight: 600, 
+                  color: '#0C0C0C', 
+                  padding: '14px 8px', 
+                  margin: 0, 
+                  letterSpacing: 1 
+                }}>
+                  {cat.name}
+                </h3>
               </Link>
             ))}
           </div>
         ) : (
-          /* Desktop/Tablet: Responsive grid */
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
@@ -404,7 +409,7 @@ export default function HomePage() {
                     aspectRatio: '3/4',
                     backgroundColor: '#E8E8E8',
                     overflow: 'hidden',
-                    marginBottom: 14
+                    marginBottom: 16
                   }} 
                   className="category-image"
                 >
@@ -416,7 +421,17 @@ export default function HomePage() {
                     </div>
                   )}
                 </div>
-                <h3 style={{ textAlign: 'center', fontSize: 15, fontWeight: 600, lineHeight: '22px', color: '#0C0C0C', margin: 0, letterSpacing: 1 }}>{cat.name}</h3>
+                <h3 style={{ 
+                  textAlign: 'center', 
+                  fontSize: 16, 
+                  fontWeight: 600, 
+                  lineHeight: '24px', 
+                  color: '#0C0C0C', 
+                  margin: 0, 
+                  letterSpacing: 1 
+                }}>
+                  {cat.name}
+                </h3>
               </Link>
             ))}
           </div>
@@ -435,12 +450,6 @@ export default function HomePage() {
       <style jsx global>{`
         .category-image:hover img { 
           transform: scale(1.05); 
-        }
-        
-        @media (max-width: 1200px) {
-          .category-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
         }
       `}</style>
     </div>
