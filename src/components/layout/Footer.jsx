@@ -113,7 +113,7 @@ export default function Footer() {
 
           {/* Connect With Us */}
           <div style={{ marginBottom: 28 }}>
-            <h3 style={{ fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 16, textTransform: 'uppercase', color: '#FFF' }}>Connect With Us</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 16, textTransform: 'uppercase', color: '#FFF' }}>Connect With Us</h3>
             <div style={{ display: 'flex', gap: 10 }}>
               <SocialIcon href={facebookUrl}><Facebook size={18} /></SocialIcon>
               <SocialIcon href={instagramUrl}><Instagram size={18} /></SocialIcon>
@@ -124,7 +124,7 @@ export default function Footer() {
 
           {/* Customer Service */}
           <div style={{ marginBottom: 28 }}>
-            <h3 style={{ fontSize: 12, fontWeight: 600, letterSpacing: 2, marginBottom: 14, textTransform: 'uppercase', color: '#FFF' }}>Customer Service</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 14, textTransform: 'uppercase', color: '#FFF' }}>Customer Service</h3>
             <p style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>(10 AM - 6 PM)</p>
             <p style={{ fontSize: 13, color: '#888', marginBottom: 14 }}>(Except Weekend/Govt. Holidays)</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -140,7 +140,7 @@ export default function Footer() {
           {/* Accordion - Information */}
           <div style={{ borderTop: '1px solid #2A2A2A' }}>
             <button onClick={() => toggleSection('information')} style={{ width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
-              <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: 2, color: '#FFF', textTransform: 'uppercase' }}>Information</span>
+              <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, color: '#FFF', textTransform: 'uppercase' }}>Information</span>
               <ChevronDown size={18} style={{ color: '#888', transform: openSection === 'information' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
             </button>
             {openSection === 'information' && (
@@ -157,7 +157,7 @@ export default function Footer() {
           {/* Accordion - Policy */}
           <div style={{ borderTop: '1px solid #2A2A2A', borderBottom: '1px solid #2A2A2A' }}>
             <button onClick={() => toggleSection('policy')} style={{ width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
-              <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: 2, color: '#FFF', textTransform: 'uppercase' }}>Policy</span>
+              <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, color: '#FFF', textTransform: 'uppercase' }}>Policy</span>
               <ChevronDown size={18} style={{ color: '#888', transform: openSection === 'policy' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
             </button>
             {openSection === 'policy' && (
@@ -192,7 +192,7 @@ export default function Footer() {
             </Link>
             <p style={{ fontSize: 14, color: '#888', lineHeight: 1.9, marginBottom: 32 }}>{footerText}</p>
             
-            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 18, textTransform: 'uppercase', color: '#FFF' }}>Connect With Us</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 18, textTransform: 'uppercase', color: '#FFF' }}>Connect With Us</h3>
             <div style={{ display: 'flex', gap: 12 }}>
               <SocialIcon href={facebookUrl}><Facebook size={18} /></SocialIcon>
               <SocialIcon href={instagramUrl}><Instagram size={18} /></SocialIcon>
@@ -203,7 +203,7 @@ export default function Footer() {
 
           {/* Customer Service */}
           <div>
-            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>Customer Service</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>Customer Service</h3>
             <p style={{ fontSize: 14, color: '#888', marginBottom: 4, lineHeight: 1.6 }}>(10 AM - 6 PM)</p>
             <p style={{ fontSize: 14, color: '#888', marginBottom: 22, lineHeight: 1.6 }}>(Except Weekend/Govt. Holidays)</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
@@ -218,7 +218,7 @@ export default function Footer() {
 
           {/* Information */}
           <div>
-            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>Information</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>Information</h3>
             <FooterLink href="/about">About Prismin</FooterLink>
             <FooterLink href="/safety-advisory">Safety Advisory</FooterLink>
             <FooterLink href="/community-guidelines">Community Guidelines</FooterLink>
@@ -228,7 +228,7 @@ export default function Footer() {
 
           {/* Policy */}
           <div>
-            <h3 style={{ fontSize: 11, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>Policy</h3>
+            <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>Policy</h3>
             <FooterLink href="/privacy-policy">Privacy Policy</FooterLink>
             <FooterLink href="/delivery-policy">Delivery Policy</FooterLink>
             <FooterLink href="/return-policy">Return and Exchange Policy</FooterLink>
