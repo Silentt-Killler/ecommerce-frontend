@@ -23,12 +23,9 @@ export default function Header() {
   const [showMenu, setShowMenu] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [settings, setSettings] = useState(null);
-  const [mobileSearchQuery, setMobileSearchQuery] = useState('');
-  const [showMobileSearchBox, setShowMobileSearchBox] = useState(false);
   
   const dropdownRef = useRef(null);
   const dropdownTimeoutRef = useRef(null);
-  const mobileSearchRef = useRef(null);
 
   const isHomePage = pathname === '/';
   const isAdminPage = pathname?.startsWith('/admin');
@@ -62,13 +59,6 @@ export default function Header() {
     };
   }, []);
 
-  // Focus mobile search input when opened
-  useEffect(() => {
-    if (showMobileSearchBox && mobileSearchRef.current) {
-      mobileSearchRef.current.focus();
-    }
-  }, [showMobileSearchBox]);
-
   if (isAdminPage) return null;
 
   const cartCount = mounted ? getItemCount() : 0;
@@ -86,14 +76,6 @@ export default function Header() {
 
   const handleDropdownLeave = () => {
     dropdownTimeoutRef.current = setTimeout(() => setShowDropdown(false), 150);
-  };
-
-  const handleMobileSearch = (e) => {
-    if (e.key === 'Enter' && mobileSearchQuery.trim()) {
-      router.push(`/shop?search=${encodeURIComponent(mobileSearchQuery.trim())}`);
-      setMobileSearchQuery('');
-      setShowMobileSearchBox(false);
-    }
   };
 
   const getColor = () => {
@@ -301,7 +283,7 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile Header - Logo Left, Search Right */}
+        {/* Mobile Header - Logo Left, Search Box Right (Clickable Link) */}
         <div className="md:hidden" style={{ padding: '0 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56, gap: 12 }}>
             {/* Left - Logo */}
@@ -309,37 +291,39 @@ export default function Header() {
               <Logo size="mobile" />
             </Link>
 
-            {/* Right - Search Box */}
-            <div style={{ flex: 1, maxWidth: 200, position: 'relative' }}>
+            {/* Right - Search Box as Link to /search page */}
+            <Link 
+              href="/search"
+              style={{ 
+                flex: 1, 
+                maxWidth: 200, 
+                textDecoration: 'none'
+              }}
+            >
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
+                justifyContent: 'space-between',
                 backgroundColor: isHomePage && !isScrolled ? 'rgba(255,255,255,0.15)' : '#F5F5F5',
                 borderRadius: 20,
                 padding: '8px 14px',
                 transition: 'all 0.3s'
               }}>
-                <Search size={16} style={{ color: isHomePage && !isScrolled ? 'rgba(255,255,255,0.7)' : '#919191', flexShrink: 0 }} />
-                <input
-                  ref={mobileSearchRef}
-                  type="text"
-                  value={mobileSearchQuery}
-                  onChange={(e) => setMobileSearchQuery(e.target.value)}
-                  onKeyDown={handleMobileSearch}
-                  placeholder="Search..."
-                  style={{
-                    flex: 1,
-                    border: 'none',
-                    outline: 'none',
-                    backgroundColor: 'transparent',
-                    marginLeft: 8,
-                    fontSize: 13,
-                    color: isHomePage && !isScrolled ? '#FFFFFF' : '#0C0C0C',
-                    width: '100%'
-                  }}
+                <span style={{
+                  fontSize: 13,
+                  color: isHomePage && !isScrolled ? 'rgba(255,255,255,0.7)' : '#919191'
+                }}>
+                  Search...
+                </span>
+                <Search 
+                  size={16} 
+                  style={{ 
+                    color: isHomePage && !isScrolled ? 'rgba(255,255,255,0.7)' : '#919191',
+                    flexShrink: 0 
+                  }} 
                 />
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </header>
