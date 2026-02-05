@@ -1,5 +1,5 @@
 // src/app/blog/[slug]/page.jsx
-// Single Blog Post Page - Full SEO
+// Single Blog Post Page - Fixed for Server Component
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -137,6 +137,8 @@ export default async function BlogPostPage({ params }) {
     ]
   };
 
+  const recentFiltered = (recentPosts || []).filter(p => p.slug !== post.slug).slice(0, 5);
+
   return (
     <>
       <script
@@ -169,7 +171,7 @@ export default async function BlogPostPage({ params }) {
               <li style={{ color: '#919191' }}>/</li>
               <li><Link href="/blog" style={{ color: '#919191', textDecoration: 'none' }}>Blog</Link></li>
               <li style={{ color: '#919191' }}>/</li>
-              <li style={{ color: '#0C0C0C' }}>{post.title.substring(0, 30)}...</li>
+              <li style={{ color: '#0C0C0C' }}>{post.title?.substring(0, 30)}...</li>
             </ol>
           </nav>
 
@@ -177,14 +179,14 @@ export default async function BlogPostPage({ params }) {
             {/* Main Content */}
             <article style={{ backgroundColor: '#fff', borderRadius: 16, padding: 40, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
               {/* Category & Date */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
                 {post.category && (
                   <Link href={`/blog?category=${post.category}`} style={{ padding: '4px 12px', backgroundColor: '#B08B5C', color: '#fff', borderRadius: 4, fontSize: 12, fontWeight: 600, textDecoration: 'none', textTransform: 'uppercase' }}>
                     {post.category}
                   </Link>
                 )}
                 <span style={{ fontSize: 14, color: '#919191' }}>
-                  {new Date(post.published_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  {post.published_at ? new Date(post.published_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : ''}
                 </span>
                 <span style={{ fontSize: 14, color: '#919191' }}>
                   • {post.reading_time || 3} min read
@@ -202,8 +204,8 @@ export default async function BlogPostPage({ params }) {
                   <span style={{ color: '#fff', fontWeight: 600, fontSize: 18 }}>{post.author_name?.charAt(0) || 'A'}</span>
                 </div>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C' }}>{post.author_name || 'Admin'}</p>
-                  <p style={{ fontSize: 12, color: '#919191' }}>Author</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', margin: 0 }}>{post.author_name || 'Admin'}</p>
+                  <p style={{ fontSize: 12, color: '#919191', margin: 0 }}>Author</p>
                 </div>
               </div>
 
@@ -211,7 +213,7 @@ export default async function BlogPostPage({ params }) {
               <div 
                 className="blog-content"
                 style={{ fontSize: 16, lineHeight: 1.8, color: '#333' }}
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: post.content || '' }}
               />
 
               {/* Tags */}
@@ -233,7 +235,7 @@ export default async function BlogPostPage({ params }) {
                 <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', marginBottom: 12 }}>Share this article:</p>
                 <div style={{ display: 'flex', gap: 12 }}>
                   <a href={`https://www.facebook.com/sharer/sharer.php?u=https://prismin.com/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" style={{ width: 40, height: 40, backgroundColor: '#1877f2', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>f</a>
-                  <a href={`https://twitter.com/intent/tweet?url=https://prismin.com/blog/${post.slug}&text=${post.title}`} target="_blank" rel="noopener noreferrer" style={{ width: 40, height: 40, backgroundColor: '#1da1f2', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>𝕏</a>
+                  <a href={`https://twitter.com/intent/tweet?url=https://prismin.com/blog/${post.slug}&text=${post.title}`} target="_blank" rel="noopener noreferrer" style={{ width: 40, height: 40, backgroundColor: '#1da1f2', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>X</a>
                   <a href={`https://www.linkedin.com/shareArticle?mini=true&url=https://prismin.com/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" style={{ width: 40, height: 40, backgroundColor: '#0077b5', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>in</a>
                   <a href={`https://wa.me/?text=${post.title} https://prismin.com/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" style={{ width: 40, height: 40, backgroundColor: '#25d366', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>W</a>
                 </div>
@@ -248,7 +250,7 @@ export default async function BlogPostPage({ params }) {
                   Recent Posts
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {recentPosts.filter(p => p.slug !== post.slug).slice(0, 5).map(p => (
+                  {recentFiltered.map(p => (
                     <Link key={p._id} href={`/blog/${p.slug}`} style={{ display: 'flex', gap: 12, textDecoration: 'none' }}>
                       <div style={{ width: 70, height: 70, backgroundColor: '#f3f4f6', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
                         {p.featured_image && (
@@ -257,10 +259,10 @@ export default async function BlogPostPage({ params }) {
                       </div>
                       <div>
                         <h4 style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 4, lineHeight: 1.4 }}>
-                          {p.title.substring(0, 50)}...
+                          {p.title?.substring(0, 50)}...
                         </h4>
                         <span style={{ fontSize: 12, color: '#919191' }}>
-                          {new Date(p.published_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                          {p.published_at ? new Date(p.published_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : ''}
                         </span>
                       </div>
                     </Link>
@@ -293,63 +295,6 @@ export default async function BlogPostPage({ params }) {
             </aside>
           </div>
         </div>
-
-        {/* Blog Content Styles */}
-        <style jsx global>{`
-          .blog-content h2 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #0C0C0C;
-            margin: 32px 0 16px;
-          }
-          .blog-content h3 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #0C0C0C;
-            margin: 24px 0 12px;
-          }
-          .blog-content p {
-            margin-bottom: 16px;
-          }
-          .blog-content ul, .blog-content ol {
-            margin: 16px 0;
-            padding-left: 24px;
-          }
-          .blog-content li {
-            margin-bottom: 8px;
-          }
-          .blog-content img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            margin: 24px 0;
-          }
-          .blog-content a {
-            color: #B08B5C;
-            text-decoration: underline;
-          }
-          .blog-content blockquote {
-            border-left: 4px solid #B08B5C;
-            padding-left: 20px;
-            margin: 24px 0;
-            font-style: italic;
-            color: #666;
-          }
-          .blog-content code {
-            background: #f3f4f6;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-          }
-          .blog-content pre {
-            background: #1f2937;
-            color: #fff;
-            padding: 16px;
-            border-radius: 8px;
-            overflow-x: auto;
-            margin: 24px 0;
-          }
-        `}</style>
       </main>
     </>
   );
