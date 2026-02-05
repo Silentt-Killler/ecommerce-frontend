@@ -23,17 +23,18 @@ export default function Header() {
   const [showMenu, setShowMenu] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [settings, setSettings] = useState(null);
+  const [mobileSearchQuery, setMobileSearchQuery] = useState('');
+  const [showMobileSearchBox, setShowMobileSearchBox] = useState(false);
   
   const dropdownRef = useRef(null);
   const dropdownTimeoutRef = useRef(null);
+  const mobileSearchRef = useRef(null);
 
   const isHomePage = pathname === '/';
   const isAdminPage = pathname?.startsWith('/admin');
 
   useEffect(() => {
     setMounted(true);
-    
-    // Fetch settings for logo
     const fetchSettings = async () => {
       try {
         const res = await api.get('/settings');
@@ -61,6 +62,13 @@ export default function Header() {
     };
   }, []);
 
+  // Focus mobile search input when opened
+  useEffect(() => {
+    if (showMobileSearchBox && mobileSearchRef.current) {
+      mobileSearchRef.current.focus();
+    }
+  }, [showMobileSearchBox]);
+
   if (isAdminPage) return null;
 
   const cartCount = mounted ? getItemCount() : 0;
@@ -80,12 +88,19 @@ export default function Header() {
     dropdownTimeoutRef.current = setTimeout(() => setShowDropdown(false), 150);
   };
 
+  const handleMobileSearch = (e) => {
+    if (e.key === 'Enter' && mobileSearchQuery.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(mobileSearchQuery.trim())}`);
+      setMobileSearchQuery('');
+      setShowMobileSearchBox(false);
+    }
+  };
+
   const getColor = () => {
     if (isHomePage && !isScrolled) return '#FFFFFF';
     return '#0C0C0C';
   };
 
-  // Get appropriate logo based on scroll state and page
   const getLogo = () => {
     if (isHomePage && !isScrolled) {
       return settings?.header_logo_white || null;
@@ -96,7 +111,6 @@ export default function Header() {
   const logoUrl = getLogo();
   const logoText = settings?.logo_text || 'PRISMIN';
 
-  // Logo Component
   const Logo = ({ size = 'desktop' }) => {
     const logoWidth = size === 'mobile' ? 100 : 130;
     const logoHeight = size === 'mobile' ? 28 : 35;
@@ -287,19 +301,45 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile Header */}
+        {/* Mobile Header - Logo Left, Search Right */}
         <div className="md:hidden" style={{ padding: '0 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56, gap: 12 }}>
             {/* Left - Logo */}
-            <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+            <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
               <Logo size="mobile" />
             </Link>
 
-            {/* Right - Hamburger Menu */}
-            <button onClick={() => setShowMenu(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: getColor(), transition: 'color 0.3s', padding: 8 }}>
-              <Menu size={20} strokeWidth={1.5} />
-              <span style={{ fontSize: 11, letterSpacing: 1 }}>MENU</span>
-            </button>
+            {/* Right - Search Box */}
+            <div style={{ flex: 1, maxWidth: 200, position: 'relative' }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                backgroundColor: isHomePage && !isScrolled ? 'rgba(255,255,255,0.15)' : '#F5F5F5',
+                borderRadius: 20,
+                padding: '8px 14px',
+                transition: 'all 0.3s'
+              }}>
+                <Search size={16} style={{ color: isHomePage && !isScrolled ? 'rgba(255,255,255,0.7)' : '#919191', flexShrink: 0 }} />
+                <input
+                  ref={mobileSearchRef}
+                  type="text"
+                  value={mobileSearchQuery}
+                  onChange={(e) => setMobileSearchQuery(e.target.value)}
+                  onKeyDown={handleMobileSearch}
+                  placeholder="Search..."
+                  style={{
+                    flex: 1,
+                    border: 'none',
+                    outline: 'none',
+                    backgroundColor: 'transparent',
+                    marginLeft: 8,
+                    fontSize: 13,
+                    color: isHomePage && !isScrolled ? '#FFFFFF' : '#0C0C0C',
+                    width: '100%'
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </header>
