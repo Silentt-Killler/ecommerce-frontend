@@ -2,462 +2,192 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { X, ChevronDown, ChevronRight } from 'lucide-react';
-import useAuthStore from '@/store/authStore';
-import api from '@/lib/api';
+import { usePathname } from 'next/navigation';
+import useCartStore from '@/store/cartStore';
+import MenuOverlay from './MenuOverlay';
 
-// Updated categories - Watch removed, new Pakistani categories added
-const CATEGORIES = [
-  { 
-    name: 'Original Pakistani', 
-    slug: 'original-pakistani',
-    href: '/original-pakistani',
-    type: 'subcategory'
-  },
-  { 
-    name: 'Inspired Pakistani', 
-    slug: 'inspired-pakistani',
-    href: '/inspired-pakistani',
-    type: 'subcategory'
-  },
-  { 
-    name: 'Premium Bag', 
-    slug: 'premium-bag',
-    href: '/premium-bag',
-    type: 'subcategory'
-  },
-  { 
-    name: 'Beauty & Care', 
-    slug: 'beauty',
-    href: '/beauty',
-    type: 'subcategory'
-  }
-];
+// Premium Icons
+const HomeIcon = ({ isActive }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#0C0C0C" : "#888"} strokeWidth={isActive ? "1.8" : "1.2"}>
+    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+    <path d="M9 22V12h6v10" />
+  </svg>
+);
 
-export default function MenuOverlay({ isOpen, onClose }) {
-  const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
-  const [expandedCategory, setExpandedCategory] = useState(null);
-  const [subcategories, setSubcategories] = useState({});
-  const [loading, setLoading] = useState({});
+const MenuIcon = ({ isActive }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#0C0C0C" : "#888"} strokeWidth={isActive ? "1.8" : "1.2"}>
+    <line x1="4" y1="6" x2="20" y2="6" strokeLinecap="round" />
+    <line x1="4" y1="12" x2="20" y2="12" strokeLinecap="round" />
+    <line x1="4" y1="18" x2="20" y2="18" strokeLinecap="round" />
+  </svg>
+);
 
-  // Prevent body scroll when menu is open
+const BagIcon = ({ isActive }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#0C0C0C" : "#888"} strokeWidth={isActive ? "1.8" : "1.2"}>
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0" />
+  </svg>
+);
+
+const UserIcon = ({ isActive }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#0C0C0C" : "#888"} strokeWidth={isActive ? "1.8" : "1.2"}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M20 21a8 8 0 10-16 0" />
+  </svg>
+);
+
+export default function MobileBottomNav() {
+  const pathname = usePathname();
+  const { getItemCount } = useCartStore();
+  const [activeTab, setActiveTab] = useState('home');
+  const [mounted, setMounted] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-      setExpandedCategory(null);
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+    setMounted(true);
+    if (pathname === '/') setActiveTab('home');
+    else if (pathname === '/cart') setActiveTab('cart');
+    else if (pathname?.startsWith('/account') || pathname === '/login') setActiveTab('profile');
+    else setActiveTab('');
+  }, [pathname]);
 
-  // Fetch subcategories for a category
-  const fetchSubcategories = async (categorySlug) => {
-    if (subcategories[categorySlug]) return;
-    
-    setLoading(prev => ({ ...prev, [categorySlug]: true }));
-    try {
-      const res = await api.get(`/subcategories?parent=${categorySlug}&is_active=true`);
-      setSubcategories(prev => ({
-        ...prev,
-        [categorySlug]: res.data.subcategories || []
-      }));
-    } catch (error) {
-      console.error('Failed to fetch subcategories:', error);
-      setSubcategories(prev => ({ ...prev, [categorySlug]: [] }));
-    } finally {
-      setLoading(prev => ({ ...prev, [categorySlug]: false }));
-    }
-  };
+  const isAdminPage = pathname?.startsWith('/admin');
+  const isCheckoutPage = pathname === '/checkout';
 
-  // Handle category click - expand/collapse
-  const handleCategoryClick = (category) => {
-    if (expandedCategory === category.slug) {
-      setExpandedCategory(null);
-    } else {
-      setExpandedCategory(category.slug);
-      fetchSubcategories(category.slug);
-    }
-  };
+  if (isAdminPage || isCheckoutPage) return null;
 
-  // Handle View All click
-  const handleViewAll = (category) => {
-    onClose();
-    router.push(category.href);
-  };
+  const cartCount = mounted ? getItemCount() : 0;
 
-  // Handle subcategory click
-  const handleSubcategoryClick = (category, subcategory) => {
-    onClose();
-    router.push(`${category.href}?subcategory=${subcategory.slug}`);
-  };
-
-  // Handle navigation
-  const handleNavigation = (href) => {
-    onClose();
-    router.push(href);
-  };
-
-  if (!isOpen) return null;
+  const navItems = [
+    { id: 'home', Icon: HomeIcon, href: '/' },
+    { id: 'menu', Icon: MenuIcon, href: null, isMenu: true },
+    { id: 'cart', Icon: BagIcon, href: '/cart', badge: cartCount },
+    { id: 'profile', Icon: UserIcon, href: '/account' },
+  ];
 
   return (
     <>
-      {/* Backdrop with blur */}
-      <div 
-        onClick={onClose}
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 50,
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)',
-          animation: 'fadeIn 0.3s ease'
-        }}
-      />
+      {/* Mobile-only spacer */}
+      <div className="block md:hidden h-[70px]" />
 
-      {/* Menu Panel - Left Side */}
-      <div 
+      <nav
+        className="md:hidden flex items-center justify-around"
         style={{
           position: 'fixed',
-          top: 0,
-          left: 0,
           bottom: 0,
+          left: 0,
+          right: 0,
           width: '100%',
-          maxWidth: 420,
-          zIndex: 51,
+          height: '65px',
+          zIndex: 999,
           backgroundColor: '#FFFFFF',
-          boxShadow: '4px 0 30px rgba(0, 0, 0, 0.15)',
-          animation: 'slideInLeft 0.4s ease',
-          display: 'flex',
-          flexDirection: 'column'
+          borderTop: '1px solid #f0f0f0',
+          boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.05)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
-        {/* Header */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '20px 28px',
-          borderBottom: '1px solid #E0E0E0'
-        }}>
-          <Link 
-            href="/" 
-            onClick={onClose}
-            style={{
-              fontSize: 20,
-              fontWeight: 300,
-              letterSpacing: 5,
-              color: '#0C0C0C',
-              textDecoration: 'none'
-            }}
-          >
-            PRISMIN
-          </Link>
-          
-          <button 
-            onClick={onClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 8,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: '50%',
-              transition: 'background 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F5F5F5'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            <X size={22} strokeWidth={1.5} />
-          </button>
-        </div>
+        {navItems.map((item) => {
+          const { Icon } = item;
+          const isActive = activeTab === item.id;
 
-        {/* Scrollable Content */}
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '8px 0'
-        }}>
-          {/* Categories */}
-          <nav>
-            {CATEGORIES.map((category, index) => (
-              <div 
-                key={category.slug}
+          // Menu Button
+          if (item.isMenu) {
+            return (
+              <button
+                key={item.id}
+                onClick={() => setShowMenu(true)}
                 style={{
-                  animation: `fadeInUp 0.3s ease ${index * 0.05}s both`
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flex: 1,
+                  height: '100%',
+                  position: 'relative',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                {/* Category Header */}
-                <button
-                  onClick={() => handleCategoryClick(category)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '16px 28px',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s',
-                    textAlign: 'left'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <span style={{
-                    fontSize: 15,
-                    fontWeight: 500,
-                    color: '#0C0C0C',
-                    letterSpacing: 0.5
-                  }}>
-                    {category.name}
-                  </span>
-                  <ChevronDown 
-                    size={18} 
-                    strokeWidth={1.5}
-                    style={{
-                      color: '#919191',
-                      transform: expandedCategory === category.slug ? 'rotate(180deg)' : 'rotate(0)',
-                      transition: 'transform 0.3s ease'
-                    }}
-                  />
-                </button>
-
-                {/* Expanded Content */}
-                <div style={{
-                  maxHeight: expandedCategory === category.slug ? '500px' : '0',
-                  overflow: 'hidden',
-                  transition: 'max-height 0.3s ease',
-                  backgroundColor: '#FAFAFA'
-                }}>
-                  {/* Loading State */}
-                  {loading[category.slug] && (
-                    <div style={{ padding: '12px 28px 12px 44px' }}>
-                      <span style={{ fontSize: 13, color: '#919191' }}>Loading...</span>
-                    </div>
-                  )}
-
-                  {/* Subcategories */}
-                  {subcategories[category.slug]?.map((sub) => (
-                    <button
-                      key={sub.slug}
-                      onClick={() => handleSubcategoryClick(category, sub)}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '12px 28px 12px 44px',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'background 0.2s'
-                      }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F0F0'}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <ChevronRight size={14} strokeWidth={1.5} style={{ color: '#B08B5C' }} />
-                      <span style={{
-                        fontSize: 13,
-                        color: '#4A4A4A',
-                        fontWeight: 400
-                      }}>
-                        {sub.name}
-                      </span>
-                    </button>
-                  ))}
-
-                  {/* View All Button */}
-                  {expandedCategory === category.slug && !loading[category.slug] && (
-                    <button
-                      onClick={() => handleViewAll(category)}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '14px 28px 14px 44px',
-                        background: 'none',
-                        border: 'none',
-                        borderTop: '1px solid #E8E8E8',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        transition: 'background 0.2s',
-                        marginTop: 4
-                      }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F0F0'}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                      <span style={{
-                        fontSize: 13,
-                        color: '#B08B5C',
-                        fontWeight: 500,
-                        letterSpacing: 0.5
-                      }}>
-                        View All {category.name}
-                      </span>
-                      <ChevronRight size={14} strokeWidth={2} style={{ color: '#B08B5C' }} />
-                    </button>
-                  )}
+                <div style={{ transition: 'transform 0.2s ease' }}>
+                  <Icon isActive={false} />
                 </div>
+                <div style={{
+                  width: '4px',
+                  height: '4px',
+                  borderRadius: '50%',
+                  backgroundColor: 'black',
+                  marginTop: '5px',
+                  opacity: 0,
+                  transition: 'all 0.3s ease'
+                }} />
+              </button>
+            );
+          }
+
+          return (
+            <Link
+              key={item.id}
+              href={item.href}
+              onClick={() => setActiveTab(item.id)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+                height: '100%',
+                position: 'relative',
+                textDecoration: 'none',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              <div style={{
+                transition: 'transform 0.2s ease',
+                transform: isActive ? 'translateY(-2px)' : 'translateY(0)',
+              }}>
+                <Icon isActive={isActive} />
               </div>
-            ))}
-          </nav>
 
-          {/* Divider */}
-          <div style={{
-            height: 1,
-            backgroundColor: '#E0E0E0',
-            margin: '16px 28px'
-          }} />
+              {/* Active Indicator Dot */}
+              <div style={{
+                width: '4px',
+                height: '4px',
+                borderRadius: '50%',
+                backgroundColor: 'black',
+                marginTop: '5px',
+                opacity: isActive ? 1 : 0,
+                transition: 'all 0.3s ease'
+              }} />
 
-          {/* All Products Link */}
-          <button
-            onClick={() => handleNavigation('/shop')}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '16px 28px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'left',
-              transition: 'background 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            <span style={{
-              fontSize: 15,
-              fontWeight: 500,
-              color: '#0C0C0C',
-              letterSpacing: 0.5
-            }}>
-              All Products
-            </span>
-            <ChevronRight size={18} strokeWidth={1.5} style={{ color: '#919191' }} />
-          </button>
-        </div>
+              {/* Cart Badge */}
+              {item.badge > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: 'calc(50% - 15px)',
+                  backgroundColor: '#B08B5C',
+                  color: '#FFFFFF',
+                  fontSize: '9px',
+                  minWidth: '15px',
+                  height: '15px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: '700',
+                  border: '2px solid #ffffff'
+                }}>
+                  {item.badge}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
 
-        {/* Footer - Fixed at bottom */}
-        <div style={{
-          borderTop: '1px solid #E0E0E0',
-          padding: '20px 28px',
-          backgroundColor: '#FAFAFA'
-        }}>
-          {/* Sign In / My Profile */}
-          <button
-            onClick={() => handleNavigation(isAuthenticated ? '/account' : '/login')}
-            style={{
-              width: '100%',
-              padding: '12px 0',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'left',
-              borderBottom: '1px solid #E8E8E8'
-            }}
-          >
-            <span style={{
-              fontSize: 14,
-              color: '#0C0C0C',
-              fontWeight: 400,
-              textDecoration: 'underline',
-              textUnderlineOffset: 3
-            }}>
-              {isAuthenticated ? 'My Profile' : 'Sign In'}
-            </span>
-          </button>
-
-          {/* My Orders */}
-          <button
-            onClick={() => handleNavigation(isAuthenticated ? '/account/orders' : '/login')}
-            style={{
-              width: '100%',
-              padding: '12px 0',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'left',
-              borderBottom: '1px solid #E8E8E8'
-            }}
-          >
-            <span style={{
-              fontSize: 14,
-              color: '#0C0C0C',
-              fontWeight: 400,
-              textDecoration: 'underline',
-              textUnderlineOffset: 3
-            }}>
-              My Orders
-            </span>
-          </button>
-
-          {/* Contact Us */}
-          <button
-            onClick={() => handleNavigation('/contact')}
-            style={{
-              width: '100%',
-              padding: '12px 0',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'left'
-            }}
-          >
-            <span style={{
-              fontSize: 14,
-              color: '#0C0C0C',
-              fontWeight: 400,
-              textDecoration: 'underline',
-              textUnderlineOffset: 3
-            }}>
-              Contact Us
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Animations */}
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        @keyframes slideInLeft {
-          from { 
-            transform: translateX(-100%);
-            opacity: 0;
-          }
-          to { 
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        
-        @keyframes fadeInUp {
-          from { 
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to { 
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
+      {/* Menu Overlay */}
+      <MenuOverlay isOpen={showMenu} onClose={() => setShowMenu(false)} />
     </>
   );
 }
