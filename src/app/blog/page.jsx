@@ -1,9 +1,7 @@
 // src/app/blog/page.jsx
-// Blog Listing Page - SEO Optimized
+// Blog Listing Page - Fixed for Server Component
 
-import { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 
 export const metadata = {
   title: 'Blog - Tips, Guides & News | PRISMIN',
@@ -26,8 +24,9 @@ async function getPosts(page = 1, category = null) {
     if (category) url += `&category=${category}`;
     
     const res = await fetch(url, { 
-      next: { revalidate: 300 } // Revalidate every 5 minutes
+      next: { revalidate: 300 }
     });
+    if (!res.ok) return { posts: [], total: 0, pages: 1 };
     return res.json();
   } catch (error) {
     return { posts: [], total: 0, pages: 1 };
@@ -39,6 +38,7 @@ async function getCategories() {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/categories`, {
       next: { revalidate: 3600 }
     });
+    if (!res.ok) return [];
     return res.json();
   } catch (error) {
     return [];
@@ -50,6 +50,7 @@ async function getRecentPosts() {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/blog/recent?limit=5`, {
       next: { revalidate: 300 }
     });
+    if (!res.ok) return [];
     return res.json();
   } catch (error) {
     return [];
@@ -66,7 +67,9 @@ export default async function BlogPage({ searchParams }) {
     getRecentPosts()
   ]);
 
-  const { posts, total, pages } = postsData;
+  const posts = postsData?.posts || [];
+  const total = postsData?.total || 0;
+  const pages = postsData?.pages || 1;
 
   // JSON-LD Schema
   const schemaData = {
@@ -110,7 +113,7 @@ export default async function BlogPage({ searchParams }) {
             {/* Main Content */}
             <div>
               {/* Category Filter */}
-              {categories.length > 0 && (
+              {categories && categories.length > 0 && (
                 <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
                   <Link href="/blog" style={{ padding: '8px 16px', backgroundColor: !category ? '#0C0C0C' : '#fff', color: !category ? '#fff' : '#0C0C0C', borderRadius: 20, fontSize: 14, textDecoration: 'none', border: '1px solid #E0E0E0' }}>
                     All
@@ -152,7 +155,7 @@ export default async function BlogPage({ searchParams }) {
                             {post.excerpt?.substring(0, 120)}...
                           </p>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#919191' }}>
-                            <span>{new Date(post.published_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                            <span>{post.published_at ? new Date(post.published_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}</span>
                             <span>{post.reading_time || 3} min read</span>
                           </div>
                         </div>
@@ -196,7 +199,7 @@ export default async function BlogPage({ searchParams }) {
                   Recent Posts
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {recentPosts.map(post => (
+                  {(recentPosts || []).map(post => (
                     <Link key={post._id} href={`/blog/${post.slug}`} style={{ display: 'flex', gap: 12, textDecoration: 'none' }}>
                       <div style={{ width: 60, height: 60, backgroundColor: '#f3f4f6', borderRadius: 8, overflow: 'hidden', flexShrink: 0 }}>
                         {post.featured_image && (
@@ -205,10 +208,10 @@ export default async function BlogPage({ searchParams }) {
                       </div>
                       <div>
                         <h4 style={{ fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 4, lineHeight: 1.4 }}>
-                          {post.title.substring(0, 50)}...
+                          {post.title?.substring(0, 50)}...
                         </h4>
                         <span style={{ fontSize: 12, color: '#919191' }}>
-                          {new Date(post.published_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                          {post.published_at ? new Date(post.published_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : ''}
                         </span>
                       </div>
                     </Link>
@@ -217,19 +220,21 @@ export default async function BlogPage({ searchParams }) {
               </div>
 
               {/* Categories */}
-              <div style={{ backgroundColor: '#fff', borderRadius: 12, padding: 24 }}>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0C0C0C', marginBottom: 16, paddingBottom: 12, borderBottom: '2px solid #B08B5C' }}>
-                  Categories
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {categories.map(cat => (
-                    <Link key={cat.name} href={`/blog?category=${cat.name}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', color: '#0C0C0C', textDecoration: 'none', borderBottom: '1px solid #f3f4f6' }}>
-                      <span style={{ fontSize: 14 }}>{cat.name}</span>
-                      <span style={{ fontSize: 12, color: '#919191' }}>({cat.count})</span>
-                    </Link>
-                  ))}
+              {categories && categories.length > 0 && (
+                <div style={{ backgroundColor: '#fff', borderRadius: 12, padding: 24 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 600, color: '#0C0C0C', marginBottom: 16, paddingBottom: 12, borderBottom: '2px solid #B08B5C' }}>
+                    Categories
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {categories.map(cat => (
+                      <Link key={cat.name} href={`/blog?category=${cat.name}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', color: '#0C0C0C', textDecoration: 'none', borderBottom: '1px solid #f3f4f6' }}>
+                        <span style={{ fontSize: 14 }}>{cat.name}</span>
+                        <span style={{ fontSize: 12, color: '#919191' }}>({cat.count})</span>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </aside>
           </div>
         </div>
