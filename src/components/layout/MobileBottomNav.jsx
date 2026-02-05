@@ -1,334 +1,192 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
-import { ShoppingBag, User, Search, Menu, X, Plus } from 'lucide-react';
-import useAuthStore from '@/store/authStore';
+import { usePathname } from 'next/navigation';
 import useCartStore from '@/store/cartStore';
 import MenuOverlay from './MenuOverlay';
-import SearchOverlay from './SearchOverlay';
-import api from '@/lib/api';
 
-export default function Header() {
+// Premium Icons
+const HomeIcon = ({ isActive }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#0C0C0C" : "#888"} strokeWidth={isActive ? "1.8" : "1.2"}>
+    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+    <path d="M9 22V12h6v10" />
+  </svg>
+);
+
+const MenuIcon = ({ isActive }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#0C0C0C" : "#888"} strokeWidth={isActive ? "1.8" : "1.2"}>
+    <line x1="4" y1="6" x2="20" y2="6" strokeLinecap="round" />
+    <line x1="4" y1="12" x2="20" y2="12" strokeLinecap="round" />
+    <line x1="4" y1="18" x2="20" y2="18" strokeLinecap="round" />
+  </svg>
+);
+
+const BagIcon = ({ isActive }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#0C0C0C" : "#888"} strokeWidth={isActive ? "1.8" : "1.2"}>
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0" />
+  </svg>
+);
+
+const UserIcon = ({ isActive }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isActive ? "#0C0C0C" : "#888"} strokeWidth={isActive ? "1.8" : "1.2"}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M20 21a8 8 0 10-16 0" />
+  </svg>
+);
+
+export default function MobileBottomNav() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { isAuthenticated, user, logout } = useAuthStore();
   const { getItemCount } = useCartStore();
-  
+  const [activeTab, setActiveTab] = useState('home');
   const [mounted, setMounted] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [settings, setSettings] = useState(null);
-  
-  const dropdownRef = useRef(null);
-  const dropdownTimeoutRef = useRef(null);
-
-  const isHomePage = pathname === '/';
-  const isAdminPage = pathname?.startsWith('/admin');
 
   useEffect(() => {
     setMounted(true);
-    const fetchSettings = async () => {
-      try {
-        const res = await api.get('/settings');
-        setSettings(res.data);
-      } catch (error) {
-        console.error('Failed to fetch settings:', error);
-      }
-    };
-    fetchSettings();
-  }, []);
+    if (pathname === '/') setActiveTab('home');
+    else if (pathname === '/cart') setActiveTab('cart');
+    else if (pathname?.startsWith('/account') || pathname === '/login') setActiveTab('profile');
+    else setActiveTab('');
+  }, [pathname]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const isAdminPage = pathname?.startsWith('/admin');
+  const isCheckoutPage = pathname === '/checkout';
 
-  useEffect(() => {
-    return () => {
-      if (dropdownTimeoutRef.current) {
-        clearTimeout(dropdownTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  if (isAdminPage) return null;
+  if (isAdminPage || isCheckoutPage) return null;
 
   const cartCount = mounted ? getItemCount() : 0;
 
-  const handleLogout = () => {
-    logout();
-    setShowDropdown(false);
-    router.push('/');
-  };
-
-  const handleDropdownEnter = () => {
-    if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
-    setShowDropdown(true);
-  };
-
-  const handleDropdownLeave = () => {
-    dropdownTimeoutRef.current = setTimeout(() => setShowDropdown(false), 150);
-  };
-
-  const getColor = () => {
-    if (isHomePage && !isScrolled) return '#FFFFFF';
-    return '#0C0C0C';
-  };
-
-  const getLogo = () => {
-    if (isHomePage && !isScrolled) {
-      return settings?.header_logo_white || null;
-    }
-    return settings?.header_logo || null;
-  };
-
-  const logoUrl = getLogo();
-  const logoText = settings?.logo_text || 'PRISMIN';
-
-  const Logo = ({ size = 'desktop' }) => {
-    const logoWidth = size === 'mobile' ? 100 : 130;
-    const logoHeight = size === 'mobile' ? 28 : 35;
-    const fontSize = size === 'mobile' ? 18 : 22;
-
-    if (logoUrl) {
-      return (
-        <Image
-          src={logoUrl}
-          alt={logoText}
-          width={logoWidth}
-          height={logoHeight}
-          style={{ height: 'auto', maxHeight: logoHeight, width: 'auto' }}
-          priority
-        />
-      );
-    }
-    
-    return (
-      <span style={{
-        fontSize,
-        fontWeight: 300,
-        letterSpacing: size === 'mobile' ? 4 : 6,
-        color: getColor(),
-        transition: 'color 0.3s'
-      }}>
-        {logoText}
-      </span>
-    );
-  };
+  const navItems = [
+    { id: 'home', Icon: HomeIcon, href: '/' },
+    { id: 'menu', Icon: MenuIcon, href: null, isMenu: true },
+    { id: 'cart', Icon: BagIcon, href: '/cart', badge: cartCount },
+    { id: 'profile', Icon: UserIcon, href: '/account' },
+  ];
 
   return (
     <>
-      <header 
+      {/* Mobile-only spacer */}
+      <div className="block md:hidden h-[70px]" />
+
+      <nav
+        className="md:hidden flex items-center justify-around"
         style={{
           position: 'fixed',
-          top: 0,
+          bottom: 0,
           left: 0,
           right: 0,
-          zIndex: 40,
-          transition: 'all 0.3s ease',
-          backgroundColor: isHomePage && !isScrolled ? 'transparent' : 'rgba(255,255,255,0.98)',
-          backdropFilter: isScrolled || !isHomePage ? 'blur(10px)' : 'none',
-          borderBottom: isScrolled || !isHomePage ? '1px solid #E0E0E0' : 'none'
+          width: '100%',
+          height: '65px',
+          zIndex: 999,
+          backgroundColor: '#FFFFFF',
+          borderTop: '1px solid #f0f0f0',
+          boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.05)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
-        {/* Desktop Header */}
-        <div className="hidden md:block" style={{ maxWidth: 1600, margin: '0 auto', padding: '0 40px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60 }}>
-            
-            {/* Left - Contact Us */}
-            <div style={{ flex: 1 }}>
-              <Link 
-                href="/contact" 
+        {navItems.map((item) => {
+          const { Icon } = item;
+          const isActive = activeTab === item.id;
+
+          // Menu Button
+          if (item.isMenu) {
+            return (
+              <button
+                key={item.id}
+                onClick={() => setShowMenu(true)}
                 style={{
-                  display: 'inline-flex',
+                  display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 4,
-                  fontSize: 12,
-                  letterSpacing: 1,
-                  color: getColor(),
-                  textDecoration: 'none',
-                  transition: 'color 0.3s'
+                  justifyContent: 'center',
+                  flex: 1,
+                  height: '100%',
+                  position: 'relative',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                <Plus size={12} />
-                <span>Contact Us</span>
-              </Link>
-            </div>
-
-            {/* Center - Logo */}
-            <Link 
-              href="/"
-              style={{
-                position: 'absolute',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                textDecoration: 'none',
-                display: 'flex',
-                alignItems: 'center'
-              }}
-            >
-              <Logo size="desktop" />
-            </Link>
-
-            {/* Right - Icons + MENU */}
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 18 }}>
-              {/* Cart */}
-              <Link 
-                href="/cart" 
-                style={{ position: 'relative', color: getColor(), transition: 'color 0.3s', display: 'flex', alignItems: 'center' }}
-              >
-                <ShoppingBag size={20} strokeWidth={1.5} />
-                {mounted && cartCount > 0 && (
-                  <span style={{
-                    position: 'absolute',
-                    top: -6,
-                    right: -6,
-                    width: 16,
-                    height: 16,
-                    backgroundColor: '#B08B5C',
-                    color: '#FFFFFF',
-                    fontSize: 9,
-                    fontWeight: 500,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: '50%'
-                  }}>
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
-
-              {/* User Icon with Dropdown */}
-              {mounted && isAuthenticated ? (
-                <div 
-                  ref={dropdownRef}
-                  style={{ position: 'relative' }}
-                  onMouseEnter={handleDropdownEnter}
-                  onMouseLeave={handleDropdownLeave}
-                >
-                  <button 
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: getColor(), transition: 'color 0.3s', padding: 4, display: 'flex', alignItems: 'center' }}
-                  >
-                    <User size={20} strokeWidth={1.5} />
-                  </button>
-                  
-                  {/* Dropdown Menu */}
-                  <div 
-                    style={{
-                      position: 'absolute',
-                      right: 0,
-                      top: '100%',
-                      paddingTop: 8,
-                      opacity: showDropdown ? 1 : 0,
-                      visibility: showDropdown ? 'visible' : 'hidden',
-                      transform: showDropdown ? 'translateY(0)' : 'translateY(-10px)',
-                      transition: 'all 0.2s ease',
-                      zIndex: 100
-                    }}
-                    onMouseEnter={handleDropdownEnter}
-                    onMouseLeave={handleDropdownLeave}
-                  >
-                    <div style={{ width: 200, backgroundColor: '#FFFFFF', boxShadow: '0 4px 20px rgba(0,0,0,0.12)', borderRadius: 8, overflow: 'hidden', border: '1px solid #E8E8E8' }}>
-                      <div style={{ padding: '14px 16px', borderBottom: '1px solid #E8E8E8', backgroundColor: '#FAFAFA' }}>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: '#0C0C0C', margin: 0 }}>{user?.name || 'User'}</p>
-                        <p style={{ fontSize: 12, color: '#919191', margin: '4px 0 0 0' }}>{user?.email}</p>
-                      </div>
-                      
-                      <div style={{ padding: '8px 0' }}>
-                        <Link href="/account" style={{ display: 'block', padding: '10px 16px', fontSize: 14, color: '#0C0C0C', textDecoration: 'none', transition: 'background 0.2s' }} onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'} onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}>
-                          My Profile
-                        </Link>
-                        <Link href="/account/orders" style={{ display: 'block', padding: '10px 16px', fontSize: 14, color: '#0C0C0C', textDecoration: 'none', transition: 'background 0.2s' }} onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'} onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}>
-                          My Orders
-                        </Link>
-                        {user?.role === 'admin' && (
-                          <Link href="/admin" style={{ display: 'block', padding: '10px 16px', fontSize: 14, color: '#B08B5C', fontWeight: 500, textDecoration: 'none', transition: 'background 0.2s' }} onMouseOver={(e) => e.target.style.backgroundColor = '#F5F5F5'} onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}>
-                            Admin Panel
-                          </Link>
-                        )}
-                        <div style={{ height: 1, backgroundColor: '#E8E8E8', margin: '8px 0' }} />
-                        <button onClick={handleLogout} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 16px', fontSize: 14, color: '#DC2626', background: 'none', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }} onMouseOver={(e) => e.target.style.backgroundColor = '#FEF2F2'} onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}>
-                          Logout
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                <div style={{ transition: 'transform 0.2s ease' }}>
+                  <Icon isActive={false} />
                 </div>
-              ) : (
-                <Link href="/login" style={{ color: getColor(), transition: 'color 0.3s', display: 'flex', alignItems: 'center' }}>
-                  <User size={20} strokeWidth={1.5} />
-                </Link>
-              )}
-
-              {/* Search Button */}
-              <button onClick={() => setShowSearch(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: getColor(), transition: 'color 0.3s', padding: 0, display: 'flex', alignItems: 'center' }}>
-                <Search size={20} strokeWidth={1.5} />
+                <div style={{
+                  width: '4px',
+                  height: '4px',
+                  borderRadius: '50%',
+                  backgroundColor: 'black',
+                  marginTop: '5px',
+                  opacity: 0,
+                  transition: 'all 0.3s ease'
+                }} />
               </button>
+            );
+          }
 
-              {/* Menu Toggle */}
-              <button onClick={() => setShowMenu(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: getColor(), transition: 'color 0.3s', padding: 0 }}>
-                <Menu size={20} strokeWidth={1.5} />
-                <span style={{ fontSize: 12, letterSpacing: 1 }}>MENU</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Header - Logo Left, Search Box Right (Clickable Link) */}
-        <div className="md:hidden" style={{ padding: '0 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 56, gap: 12 }}>
-            {/* Left - Logo */}
-            <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-              <Logo size="mobile" />
-            </Link>
-
-            {/* Right - Search Box as Link to /search page */}
-            <Link 
-              href="/search"
-              style={{ 
-                flex: 1, 
-                maxWidth: 200, 
-                textDecoration: 'none'
+          return (
+            <Link
+              key={item.id}
+              href={item.href}
+              onClick={() => setActiveTab(item.id)}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flex: 1,
+                height: '100%',
+                position: 'relative',
+                textDecoration: 'none',
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
               <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                backgroundColor: isHomePage && !isScrolled ? 'rgba(255,255,255,0.15)' : '#F5F5F5',
-                borderRadius: 20,
-                padding: '8px 14px',
-                transition: 'all 0.3s'
+                transition: 'transform 0.2s ease',
+                transform: isActive ? 'translateY(-2px)' : 'translateY(0)',
               }}>
-                <span style={{
-                  fontSize: 13,
-                  color: isHomePage && !isScrolled ? 'rgba(255,255,255,0.7)' : '#919191'
-                }}>
-                  Search...
-                </span>
-                <Search 
-                  size={16} 
-                  style={{ 
-                    color: isHomePage && !isScrolled ? 'rgba(255,255,255,0.7)' : '#919191',
-                    flexShrink: 0 
-                  }} 
-                />
+                <Icon isActive={isActive} />
               </div>
-            </Link>
-          </div>
-        </div>
-      </header>
 
-      <SearchOverlay isOpen={showSearch} onClose={() => setShowSearch(false)} />
+              {/* Active Indicator Dot */}
+              <div style={{
+                width: '4px',
+                height: '4px',
+                borderRadius: '50%',
+                backgroundColor: 'black',
+                marginTop: '5px',
+                opacity: isActive ? 1 : 0,
+                transition: 'all 0.3s ease'
+              }} />
+
+              {/* Cart Badge */}
+              {item.badge > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: 'calc(50% - 15px)',
+                  backgroundColor: '#B08B5C',
+                  color: '#FFFFFF',
+                  fontSize: '9px',
+                  minWidth: '15px',
+                  height: '15px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: '700',
+                  border: '2px solid #ffffff'
+                }}>
+                  {item.badge}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Menu Overlay */}
       <MenuOverlay isOpen={showMenu} onClose={() => setShowMenu(false)} />
     </>
   );
