@@ -1,5 +1,5 @@
 // src/app/blog/[slug]/page.jsx
-// Single Blog Post Page - Fixed for Server Component
+
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
