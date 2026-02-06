@@ -3,33 +3,38 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { X, ChevronRight } from 'lucide-react';
+import { X, ChevronDown, ChevronRight } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
+import api from '@/lib/api';
 
 // ============================================================================
-// CATEGORY CONFIGURATION - Easily maintainable
+// CATEGORIES CONFIGURATION
 // ============================================================================
 
 const CATEGORIES = [
   { 
     name: 'Original Pakistani', 
     slug: 'original-pakistani',
-    href: '/original-pakistani'
+    href: '/original-pakistani',
+    type: 'subcategory'
   },
   { 
     name: 'Inspired Pakistani', 
     slug: 'inspired-pakistani',
-    href: '/inspired-pakistani'
+    href: '/inspired-pakistani',
+    type: 'subcategory'
   },
   { 
     name: 'Premium Bag', 
     slug: 'premium-bag',
-    href: '/premium-bag'
+    href: '/premium-bag',
+    type: 'subcategory'
   },
   { 
     name: 'Beauty & Care', 
     slug: 'beauty',
-    href: '/beauty'
+    href: '/beauty',
+    type: 'subcategory'
   }
 ];
 
@@ -42,6 +47,9 @@ export default function MenuOverlay({ isOpen, onClose }) {
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
   const [isMobile, setIsMobile] = useState(true);
+  const [expandedCategory, setExpandedCategory] = useState(null);
+  const [subcategories, setSubcategories] = useState({});
+  const [loading, setLoading] = useState({});
 
   // Detect screen size
   useEffect(() => {
@@ -57,6 +65,7 @@ export default function MenuOverlay({ isOpen, onClose }) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
+      setExpandedCategory(null);
     }
     return () => {
       document.body.style.overflow = 'unset';
@@ -70,10 +79,51 @@ export default function MenuOverlay({ isOpen, onClose }) {
     }
   }, [pathname]);
 
-  // Navigation handler
-  const handleNavigation = (path) => {
-    router.push(path);
+  // Fetch subcategories for a category
+  const fetchSubcategories = async (categorySlug) => {
+    if (subcategories[categorySlug]) return;
+    
+    setLoading(prev => ({ ...prev, [categorySlug]: true }));
+    try {
+      const res = await api.get(`/subcategories?parent=${categorySlug}&is_active=true`);
+      setSubcategories(prev => ({
+        ...prev,
+        [categorySlug]: res.data.subcategories || []
+      }));
+    } catch (error) {
+      console.error('Failed to fetch subcategories:', error);
+      setSubcategories(prev => ({ ...prev, [categorySlug]: [] }));
+    } finally {
+      setLoading(prev => ({ ...prev, [categorySlug]: false }));
+    }
+  };
+
+  // Handle category click - expand/collapse
+  const handleCategoryClick = (category) => {
+    if (expandedCategory === category.slug) {
+      setExpandedCategory(null);
+    } else {
+      setExpandedCategory(category.slug);
+      fetchSubcategories(category.slug);
+    }
+  };
+
+  // Handle View All click
+  const handleViewAll = (category) => {
     onClose();
+    router.push(category.href);
+  };
+
+  // Handle subcategory click
+  const handleSubcategoryClick = (category, subcategory) => {
+    onClose();
+    router.push(`${category.href}?subcategory=${subcategory.slug}`);
+  };
+
+  // Handle navigation
+  const handleNavigation = (href) => {
+    onClose();
+    router.push(href);
   };
 
   if (!isOpen) return null;
@@ -125,19 +175,22 @@ export default function MenuOverlay({ isOpen, onClose }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: isMobile ? '20px 24px' : '24px 28px',
-          borderBottom: '1px solid #F0F0F0',
-          backgroundColor: '#FAFAFA'
+          padding: isMobile ? '18px 24px' : '20px 28px',
+          borderBottom: '1px solid #E0E0E0'
         }}>
-          <span style={{
-            fontSize: isMobile ? 13 : 14,
-            fontWeight: 600,
-            letterSpacing: 2.5,
-            textTransform: 'uppercase',
-            color: '#999'
-          }}>
-            Menu
-          </span>
+          <Link 
+            href="/" 
+            onClick={onClose}
+            style={{
+              fontSize: isMobile ? 22 : 24,
+              fontWeight: 300,
+              letterSpacing: isMobile ? 5 : 6,
+              color: '#0C0C0C',
+              textDecoration: 'none'
+            }}
+          >
+            PRISMIN
+          </Link>
           
           <button 
             onClick={onClose}
@@ -167,217 +220,250 @@ export default function MenuOverlay({ isOpen, onClose }) {
           flex: 1,
           overflowY: 'auto',
           overflowX: 'hidden',
-          padding: isMobile ? '24px 24px 16px' : '28px 28px 20px'
+          padding: isMobile ? '8px 0' : '12px 0'
         }}>
           
-          {/* Main Categories Section */}
+          {/* Main Categories with Subcategories */}
           <nav aria-label="Main categories">
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: isMobile ? '4px' : '6px'
-            }}>
-              {CATEGORIES.map((category, index) => (
+            {CATEGORIES.map((category, index) => (
+              <div 
+                key={category.slug}
+                style={{
+                  animation: `fadeInUp 0.3s ease ${index * 0.05}s both`
+                }}
+              >
+                {/* Category Header (Expandable) */}
                 <button
-                  key={category.slug}
-                  onClick={() => handleNavigation(category.href)}
+                  onClick={() => handleCategoryClick(category)}
                   style={{
                     width: '100%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: isMobile ? '14px 16px' : '16px 18px',
+                    padding: isMobile ? '14px 24px' : '16px 28px',
                     background: 'none',
                     border: 'none',
-                    borderRadius: '8px',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'background-color 0.2s ease',
-                    animation: `fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.05}s both`
+                    transition: 'background 0.2s'
                   }}
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
                   onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   <span style={{
-                    fontSize: isMobile ? 17 : 18,
+                    fontSize: isMobile ? 16 : 17,
                     fontWeight: 500,
                     color: '#0C0C0C',
-                    letterSpacing: 0.3
+                    letterSpacing: 0.5
                   }}>
                     {category.name}
                   </span>
-                  <ChevronRight 
-                    size={18} 
-                    strokeWidth={1.8} 
-                    style={{ 
-                      color: '#CCC',
-                      transition: 'transform 0.2s ease'
-                    }} 
+                  <ChevronDown 
+                    size={isMobile ? 18 : 20} 
+                    strokeWidth={1.5}
+                    style={{
+                      color: '#919191',
+                      transform: expandedCategory === category.slug ? 'rotate(180deg)' : 'rotate(0)',
+                      transition: 'transform 0.3s ease'
+                    }}
                   />
                 </button>
-              ))}
-            </div>
+
+                {/* Expanded Content - Subcategories */}
+                <div style={{
+                  maxHeight: expandedCategory === category.slug ? '500px' : '0',
+                  overflow: 'hidden',
+                  transition: 'max-height 0.3s ease',
+                  backgroundColor: '#FAFAFA'
+                }}>
+                  {/* Loading State */}
+                  {loading[category.slug] && (
+                    <div style={{ padding: isMobile ? '12px 24px 12px 40px' : '12px 28px 12px 44px' }}>
+                      <span style={{ fontSize: 14, color: '#919191' }}>Loading...</span>
+                    </div>
+                  )}
+
+                  {/* Subcategories List */}
+                  {subcategories[category.slug]?.map((sub) => (
+                    <button
+                      key={sub.slug}
+                      onClick={() => handleSubcategoryClick(category, sub)}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: isMobile ? '12px 24px 12px 40px' : '12px 28px 12px 44px',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'background 0.2s'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F0F0'}
+                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <ChevronRight size={14} strokeWidth={1.5} style={{ color: '#B08B5C' }} />
+                      <span style={{
+                        fontSize: 14,
+                        color: '#4A4A4A',
+                        fontWeight: 400
+                      }}>
+                        {sub.name}
+                      </span>
+                    </button>
+                  ))}
+
+                  {/* View All Button */}
+                  {expandedCategory === category.slug && !loading[category.slug] && (
+                    <button
+                      onClick={() => handleViewAll(category)}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: isMobile ? '13px 24px 13px 40px' : '14px 28px 14px 44px',
+                        background: 'none',
+                        border: 'none',
+                        borderTop: '1px solid #E8E8E8',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'background 0.2s',
+                        marginTop: 4
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F0F0F0'}
+                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <span style={{
+                        fontSize: 14,
+                        color: '#B08B5C',
+                        fontWeight: 500,
+                        letterSpacing: 0.5
+                      }}>
+                        View All {category.name}
+                      </span>
+                      <ChevronRight size={14} strokeWidth={2} style={{ color: '#B08B5C' }} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* Divider */}
           <div style={{
-            height: '1px',
-            backgroundColor: '#F0F0F0',
-            margin: isMobile ? '20px 0' : '24px 0'
+            height: 1,
+            backgroundColor: '#E0E0E0',
+            margin: isMobile ? '14px 24px' : '16px 28px'
           }} />
 
-          {/* Secondary Links Section */}
-          <nav aria-label="Additional links">
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: isMobile ? '4px' : '6px'
-            }}>
-              {/* Shop All - Highlighted */}
-              <button
-                onClick={() => handleNavigation('/shop')}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  background: 'none',
-                  border: 'none',
-                  padding: isMobile ? '12px 16px' : '14px 18px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s ease'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <span style={{
-                  fontSize: isMobile ? 16 : 17,
-                  fontWeight: 600,
-                  color: '#0C0C0C',
-                  letterSpacing: 1,
-                  textTransform: 'uppercase'
-                }}>
-                  Shop All
-                </span>
-              </button>
-
-              {/* Conditional Links based on auth */}
-              {!isAuthenticated ? (
-                <button
-                  onClick={() => handleNavigation('/login')}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    background: 'none',
-                    border: 'none',
-                    padding: isMobile ? '12px 16px' : '14px 18px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s ease'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <span style={{
-                    fontSize: isMobile ? 15 : 16,
-                    fontWeight: 400,
-                    color: '#555'
-                  }}>
-                    Login / Register
-                  </span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleNavigation('/account')}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    background: 'none',
-                    border: 'none',
-                    padding: isMobile ? '12px 16px' : '14px 18px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s ease'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <span style={{
-                    fontSize: isMobile ? 15 : 16,
-                    fontWeight: 400,
-                    color: '#555'
-                  }}>
-                    My Account
-                  </span>
-                </button>
-              )}
-
-              {/* Track Order */}
-              {isAuthenticated && (
-                <button
-                  onClick={() => handleNavigation('/account/orders')}
-                  style={{
-                    width: '100%',
-                    textAlign: 'left',
-                    background: 'none',
-                    border: 'none',
-                    padding: isMobile ? '12px 16px' : '14px 18px',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s ease'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <span style={{
-                    fontSize: isMobile ? 15 : 16,
-                    fontWeight: 400,
-                    color: '#555'
-                  }}>
-                    My Orders
-                  </span>
-                </button>
-              )}
-            </div>
-          </nav>
-        </div>
-
-        {/* ===== FOOTER SECTION ===== */}
-        <footer style={{
-          borderTop: '1px solid #F0F0F0',
-          padding: isMobile ? '20px 24px' : '24px 28px',
-          backgroundColor: '#FAFAFA'
-        }}>
+          {/* All Products Link */}
           <button
-            onClick={() => handleNavigation('/contact')}
+            onClick={() => handleNavigation('/shop')}
             style={{
               width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: isMobile ? '14px 24px' : '16px 28px',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
               textAlign: 'left',
-              padding: '8px 0',
-              marginBottom: '12px'
+              transition: 'background 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            <span style={{
+              fontSize: isMobile ? 16 : 17,
+              fontWeight: 500,
+              color: '#0C0C0C',
+              letterSpacing: 0.5
+            }}>
+              All Products
+            </span>
+            <ChevronRight size={isMobile ? 18 : 20} strokeWidth={1.5} style={{ color: '#919191' }} />
+          </button>
+        </div>
+
+        {/* ===== FOOTER SECTION ===== */}
+        <footer style={{
+          borderTop: '1px solid #E0E0E0',
+          padding: isMobile ? '16px 24px' : '20px 28px',
+          backgroundColor: '#FAFAFA'
+        }}>
+          {/* Sign In / My Profile */}
+          <button
+            onClick={() => handleNavigation(isAuthenticated ? '/account' : '/login')}
+            style={{
+              width: '100%',
+              padding: isMobile ? '11px 0' : '12px 0',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left',
+              borderBottom: '1px solid #E8E8E8'
             }}
           >
             <span style={{
-              fontSize: isMobile ? 14 : 15,
-              fontWeight: 500,
+              fontSize: 15,
               color: '#0C0C0C',
-              letterSpacing: 0.8,
-              textTransform: 'uppercase'
+              fontWeight: 400,
+              textDecoration: 'underline',
+              textUnderlineOffset: 3
+            }}>
+              {isAuthenticated ? 'My Profile' : 'Sign In'}
+            </span>
+          </button>
+
+          {/* My Orders */}
+          <button
+            onClick={() => handleNavigation(isAuthenticated ? '/account/orders' : '/login')}
+            style={{
+              width: '100%',
+              padding: isMobile ? '11px 0' : '12px 0',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left',
+              borderBottom: '1px solid #E8E8E8'
+            }}
+          >
+            <span style={{
+              fontSize: 15,
+              color: '#0C0C0C',
+              fontWeight: 400,
+              textDecoration: 'underline',
+              textUnderlineOffset: 3
+            }}>
+              My Orders
+            </span>
+          </button>
+
+          {/* Contact Us */}
+          <button
+            onClick={() => handleNavigation('/contact')}
+            style={{
+              width: '100%',
+              padding: isMobile ? '11px 0' : '12px 0',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left'
+            }}
+          >
+            <span style={{
+              fontSize: 15,
+              color: '#0C0C0C',
+              fontWeight: 400,
+              textDecoration: 'underline',
+              textUnderlineOffset: 3
             }}>
               Contact Us
             </span>
           </button>
-          
-          <p style={{
-            fontSize: 11,
-            color: '#999',
-            margin: 0,
-            letterSpacing: 0.5
-          }}>
-            © {new Date().getFullYear()} PRISMIN
-          </p>
         </footer>
       </aside>
 
