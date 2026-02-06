@@ -18,10 +18,12 @@ import {
   LogOut,
   FolderOpen,
   UserPlus,
-  CreditCard
+  CreditCard,
+  FileText
 } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
 import { Layers } from 'lucide-react';
+
 
 const menuItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -34,6 +36,7 @@ const menuItems = [
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Brands', href: '/admin/brands', icon: Tag },
   { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
+  { name: 'Blog', href: '/admin/blog', icon: FileText },
   { name: 'Admin Roles', href: '/admin/roles', icon: Shield },
   { name: 'Settings', href: '/admin/settings', icon: Settings }
 ];
