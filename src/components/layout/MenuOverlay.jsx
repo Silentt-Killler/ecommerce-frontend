@@ -3,126 +3,446 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { X, ChevronDown } from 'lucide-react';
+import { X, ChevronRight } from 'lucide-react';
 import useAuthStore from '@/store/authStore';
-import api from '@/lib/api';
+
+// ============================================================================
+// CATEGORY CONFIGURATION - Easily maintainable
+// ============================================================================
 
 const CATEGORIES = [
-  { name: 'Original Pakistani', slug: 'original-pakistani', href: '/original-pakistani' },
-  { name: 'Inspired Pakistani', slug: 'inspired-pakistani', href: '/inspired-pakistani' },
-  { name: 'Premium Bag', slug: 'premium-bag', href: '/premium-bag' },
-  { name: 'Beauty & Care', slug: 'beauty', href: '/beauty' }
+  { 
+    name: 'Original Pakistani', 
+    slug: 'original-pakistani',
+    href: '/original-pakistani'
+  },
+  { 
+    name: 'Inspired Pakistani', 
+    slug: 'inspired-pakistani',
+    href: '/inspired-pakistani'
+  },
+  { 
+    name: 'Premium Bag', 
+    slug: 'premium-bag',
+    href: '/premium-bag'
+  },
+  { 
+    name: 'Beauty & Care', 
+    slug: 'beauty',
+    href: '/beauty'
+  }
 ];
 
+// ============================================================================
+// MENU OVERLAY COMPONENT - Professional Grade
+// ============================================================================
+
 export default function MenuOverlay({ isOpen, onClose }) {
+  const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
-  const [expandedCategory, setExpandedCategory] = useState(null);
-  const [subcategories, setSubcategories] = useState({});
-  const [loading, setLoading] = useState({});
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
 
+  // Detect screen size
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Back button বা অন্য পেজে ক্লিক করলে অটো মেনু বন্ধ হবে
+  // Prevent body scroll when menu is open
   useEffect(() => {
-    if (isOpen) onClose();
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  // Auto-close menu on route change (Back button, navigation)
+  useEffect(() => {
+    if (isOpen) {
+      onClose();
+    }
   }, [pathname]);
 
-  const fetchSubcategories = async (slug) => {
-    if (subcategories[slug]) return;
-    setLoading(prev => ({ ...prev, [slug]: true }));
-    try {
-      const res = await api.get(`/subcategories?parent=${slug}&is_active=true`);
-      setSubcategories(prev => ({ ...prev, [slug]: res.data.subcategories || [] }));
-    } catch (error) {
-      setSubcategories(prev => ({ ...prev, [slug]: [] }));
-    } finally {
-      setLoading(prev => ({ ...prev, [slug]: false }));
-    }
+  // Navigation handler
+  const handleNavigation = (path) => {
+    router.push(path);
+    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
     <>
-      <div onClick={onClose} style={{
-        position: 'fixed', inset: 0, zIndex: 9998,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(5px)',
-        animation: 'fadeIn 0.3s ease'
-      }} />
+      {/* Backdrop Overlay */}
+      <div 
+        onClick={onClose}
+        role="presentation"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
+          zIndex: 60,
+          animation: 'fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
+      />
 
-      <div style={{
-        position: 'fixed', top: 0, bottom: 0,
-        right: isMobile ? 'auto' : 0, left: isMobile ? 0 : 'auto',
-        width: isMobile ? '85vw' : '400px',
-        zIndex: 9999, backgroundColor: '#FFFFFF',
-        display: 'flex', flexDirection: 'column',
-        animation: isMobile ? 'slideInLeft 0.4s ease' : 'slideInRight 0.4s ease',
-        boxShadow: isMobile ? '5px 0 25px rgba(0,0,0,0.1)' : '-5px 0 25px rgba(0,0,0,0.1)'
-      }}>
-        <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0' }}>
-          <span style={{ fontSize: 18, fontWeight: 300, letterSpacing: 3 }}>PRISMIN</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-            <X size={24} />
+      {/* Menu Drawer Panel */}
+      <aside 
+        role="dialog"
+        aria-label="Navigation menu"
+        aria-modal="true"
+        style={{
+          position: 'fixed',
+          top: 0,
+          bottom: 0,
+          left: isMobile ? 0 : 'auto',
+          right: isMobile ? 'auto' : 0,
+          width: isMobile ? '85vw' : '420px',
+          maxWidth: isMobile ? '340px' : '420px',
+          backgroundColor: '#FFFFFF',
+          zIndex: 61,
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: isMobile 
+            ? '4px 0 24px rgba(0, 0, 0, 0.12)' 
+            : '-4px 0 24px rgba(0, 0, 0, 0.12)',
+          animation: isMobile 
+            ? 'slideInLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1)' 
+            : 'slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
+      >
+        {/* ===== HEADER SECTION ===== */}
+        <header style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: isMobile ? '20px 24px' : '24px 28px',
+          borderBottom: '1px solid #F0F0F0',
+          backgroundColor: '#FAFAFA'
+        }}>
+          <span style={{
+            fontSize: isMobile ? 13 : 14,
+            fontWeight: 600,
+            letterSpacing: 2.5,
+            textTransform: 'uppercase',
+            color: '#999'
+          }}>
+            Menu
+          </span>
+          
+          <button 
+            onClick={onClose}
+            aria-label="Close menu"
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 8,
+              margin: -8,
+              cursor: 'pointer',
+              color: '#0C0C0C',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '50%',
+              transition: 'background-color 0.2s ease'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#F5F5F5'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            <X size={24} strokeWidth={1.8} />
           </button>
-        </div>
+        </header>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
-          {CATEGORIES.map((cat) => (
-            <div key={cat.slug}>
-              <button 
-                onClick={() => {
-                  setExpandedCategory(expandedCategory === cat.slug ? null : cat.slug);
-                  fetchSubcategories(cat.slug);
-                }}
+        {/* ===== SCROLLABLE CONTENT ===== */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: isMobile ? '24px 24px 16px' : '28px 28px 20px'
+        }}>
+          
+          {/* Main Categories Section */}
+          <nav aria-label="Main categories">
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: isMobile ? '4px' : '6px'
+            }}>
+              {CATEGORIES.map((category, index) => (
+                <button
+                  key={category.slug}
+                  onClick={() => handleNavigation(category.href)}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: isMobile ? '14px 16px' : '16px 18px',
+                    background: 'none',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'background-color 0.2s ease',
+                    animation: `fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${index * 0.05}s both`
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <span style={{
+                    fontSize: isMobile ? 17 : 18,
+                    fontWeight: 500,
+                    color: '#0C0C0C',
+                    letterSpacing: 0.3
+                  }}>
+                    {category.name}
+                  </span>
+                  <ChevronRight 
+                    size={18} 
+                    strokeWidth={1.8} 
+                    style={{ 
+                      color: '#CCC',
+                      transition: 'transform 0.2s ease'
+                    }} 
+                  />
+                </button>
+              ))}
+            </div>
+          </nav>
+
+          {/* Divider */}
+          <div style={{
+            height: '1px',
+            backgroundColor: '#F0F0F0',
+            margin: isMobile ? '20px 0' : '24px 0'
+          }} />
+
+          {/* Secondary Links Section */}
+          <nav aria-label="Additional links">
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: isMobile ? '4px' : '6px'
+            }}>
+              {/* Shop All - Highlighted */}
+              <button
+                onClick={() => handleNavigation('/shop')}
                 style={{
-                  width: '100%', display: 'flex', justifyContent: 'space-between',
-                  padding: '18px 24px', background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 16, fontWeight: 500, color: '#1a1a1a'
+                  width: '100%',
+                  textAlign: 'left',
+                  background: 'none',
+                  border: 'none',
+                  padding: isMobile ? '12px 16px' : '14px 18px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s ease'
                 }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                {cat.name}
-                <ChevronDown size={18} style={{ transform: expandedCategory === cat.slug ? 'rotate(180deg)' : 'none', transition: '0.3s' }} />
+                <span style={{
+                  fontSize: isMobile ? 16 : 17,
+                  fontWeight: 600,
+                  color: '#0C0C0C',
+                  letterSpacing: 1,
+                  textTransform: 'uppercase'
+                }}>
+                  Shop All
+                </span>
               </button>
-              
-              {expandedCategory === cat.slug && (
-                <div style={{ backgroundColor: '#fcfcfc', borderLeft: '3px solid #000' }}>
-                  {loading[cat.slug] ? <div style={{ padding: '10px 40px', fontSize: 13, color: '#888' }}>Loading...</div> : 
-                    subcategories[cat.slug]?.map(sub => (
-                      <Link key={sub.slug} href={`${cat.href}?subcategory=${sub.slug}`} style={{
-                        display: 'block', padding: '12px 40px', color: '#555', fontSize: 14, textDecoration: 'none'
-                      }}>
-                        {sub.name}
-                      </Link>
-                    ))
-                  }
-                  <Link href={cat.href} style={{ display: 'block', padding: '12px 40px', color: '#B08B5C', fontWeight: 600, fontSize: 14 }}>
-                    Shop All {cat.name}
-                  </Link>
-                </div>
+
+              {/* Conditional Links based on auth */}
+              {!isAuthenticated ? (
+                <button
+                  onClick={() => handleNavigation('/login')}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    background: 'none',
+                    border: 'none',
+                    padding: isMobile ? '12px 16px' : '14px 18px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <span style={{
+                    fontSize: isMobile ? 15 : 16,
+                    fontWeight: 400,
+                    color: '#555'
+                  }}>
+                    Login / Register
+                  </span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleNavigation('/account')}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    background: 'none',
+                    border: 'none',
+                    padding: isMobile ? '12px 16px' : '14px 18px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <span style={{
+                    fontSize: isMobile ? 15 : 16,
+                    fontWeight: 400,
+                    color: '#555'
+                  }}>
+                    My Account
+                  </span>
+                </button>
+              )}
+
+              {/* Track Order */}
+              {isAuthenticated && (
+                <button
+                  onClick={() => handleNavigation('/account/orders')}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    background: 'none',
+                    border: 'none',
+                    padding: isMobile ? '12px 16px' : '14px 18px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s ease'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#FAFAFA'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <span style={{
+                    fontSize: isMobile ? 15 : 16,
+                    fontWeight: 400,
+                    color: '#555'
+                  }}>
+                    My Orders
+                  </span>
+                </button>
               )}
             </div>
-          ))}
+          </nav>
         </div>
 
-        <div style={{ padding: '24px', borderTop: '1px solid #f0f0f0', backgroundColor: '#fafafa' }}>
-           <Link href={isAuthenticated ? "/account" : "/login"} style={{ display: 'block', padding: '10px 0', color: '#000', fontSize: 15, fontWeight: 500 }}>
-             {isAuthenticated ? "My Account" : "Sign In / Register"}
-           </Link>
-           <Link href="/contact" style={{ display: 'block', padding: '10px 0', color: '#666', fontSize: 14 }}>Contact Us</Link>
-        </div>
-      </div>
+        {/* ===== FOOTER SECTION ===== */}
+        <footer style={{
+          borderTop: '1px solid #F0F0F0',
+          padding: isMobile ? '20px 24px' : '24px 28px',
+          backgroundColor: '#FAFAFA'
+        }}>
+          <button
+            onClick={() => handleNavigation('/contact')}
+            style={{
+              width: '100%',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              textAlign: 'left',
+              padding: '8px 0',
+              marginBottom: '12px'
+            }}
+          >
+            <span style={{
+              fontSize: isMobile ? 14 : 15,
+              fontWeight: 500,
+              color: '#0C0C0C',
+              letterSpacing: 0.8,
+              textTransform: 'uppercase'
+            }}>
+              Contact Us
+            </span>
+          </button>
+          
+          <p style={{
+            fontSize: 11,
+            color: '#999',
+            margin: 0,
+            letterSpacing: 0.5
+          }}>
+            © {new Date().getFullYear()} PRISMIN
+          </p>
+        </footer>
+      </aside>
 
+      {/* ===== ANIMATIONS ===== */}
       <style jsx global>{`
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes fadeIn {
+          from { 
+            opacity: 0; 
+          }
+          to { 
+            opacity: 1; 
+          }
+        }
+        
+        @keyframes slideInLeft {
+          from { 
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          to { 
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideInRight {
+          from { 
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to { 
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        @keyframes fadeInUp {
+          from { 
+            opacity: 0;
+            transform: translateY(12px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Smooth scrolling for menu content */
+        aside[aria-label="Navigation menu"] > div {
+          scrollbar-width: thin;
+          scrollbar-color: #E0E0E0 transparent;
+        }
+
+        aside[aria-label="Navigation menu"] > div::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        aside[aria-label="Navigation menu"] > div::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        aside[aria-label="Navigation menu"] > div::-webkit-scrollbar-thumb {
+          background-color: #E0E0E0;
+          border-radius: 3px;
+        }
       `}</style>
     </>
   );
