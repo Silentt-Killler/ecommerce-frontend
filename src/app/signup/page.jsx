@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Eye, EyeOff, User } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import api from '@/lib/api';
 import useAuthStore from '@/store/authStore';
 import toast from 'react-hot-toast';
@@ -15,8 +15,7 @@ export default function SignupPage() {
   
   const [formData, setFormData] = useState({ 
     name: '', 
-    email: '', 
-    phone: '',
+    emailOrPhone: '',
     password: '', 
     confirmPassword: '' 
   });
@@ -30,7 +29,6 @@ export default function SignupPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   const [otpVerified, setOtpVerified] = useState(false);
-  const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
@@ -64,35 +62,26 @@ export default function SignupPage() {
   };
 
   // Detect if input is email or phone
-  const isPhone = (value) => {
-    return /^01[3-9]\d{8}$/.test(value.replace(/\s/g, ''));
-  };
-
-  const isEmail = (value) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  };
+  const isPhone = (value) => /^01[3-9]\d{8}$/.test(value.replace(/\s/g, ''));
+  const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
   const handleSendOtp = async () => {
-    const contact = formData.email || formData.phone;
+    const contact = formData.emailOrPhone.trim();
     
     if (!contact) {
       toast.error('Please enter email or phone number');
       return;
     }
 
-    setSendingOtp(true);
     try {
       if (isPhone(contact)) {
-        // Send SMS OTP
         await api.post('/auth/send-otp', { phone: contact });
         toast.success('OTP sent to your phone');
       } else if (isEmail(contact)) {
-        // Send Email OTP
         await api.post('/auth/send-email-otp', { email: contact });
         toast.success('OTP sent to your email');
       } else {
-        toast.error('Please enter valid email or phone number');
-        setSendingOtp(false);
+        toast.error('Please enter valid email or BD phone number (01XXXXXXXXX)');
         return;
       }
       
@@ -101,11 +90,10 @@ export default function SignupPage() {
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to send OTP');
     }
-    setSendingOtp(false);
   };
 
   const handleVerifyOtp = async () => {
-    const contact = formData.email || formData.phone;
+    const contact = formData.emailOrPhone.trim();
     
     if (!otp || otp.length !== 6) {
       toast.error('Please enter 6-digit OTP');
@@ -131,9 +119,28 @@ export default function SignupPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!otpVerified) {
-      toast.error('Please verify your email/phone first');
+    const contact = formData.emailOrPhone.trim();
+
+    // Validation
+    if (!formData.name.trim()) {
+      toast.error('Please enter your name');
       return;
+    }
+
+    if (!contact) {
+      toast.error('Please enter email or phone number');
+      return;
+    }
+
+    // If not verified, send OTP first
+    if (!otpVerified) {
+      if (!otpSent) {
+        await handleSendOtp();
+        return;
+      } else {
+        toast.error('Please verify your email/phone with OTP');
+        return;
+      }
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -148,7 +155,11 @@ export default function SignupPage() {
 
     setSubmitting(true);
 
-    const result = await register(formData.name, formData.email, formData.password, formData.phone);
+    // Determine email and phone
+    const email = isEmail(contact) ? contact : '';
+    const phone = isPhone(contact) ? contact : '';
+
+    const result = await register(formData.name, email, formData.password, phone);
 
     if (result.success) {
       toast.success('Account created successfully!');
@@ -175,27 +186,27 @@ export default function SignupPage() {
   // Mobile Layout
   if (isMobile) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', paddingTop: 56 }}>
         {/* Black Header */}
         <div style={{
           backgroundColor: '#0C0C0C',
-          padding: '50px 20px 30px',
+          padding: '35px 20px 25px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           borderBottomLeftRadius: 30,
           borderBottomRightRadius: 30
         }}>
-          <h1 style={{ fontSize: 24, fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
-            Create Account
+          <h1 style={{ fontSize: 22, fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+            Sign Up
           </h1>
         </div>
 
         {/* Form Section */}
-        <div style={{ padding: '30px 24px', paddingBottom: 100 }}>
+        <div style={{ padding: '28px 24px', paddingBottom: 120 }}>
           <form onSubmit={handleSubmit}>
             {/* Full Name */}
-            <div style={{ marginBottom: 18 }}>
+            <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>
                 Full Name
               </label>
@@ -217,67 +228,47 @@ export default function SignupPage() {
               />
             </div>
 
-            {/* Email */}
-            <div style={{ marginBottom: 18 }}>
+            {/* Email or Phone */}
+            <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>
-                E-mail
+                Email or Phone Number
               </label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => {
-                    setFormData({ ...formData, email: e.target.value });
-                    setOtpSent(false);
-                    setOtpVerified(false);
-                  }}
-                  placeholder="Hello@dream.com"
-                  required
-                  disabled={otpVerified}
-                  style={{
-                    flex: 1,
-                    padding: '14px 16px',
-                    border: '1px solid #E0E0E0',
-                    borderRadius: 8,
-                    fontSize: 15,
-                    outline: 'none',
-                    backgroundColor: otpVerified ? '#E8F5E9' : '#F9F9F9'
-                  }}
-                />
-                {!otpVerified && (
-                  <button
-                    type="button"
-                    onClick={handleSendOtp}
-                    disabled={sendingOtp || countdown > 0}
-                    style={{
-                      padding: '12px 16px',
-                      backgroundColor: '#0C0C0C',
-                      color: '#FFFFFF',
-                      border: 'none',
-                      borderRadius: 8,
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: sendingOtp || countdown > 0 ? 'not-allowed' : 'pointer',
-                      opacity: sendingOtp || countdown > 0 ? 0.6 : 1,
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {sendingOtp ? '...' : countdown > 0 ? `${countdown}s` : 'Send OTP'}
-                  </button>
-                )}
-                {otpVerified && (
-                  <span style={{ padding: '14px', color: '#1E7F4F', fontWeight: 600 }}>✓</span>
-                )}
-              </div>
+              <input
+                type="text"
+                value={formData.emailOrPhone}
+                onChange={(e) => {
+                  setFormData({ ...formData, emailOrPhone: e.target.value });
+                  setOtpSent(false);
+                  setOtpVerified(false);
+                  setOtp('');
+                }}
+                placeholder="Hello@dream.com or 01XXXXXXXXX"
+                required
+                disabled={otpVerified}
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  border: '1px solid #E0E0E0',
+                  borderRadius: 8,
+                  fontSize: 15,
+                  outline: 'none',
+                  backgroundColor: otpVerified ? '#E8F5E9' : '#F9F9F9'
+                }}
+              />
+              {otpVerified && (
+                <p style={{ fontSize: 12, color: '#1E7F4F', marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  ✓ Verified
+                </p>
+              )}
             </div>
 
-            {/* OTP Input */}
+            {/* OTP Input - Shows after OTP sent */}
             {otpSent && !otpVerified && (
-              <div style={{ marginBottom: 18 }}>
+              <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>
                   Enter OTP
                 </label>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 10 }}>
                   <input
                     type="text"
                     value={otp}
@@ -289,7 +280,7 @@ export default function SignupPage() {
                       padding: '14px 16px',
                       border: '1px solid #E0E0E0',
                       borderRadius: 8,
-                      fontSize: 15,
+                      fontSize: 18,
                       outline: 'none',
                       backgroundColor: '#F9F9F9',
                       letterSpacing: 8,
@@ -301,12 +292,12 @@ export default function SignupPage() {
                     onClick={handleVerifyOtp}
                     disabled={verifyingOtp || otp.length !== 6}
                     style={{
-                      padding: '12px 20px',
+                      padding: '14px 20px',
                       backgroundColor: '#1E7F4F',
                       color: '#FFFFFF',
                       border: 'none',
                       borderRadius: 8,
-                      fontSize: 13,
+                      fontSize: 14,
                       fontWeight: 500,
                       cursor: verifyingOtp ? 'not-allowed' : 'pointer'
                     }}
@@ -314,11 +305,25 @@ export default function SignupPage() {
                     {verifyingOtp ? '...' : 'Verify'}
                   </button>
                 </div>
+                {countdown > 0 && (
+                  <p style={{ fontSize: 12, color: '#919191', marginTop: 8 }}>
+                    Resend OTP in {countdown}s
+                  </p>
+                )}
+                {countdown === 0 && otpSent && (
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    style={{ fontSize: 13, color: '#B08B5C', background: 'none', border: 'none', marginTop: 8, cursor: 'pointer' }}
+                  >
+                    Resend OTP
+                  </button>
+                )}
               </div>
             )}
 
             {/* Password */}
-            <div style={{ marginBottom: 18 }}>
+            <div style={{ marginBottom: 16 }}>
               <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>
                 Password
               </label>
@@ -375,24 +380,24 @@ export default function SignupPage() {
               </div>
             </div>
 
-            {/* Sign Up Button */}
+            {/* Sign Up Button - Sends OTP if not verified */}
             <button
               type="submit"
-              disabled={submitting || !otpVerified}
+              disabled={submitting}
               style={{
                 width: '100%',
-                padding: '16px',
-                backgroundColor: otpVerified ? '#0C0C0C' : '#CCCCCC',
+                padding: '15px',
+                backgroundColor: '#0C0C0C',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: 30,
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: 600,
-                cursor: submitting || !otpVerified ? 'not-allowed' : 'pointer',
+                cursor: submitting ? 'not-allowed' : 'pointer',
                 opacity: submitting ? 0.7 : 1
               }}
             >
-              {submitting ? 'Creating account...' : 'Sign Up'}
+              {submitting ? 'Creating account...' : otpVerified ? 'Sign Up' : otpSent ? 'Verify & Sign Up' : 'Sign Up'}
             </button>
           </form>
 
@@ -432,10 +437,10 @@ export default function SignupPage() {
           </button>
 
           {/* Login Link */}
-          <p style={{ textAlign: 'center', marginTop: 30, fontSize: 15, color: '#666' }}>
+          <p style={{ textAlign: 'center', marginTop: 28, fontSize: 15, color: '#666' }}>
             Already have a account?{' '}
             <Link href="/login" style={{ color: '#0C0C0C', fontWeight: 600, textDecoration: 'none' }}>
-              Sign In
+              Login
             </Link>
           </p>
         </div>
@@ -443,21 +448,10 @@ export default function SignupPage() {
     );
   }
 
-  // Desktop Layout
+  // Desktop Layout - Image on RIGHT
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Left Side - Image */}
-      <div style={{ flex: 1, position: 'relative', backgroundColor: '#F5F5F5' }}>
-        {authImage ? (
-          <Image src={authImage} alt="Signup" fill style={{ objectFit: 'cover' }} />
-        ) : (
-          <div style={{ width: '100%', height: '100%', backgroundColor: '#E8E8E8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-            <p style={{ color: '#999', fontSize: 14 }}>Auth image not set</p>
-          </div>
-        )}
-      </div>
-
-      {/* Right Side - Form */}
+      {/* Left Side - Form */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '40px 80px', backgroundColor: '#FFFFFF', overflowY: 'auto' }}>
         <div style={{ maxWidth: 420, width: '100%', margin: '0 auto' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
@@ -481,35 +475,24 @@ export default function SignupPage() {
               />
             </div>
 
-            {/* Email with OTP */}
+            {/* Email or Phone */}
             <div style={{ marginBottom: 20 }}>
-              <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>Email Address</label>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => {
-                    setFormData({ ...formData, email: e.target.value });
-                    setOtpSent(false);
-                    setOtpVerified(false);
-                  }}
-                  placeholder="Enter your email"
-                  required
-                  disabled={otpVerified}
-                  style={{ flex: 1, padding: '14px 16px', border: '1px solid #E0E0E0', borderRadius: 8, fontSize: 15, outline: 'none', backgroundColor: otpVerified ? '#E8F5E9' : '#fff' }}
-                />
-                {!otpVerified && (
-                  <button
-                    type="button"
-                    onClick={handleSendOtp}
-                    disabled={sendingOtp || countdown > 0 || !formData.email}
-                    style={{ padding: '14px 20px', backgroundColor: '#0C0C0C', color: '#FFFFFF', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 500, cursor: sendingOtp || countdown > 0 ? 'not-allowed' : 'pointer', opacity: sendingOtp || countdown > 0 ? 0.6 : 1, whiteSpace: 'nowrap' }}
-                  >
-                    {sendingOtp ? 'Sending...' : countdown > 0 ? `Resend (${countdown}s)` : 'Send OTP'}
-                  </button>
-                )}
-                {otpVerified && <span style={{ padding: '14px 20px', color: '#1E7F4F', fontWeight: 600, fontSize: 18 }}>✓ Verified</span>}
-              </div>
+              <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>Email or Phone Number</label>
+              <input
+                type="text"
+                value={formData.emailOrPhone}
+                onChange={(e) => {
+                  setFormData({ ...formData, emailOrPhone: e.target.value });
+                  setOtpSent(false);
+                  setOtpVerified(false);
+                  setOtp('');
+                }}
+                placeholder="Enter email or phone (01XXXXXXXXX)"
+                required
+                disabled={otpVerified}
+                style={{ width: '100%', padding: '14px 16px', border: '1px solid #E0E0E0', borderRadius: 8, fontSize: 15, outline: 'none', backgroundColor: otpVerified ? '#E8F5E9' : '#fff' }}
+              />
+              {otpVerified && <p style={{ fontSize: 12, color: '#1E7F4F', marginTop: 6 }}>✓ Verified</p>}
             </div>
 
             {/* OTP Input */}
@@ -533,6 +516,13 @@ export default function SignupPage() {
                   >
                     {verifyingOtp ? 'Verifying...' : 'Verify'}
                   </button>
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  {countdown > 0 ? (
+                    <span style={{ fontSize: 12, color: '#919191' }}>Resend in {countdown}s</span>
+                  ) : (
+                    <button type="button" onClick={handleSendOtp} style={{ fontSize: 13, color: '#B08B5C', background: 'none', border: 'none', cursor: 'pointer' }}>Resend OTP</button>
+                  )}
                 </div>
               </div>
             )}
@@ -575,10 +565,10 @@ export default function SignupPage() {
 
             <button
               type="submit"
-              disabled={submitting || !otpVerified}
-              style={{ width: '100%', padding: '16px', backgroundColor: otpVerified ? '#0C0C0C' : '#CCCCCC', color: '#FFFFFF', border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: submitting || !otpVerified ? 'not-allowed' : 'pointer' }}
+              disabled={submitting}
+              style={{ width: '100%', padding: '16px', backgroundColor: '#0C0C0C', color: '#FFFFFF', border: 'none', borderRadius: 8, fontSize: 15, fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer' }}
             >
-              {submitting ? 'Creating account...' : 'Create Account'}
+              {submitting ? 'Creating account...' : otpVerified ? 'Create Account' : 'Sign Up'}
             </button>
           </form>
 
@@ -607,6 +597,17 @@ export default function SignupPage() {
             <Link href="/login" style={{ color: '#B08B5C', fontWeight: 600, textDecoration: 'none' }}>Sign In</Link>
           </p>
         </div>
+      </div>
+
+      {/* Right Side - Image */}
+      <div style={{ flex: 1, position: 'relative', backgroundColor: '#F5F5F5' }}>
+        {authImage ? (
+          <Image src={authImage} alt="Signup" fill style={{ objectFit: 'cover' }} />
+        ) : (
+          <div style={{ width: '100%', height: '100%', backgroundColor: '#E8E8E8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
+            <p style={{ color: '#999', fontSize: 14 }}>Auth image not set</p>
+          </div>
+        )}
       </div>
     </div>
   );
