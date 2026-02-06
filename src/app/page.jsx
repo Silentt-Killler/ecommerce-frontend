@@ -310,12 +310,13 @@ export default function HomePage() {
             Two Expressions · One Signature
           </h2>
 
-          {/* Buttons - Same text size, less padding */}
+          {/* Buttons - Reduced padding with black hover effect */}
           <div style={{ display: 'flex', gap: isMobile ? 10 : 14 }}>
             <Link 
               href={original ? getCategoryLink(original) : (categories[0] ? getCategoryLink(categories[0]) : '/shop')} 
+              className="hero-button"
               style={{
-                padding: isMobile ? '11px 20px' : '13px 30px',
+                padding: isMobile ? '8px 16px' : '10px 24px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
                 fontSize: isMobile ? 12 : 13,
@@ -324,15 +325,17 @@ export default function HomePage() {
                 textTransform: 'uppercase',
                 textDecoration: 'none',
                 transition: 'all 0.3s',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.15)'
+                boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+                border: '1px solid transparent'
               }}
             >
               Original
             </Link>
             <Link 
               href={inspired ? getCategoryLink(inspired) : (categories[1] ? getCategoryLink(categories[1]) : '/shop')} 
+              className="hero-button"
               style={{
-                padding: isMobile ? '11px 20px' : '13px 30px',
+                padding: isMobile ? '8px 16px' : '10px 24px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
                 fontSize: isMobile ? 12 : 13,
@@ -341,7 +344,8 @@ export default function HomePage() {
                 textTransform: 'uppercase',
                 textDecoration: 'none',
                 transition: 'all 0.3s',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.15)'
+                boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+                border: '1px solid transparent'
               }}
             >
               Inspired
@@ -450,6 +454,11 @@ export default function HomePage() {
       <style jsx global>{`
         .category-image:hover img { 
           transform: scale(1.05); 
+        }
+        .hero-button:hover {
+          background-color: #0C0C0C !important;
+          color: #FFFFFF !important;
+          border-color: #0C0C0C !important;
         }
       `}</style>
     </div>
