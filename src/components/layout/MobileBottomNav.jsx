@@ -2,72 +2,120 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import useCartStore from '@/store/cartStore';
-import MenuOverlay from './MenuOverlay';
-import { Home, Menu, ShoppingBag, User } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { X, ChevronDown } from 'lucide-react';
+import useAuthStore from '@/store/authStore';
+import api from '@/lib/api';
 
-export default function MobileBottomNav() {
+const CATEGORIES = [
+  { name: 'Original Pakistani', slug: 'original-pakistani', href: '/original-pakistani' },
+  { name: 'Inspired Pakistani', slug: 'inspired-pakistani', href: '/inspired-pakistani' },
+  { name: 'Premium Bag', slug: 'premium-bag', href: '/premium-bag' },
+  { name: 'Beauty & Care', slug: 'beauty', href: '/beauty' }
+];
+
+export default function MenuOverlay({ isOpen, onClose }) {
   const pathname = usePathname();
-  const { getItemCount } = useCartStore();
-  const [showMenu, setShowMenu] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const { isAuthenticated } = useAuthStore();
+  const [expandedCategory, setExpandedCategory] = useState(null);
+  const [subcategories, setSubcategories] = useState({});
+  const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
-  
-  if (pathname?.startsWith('/admin') || pathname === '/checkout') return null;
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  const cartCount = mounted ? getItemCount() : 0;
+  // নেভিগেশন হলে মেনু বন্ধ করার জন্য (Back/Home click fix)
+  useEffect(() => {
+    if (isOpen) onClose();
+  }, [pathname]);
 
-  const navItems = [
-    { id: 'home', icon: Home, href: '/' },
-    { id: 'menu', icon: Menu, isMenu: true },
-    { id: 'cart', icon: ShoppingBag, href: '/cart', badge: cartCount },
-    { id: 'profile', icon: User, href: '/account' },
-  ];
+  const fetchSubcategories = async (slug) => {
+    if (subcategories[slug]) return;
+    try {
+      const res = await api.get(`/subcategories?parent=${slug}&is_active=true`);
+      setSubcategories(prev => ({ ...prev, [slug]: res.data.subcategories || [] }));
+    } catch (e) { console.error(e); }
+  };
+
+  if (!isOpen) return null;
 
   return (
     <>
-      <div className="block md:hidden h-[70px]" />
-      <nav style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        height: '65px', zIndex: 9000, backgroundColor: '#FFFFFF',
-        borderTop: '1px solid #f0f0f0', display: 'flex',
-        boxShadow: '0 -10px 30px rgba(0, 0, 0, 0.05)',
-        paddingBottom: 'env(safe-area-inset-bottom)'
+      {/* Backdrop */}
+      <div onClick={onClose} style={{
+        position: 'fixed', inset: 0, zIndex: 9998,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)', backdropFilter: 'blur(4px)',
+        animation: 'fadeIn 0.3s ease'
+      }} />
+
+      {/* Drawer */}
+      <div style={{
+        position: 'fixed', top: 0, bottom: 0,
+        // ডেস্কটপে রাইট, মোবাইলে লেফট
+        right: isMobile ? 'auto' : 0, 
+        left: isMobile ? 0 : 'auto',
+        width: isMobile ? '85vw' : '400px', // স্ট্যান্ডার্ড প্রিমিয়াম উইডথ
+        zIndex: 9999, backgroundColor: '#FFFFFF',
+        display: 'flex', flexDirection: 'column',
+        boxShadow: isMobile ? '5px 0 25px rgba(0,0,0,0.1)' : '-5px 0 25px rgba(0,0,0,0.1)',
+        animation: isMobile ? 'slideInLeft 0.4s ease' : 'slideInRight 0.4s ease'
       }}>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = item.isMenu ? showMenu : pathname === item.href;
+        {/* Header */}
+        <div style={{ padding: '24px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f5f5f5' }}>
+          <span style={{ fontSize: 18, fontWeight: 300, letterSpacing: 4 }}>PRISMIN</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
+        </div>
 
-          const content = (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, position: 'relative' }}>
-               <Icon size={24} strokeWidth={isActive ? 2 : 1.5} color={isActive ? "#0C0C0C" : "#888"} />
-               <div style={{
-                 width: '4px', height: '4px', borderRadius: '50%',
-                 backgroundColor: '#0C0C0C', marginTop: '4px',
-                 opacity: isActive ? 1 : 0, transition: '0.3s'
-               }} />
-               {item.badge > 0 && (
-                 <span style={{
-                   position: 'absolute', top: '-2px', right: '20%',
-                   backgroundColor: '#B08B5C', color: '#fff', fontSize: '10px',
-                   minWidth: '16px', height: '16px', borderRadius: '50%',
-                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                   border: '2px solid #fff', fontWeight: 'bold'
-                 }}>{item.badge}</span>
-               )}
+        {/* Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '10px 0' }}>
+          {CATEGORIES.map((cat) => (
+            <div key={cat.slug}>
+              <button 
+                onClick={() => {
+                  setExpandedCategory(expandedCategory === cat.slug ? null : cat.slug);
+                  fetchSubcategories(cat.slug);
+                }}
+                style={{
+                  width: '100%', display: 'flex', justifyContent: 'space-between',
+                  padding: '20px 24px', background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 17, fontWeight: 400, color: '#1a1a1a', letterSpacing: '0.5px'
+                }}
+              >
+                {cat.name}
+                <ChevronDown size={18} style={{ transform: expandedCategory === cat.slug ? 'rotate(180deg)' : 'none', transition: '0.3s' }} />
+              </button>
+              
+              {expandedCategory === cat.slug && (
+                <div style={{ backgroundColor: '#fafafa', animation: 'fadeIn 0.3s' }}>
+                  {subcategories[cat.slug]?.map(sub => (
+                    <Link key={sub.slug} href={`${cat.href}?subcategory=${sub.slug}`} style={{
+                      display: 'block', padding: '12px 40px', color: '#666', fontSize: 15, textDecoration: 'none'
+                    }}>{sub.name}</Link>
+                  ))}
+                  <Link href={cat.href} style={{ display: 'block', padding: '12px 40px', color: '#B08B5C', fontWeight: 600, fontSize: 14 }}>View All</Link>
+                </div>
+              )}
             </div>
-          );
+          ))}
+          <Link href="/shop" style={{ display: 'block', padding: '20px 24px', fontSize: 17, fontWeight: 500, color: '#000', textDecoration: 'none' }}>Shop All Products</Link>
+        </div>
 
-          return item.isMenu ? (
-            <button key={item.id} onClick={() => setShowMenu(true)} style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer' }}>{content}</button>
-          ) : (
-            <Link key={item.id} href={item.href} style={{ flex: 1, display: 'flex', textDecoration: 'none' }}>{content}</Link>
-          );
-        })}
-      </nav>
-      <MenuOverlay isOpen={showMenu} onClose={() => setShowMenu(false)} />
+        {/* Footer Links */}
+        <div style={{ padding: '24px', borderTop: '1px solid #f5f5f5', backgroundColor: '#fafafa' }}>
+           <Link href={isAuthenticated ? "/account" : "/login"} style={{ display: 'block', padding: '10px 0', color: '#000', fontSize: 15, fontWeight: 500 }}>{isAuthenticated ? "My Account" : "Login / Register"}</Link>
+           <Link href="/contact" style={{ display: 'block', padding: '10px 0', color: '#666', fontSize: 14 }}>Contact Us</Link>
+        </div>
+      </div>
+
+      <style jsx global>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+      `}</style>
     </>
   );
 }
