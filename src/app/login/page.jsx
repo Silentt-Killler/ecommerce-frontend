@@ -58,7 +58,6 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    // Redirect to backend Google OAuth
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
   };
 
@@ -73,11 +72,11 @@ export default function LoginPage() {
   // Mobile Layout
   if (isMobile) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF', paddingTop: 56 }}>
         {/* Black Header with User Icon */}
         <div style={{
           backgroundColor: '#0C0C0C',
-          padding: '60px 20px 40px',
+          padding: '40px 20px 30px',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -85,28 +84,27 @@ export default function LoginPage() {
           borderBottomRightRadius: 30
         }}>
           <div style={{
-            width: 80,
-            height: 80,
+            width: 70,
+            height: 70,
             border: '2px solid #FFFFFF',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 20
+            justifyContent: 'center'
           }}>
-            <User size={40} color="#FFFFFF" strokeWidth={1.5} />
+            <User size={35} color="#FFFFFF" strokeWidth={1.5} />
           </div>
         </div>
 
         {/* Form Section */}
-        <div style={{ padding: '30px 24px', paddingBottom: 100 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: '#0C0C0C', marginBottom: 30, textAlign: 'center' }}>
+        <div style={{ padding: '30px 24px', paddingBottom: 120 }}>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: '#0C0C0C', marginBottom: 28, textAlign: 'center' }}>
             Login
           </h1>
 
           <form onSubmit={handleSubmit}>
             {/* Email */}
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 18 }}>
               <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>
                 E-mail
               </label>
@@ -129,7 +127,7 @@ export default function LoginPage() {
             </div>
 
             {/* Password */}
-            <div style={{ marginBottom: 12 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={{ display: 'block', fontSize: 14, fontWeight: 500, color: '#0C0C0C', marginBottom: 8 }}>
                 Password
               </label>
@@ -183,12 +181,12 @@ export default function LoginPage() {
               disabled={submitting || isLoading}
               style={{
                 width: '100%',
-                padding: '16px',
+                padding: '15px',
                 backgroundColor: '#0C0C0C',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: 30,
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: 600,
                 cursor: submitting ? 'not-allowed' : 'pointer',
                 opacity: submitting ? 0.7 : 1
@@ -234,7 +232,7 @@ export default function LoginPage() {
           </button>
 
           {/* Sign Up Link */}
-          <p style={{ textAlign: 'center', marginTop: 30, fontSize: 15, color: '#666' }}>
+          <p style={{ textAlign: 'center', marginTop: 28, fontSize: 15, color: '#666' }}>
             Don't have any account?{' '}
             <Link href="/signup" style={{ color: '#0C0C0C', fontWeight: 600, textDecoration: 'none' }}>
               Sign Up
@@ -245,29 +243,10 @@ export default function LoginPage() {
     );
   }
 
-  // Desktop Layout
+  // Desktop Layout - Image on RIGHT
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Left Side - Image (Desktop Only) */}
-      <div style={{ 
-        flex: 1, 
-        position: 'relative',
-        backgroundColor: '#F5F5F5',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        {authImage ? (
-          <Image src={authImage} alt="Login" fill style={{ objectFit: 'cover' }} />
-        ) : (
-          <div style={{ width: '100%', height: '100%', backgroundColor: '#E8E8E8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
-            <p style={{ color: '#999', fontSize: 14 }}>Auth image not set</p>
-            <p style={{ color: '#BBB', fontSize: 12 }}>Add from Admin → Settings</p>
-          </div>
-        )}
-      </div>
-
-      {/* Right Side - Form */}
+      {/* Left Side - Form */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '60px 80px', backgroundColor: '#FFFFFF' }}>
         <div style={{ maxWidth: 400, width: '100%', margin: '0 auto' }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
@@ -344,6 +323,18 @@ export default function LoginPage() {
             <Link href="/signup" style={{ color: '#B08B5C', fontWeight: 600, textDecoration: 'none' }}>Sign Up</Link>
           </p>
         </div>
+      </div>
+
+      {/* Right Side - Image */}
+      <div style={{ flex: 1, position: 'relative', backgroundColor: '#F5F5F5' }}>
+        {authImage ? (
+          <Image src={authImage} alt="Login" fill style={{ objectFit: 'cover' }} />
+        ) : (
+          <div style={{ width: '100%', height: '100%', backgroundColor: '#E8E8E8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
+            <p style={{ color: '#999', fontSize: 14 }}>Auth image not set</p>
+            <p style={{ color: '#BBB', fontSize: 12 }}>Add from Admin → Settings</p>
+          </div>
+        )}
       </div>
     </div>
   );
