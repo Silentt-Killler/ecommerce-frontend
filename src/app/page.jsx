@@ -197,7 +197,7 @@ export default function HomePage() {
             {heroSlides.length > 1 && (
               <div style={{
                 position: 'absolute',
-                bottom: isMobile ? 150 : 170,
+                bottom: isMobile ? 140 : 160,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 display: 'flex',
@@ -285,22 +285,22 @@ export default function HomePage() {
         {/* CTA Section */}
         <div style={{
           position: 'absolute',
-          bottom: isMobile ? 40 : 55,
+          bottom: isMobile ? 35 : 50,
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: isMobile ? 16 : 22,
+          gap: isMobile ? 14 : 20,
           zIndex: 10,
           width: '100%',
           padding: '0 20px'
         }}>
-          {/* Tagline - Bigger Heading */}
+          {/* Tagline */}
           <h2 style={{
-            fontSize: isMobile ? 18 : 26,
+            fontSize: isMobile ? 16 : 24,
             fontWeight: 500,
-            letterSpacing: isMobile ? 3 : 6,
+            letterSpacing: isMobile ? 2 : 5,
             color: '#FFFFFF',
             textTransform: 'uppercase',
             textShadow: '0 2px 15px rgba(0,0,0,0.5)',
@@ -310,21 +310,21 @@ export default function HomePage() {
             Two Expressions · One Signature
           </h2>
 
-          {/* Buttons - Both White */}
-          <div style={{ display: 'flex', gap: isMobile ? 12 : 16 }}>
+          {/* Buttons - Compact */}
+          <div style={{ display: 'flex', gap: isMobile ? 10 : 14 }}>
             <Link 
               href={original ? getCategoryLink(original) : (categories[0] ? getCategoryLink(categories[0]) : '/shop')} 
               style={{
-                padding: isMobile ? '14px 32px' : '16px 48px',
+                padding: isMobile ? '10px 22px' : '12px 32px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
-                fontSize: isMobile ? 13 : 14,
+                fontSize: isMobile ? 11 : 12,
                 fontWeight: 600,
-                letterSpacing: 2,
+                letterSpacing: 1.5,
                 textTransform: 'uppercase',
                 textDecoration: 'none',
                 transition: 'all 0.3s',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                boxShadow: '0 4px 15px rgba(0,0,0,0.15)'
               }}
             >
               Original
@@ -332,16 +332,16 @@ export default function HomePage() {
             <Link 
               href={inspired ? getCategoryLink(inspired) : (categories[1] ? getCategoryLink(categories[1]) : '/shop')} 
               style={{
-                padding: isMobile ? '14px 32px' : '16px 48px',
+                padding: isMobile ? '10px 22px' : '12px 32px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
-                fontSize: isMobile ? 13 : 14,
+                fontSize: isMobile ? 11 : 12,
                 fontWeight: 600,
-                letterSpacing: 2,
+                letterSpacing: 1.5,
                 textTransform: 'uppercase',
                 textDecoration: 'none',
                 transition: 'all 0.3s',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+                boxShadow: '0 4px 15px rgba(0,0,0,0.15)'
               }}
             >
               Inspired
