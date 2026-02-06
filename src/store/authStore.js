@@ -1,3 +1,6 @@
+// src/store/authStore.js
+// Updated with Google login support
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '@/lib/api';
@@ -7,7 +10,7 @@ const useAuthStore = create(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
-      isLoading: true,  // Start with true
+      isLoading: true,
       isInitialized: false,
 
       login: async (email, password) => {
@@ -19,7 +22,6 @@ const useAuthStore = create(
           localStorage.setItem('access_token', access_token);
           localStorage.setItem('refresh_token', refresh_token);
           
-          // Get user profile
           const userResponse = await api.get('/users/me');
           
           set({ 
@@ -39,20 +41,20 @@ const useAuthStore = create(
         }
       },
 
-      register: async (name, email, password) => {
+      register: async (name, email, password, phone = null) => {
         set({ isLoading: true });
         try {
           const response = await api.post('/auth/register', { 
             name, 
             email, 
-            password 
+            password,
+            phone
           });
           const { access_token, refresh_token } = response.data;
           
           localStorage.setItem('access_token', access_token);
           localStorage.setItem('refresh_token', refresh_token);
           
-          // Get user profile
           const userResponse = await api.get('/users/me');
           
           set({ 
@@ -101,6 +103,10 @@ const useAuthStore = create(
         }
       },
 
+      updateUser: (userData) => {
+        set({ user: { ...get().user, ...userData } });
+      },
+
       initialize: async () => {
         const { isInitialized } = get();
         if (isInitialized) return;
@@ -115,7 +121,6 @@ const useAuthStore = create(
         isAuthenticated: state.isAuthenticated 
       }),
       onRehydrateStorage: () => (state) => {
-        // After rehydration, check auth
         if (state) {
           state.isLoading = true;
           state.checkAuth();
