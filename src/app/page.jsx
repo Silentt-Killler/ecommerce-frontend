@@ -197,7 +197,7 @@ export default function HomePage() {
             {heroSlides.length > 1 && (
               <div style={{
                 position: 'absolute',
-                bottom: isMobile ? 140 : 160,
+                bottom: isMobile ? 130 : 150,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 display: 'flex',
@@ -285,20 +285,20 @@ export default function HomePage() {
         {/* CTA Section */}
         <div style={{
           position: 'absolute',
-          bottom: isMobile ? 35 : 50,
+          bottom: isMobile ? 30 : 50,
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: isMobile ? 14 : 20,
+          gap: isMobile ? 12 : 18,
           zIndex: 10,
           width: '100%',
           padding: '0 20px'
         }}>
           {/* Tagline */}
           <h2 style={{
-            fontSize: isMobile ? 16 : 24,
+            fontSize: isMobile ? 15 : 22,
             fontWeight: 500,
             letterSpacing: isMobile ? 2 : 5,
             color: '#FFFFFF',
@@ -310,15 +310,15 @@ export default function HomePage() {
             Two Expressions · One Signature
           </h2>
 
-          {/* Buttons - Compact */}
+          {/* Buttons - Same text size, less padding */}
           <div style={{ display: 'flex', gap: isMobile ? 10 : 14 }}>
             <Link 
               href={original ? getCategoryLink(original) : (categories[0] ? getCategoryLink(categories[0]) : '/shop')} 
               style={{
-                padding: isMobile ? '10px 22px' : '12px 32px',
+                padding: isMobile ? '11px 20px' : '13px 30px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
-                fontSize: isMobile ? 11 : 12,
+                fontSize: isMobile ? 12 : 13,
                 fontWeight: 600,
                 letterSpacing: 1.5,
                 textTransform: 'uppercase',
@@ -332,10 +332,10 @@ export default function HomePage() {
             <Link 
               href={inspired ? getCategoryLink(inspired) : (categories[1] ? getCategoryLink(categories[1]) : '/shop')} 
               style={{
-                padding: isMobile ? '10px 22px' : '12px 32px',
+                padding: isMobile ? '11px 20px' : '13px 30px',
                 backgroundColor: '#FFFFFF',
                 color: '#0C0C0C',
-                fontSize: isMobile ? 11 : 12,
+                fontSize: isMobile ? 12 : 13,
                 fontWeight: 600,
                 letterSpacing: 1.5,
                 textTransform: 'uppercase',
