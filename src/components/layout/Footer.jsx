@@ -63,16 +63,16 @@ export default function Footer() {
       href={href} 
       target="_blank" 
       rel="noopener noreferrer" 
-      style={{ width: 42, height: 42, borderRadius: '50%', border: '1px solid #333', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', transition: 'all 0.2s' }}
+      style={{ width: 42, height: 42, borderRadius: '50%', border: '1px solid #444', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#B5B5B5', transition: 'all 0.2s' }}
       onMouseOver={(e) => { e.currentTarget.style.borderColor = '#B08B5C'; e.currentTarget.style.color = '#B08B5C'; }}
-      onMouseOut={(e) => { e.currentTarget.style.borderColor = '#333'; e.currentTarget.style.color = '#888'; }}
+      onMouseOut={(e) => { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.color = '#B5B5B5'; }}
     >
       {children}
     </a>
   );
 
   const FooterLink = ({ href, children }) => (
-    <Link href={href} style={{ fontSize: 14, color: '#888', textDecoration: 'none', transition: 'color 0.2s', display: 'block', lineHeight: 1.8 }} onMouseOver={(e) => e.currentTarget.style.color = '#FFF'} onMouseOut={(e) => e.currentTarget.style.color = '#888'}>
+    <Link href={href} style={{ fontSize: 14, color: '#B5B5B5', textDecoration: 'none', transition: 'color 0.2s', display: 'block', lineHeight: 1.8 }} onMouseOver={(e) => e.currentTarget.style.color = '#FFF'} onMouseOut={(e) => e.currentTarget.style.color = '#B5B5B5'}>
       {children}
     </Link>
   );
@@ -108,7 +108,7 @@ export default function Footer() {
             <Link href="/" style={{ display: 'inline-block', marginBottom: 16 }}>
               <FooterLogo />
             </Link>
-            <p style={{ fontSize: 13, color: '#888', lineHeight: 1.8 }}>{footerText}</p>
+            <p style={{ fontSize: 13, color: '#B5B5B5', lineHeight: 1.8 }}>{footerText}</p>
           </div>
 
           {/* Connect With Us */}
@@ -125,14 +125,14 @@ export default function Footer() {
           {/* Customer Service */}
           <div style={{ marginBottom: 28 }}>
             <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 14, textTransform: 'uppercase', color: '#FFF' }}>Customer Service</h3>
-            <p style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>(10 AM - 6 PM)</p>
-            <p style={{ fontSize: 13, color: '#888', marginBottom: 14 }}>(Except Weekend/Govt. Holidays)</p>
+            <p style={{ fontSize: 13, color: '#B5B5B5', marginBottom: 4 }}>(10 AM - 6 PM)</p>
+            <p style={{ fontSize: 13, color: '#B5B5B5', marginBottom: 14 }}>(Except Weekend/Govt. Holidays)</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-              <Phone size={15} style={{ color: '#888' }} />
+              <Phone size={15} style={{ color: '#B5B5B5' }} />
               <a href={'tel:' + phone} style={{ fontSize: 14, color: '#FFF', textDecoration: 'none' }}>{phone}</a>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Mail size={15} style={{ color: '#888' }} />
+              <Mail size={15} style={{ color: '#B5B5B5' }} />
               <a href={'mailto:' + email} style={{ fontSize: 14, color: '#FFF', textDecoration: 'underline' }}>{email}</a>
             </div>
           </div>
@@ -141,15 +141,15 @@ export default function Footer() {
           <div style={{ borderTop: '1px solid #2A2A2A' }}>
             <button onClick={() => toggleSection('information')} style={{ width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
               <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, color: '#FFF', textTransform: 'uppercase' }}>Information</span>
-              <ChevronDown size={18} style={{ color: '#888', transform: openSection === 'information' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              <ChevronDown size={18} style={{ color: '#B5B5B5', transform: openSection === 'information' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
             </button>
             {openSection === 'information' && (
               <div style={{ paddingBottom: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <Link href="/about" style={{ fontSize: 14, color: '#888', textDecoration: 'none' }}>About Prismin</Link>
-                <Link href="/safety-advisory" style={{ fontSize: 14, color: '#888', textDecoration: 'none' }}>Safety Advisory</Link>
-                <Link href="/community-guidelines" style={{ fontSize: 14, color: '#888', textDecoration: 'none' }}>Community Guidelines</Link>
-                <Link href="/social-responsibility" style={{ fontSize: 14, color: '#888', textDecoration: 'none' }}>Social Responsibility</Link>
-                <Link href="/blog" style={{ fontSize: 14, color: '#888', textDecoration: 'none' }}>Blog</Link>
+                <Link href="/about" style={{ fontSize: 14, color: '#B5B5B5', textDecoration: 'none' }}>About Prismin</Link>
+                <Link href="/safety-advisory" style={{ fontSize: 14, color: '#B5B5B5', textDecoration: 'none' }}>Safety Advisory</Link>
+                <Link href="/community-guidelines" style={{ fontSize: 14, color: '#B5B5B5', textDecoration: 'none' }}>Community Guidelines</Link>
+                <Link href="/social-responsibility" style={{ fontSize: 14, color: '#B5B5B5', textDecoration: 'none' }}>Social Responsibility</Link>
+                <Link href="/blog" style={{ fontSize: 14, color: '#B5B5B5', textDecoration: 'none' }}>Blog</Link>
               </div>
             )}
           </div>
@@ -158,14 +158,14 @@ export default function Footer() {
           <div style={{ borderTop: '1px solid #2A2A2A', borderBottom: '1px solid #2A2A2A' }}>
             <button onClick={() => toggleSection('policy')} style={{ width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'transparent', border: 'none', cursor: 'pointer' }}>
               <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, color: '#FFF', textTransform: 'uppercase' }}>Policy</span>
-              <ChevronDown size={18} style={{ color: '#888', transform: openSection === 'policy' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              <ChevronDown size={18} style={{ color: '#B5B5B5', transform: openSection === 'policy' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
             </button>
             {openSection === 'policy' && (
               <div style={{ paddingBottom: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <Link href="/privacy-policy" style={{ fontSize: 14, color: '#888', textDecoration: 'none' }}>Privacy Policy</Link>
-                <Link href="/delivery-policy" style={{ fontSize: 14, color: '#888', textDecoration: 'none' }}>Delivery Policy</Link>
-                <Link href="/return-policy" style={{ fontSize: 14, color: '#888', textDecoration: 'none' }}>Return and Exchange Policy</Link>
-                <Link href="/terms" style={{ fontSize: 14, color: '#888', textDecoration: 'none' }}>Terms and Conditions</Link>
+                <Link href="/privacy-policy" style={{ fontSize: 14, color: '#B5B5B5', textDecoration: 'none' }}>Privacy Policy</Link>
+                <Link href="/delivery-policy" style={{ fontSize: 14, color: '#B5B5B5', textDecoration: 'none' }}>Delivery Policy</Link>
+                <Link href="/return-policy" style={{ fontSize: 14, color: '#B5B5B5', textDecoration: 'none' }}>Return and Exchange Policy</Link>
+                <Link href="/terms" style={{ fontSize: 14, color: '#B5B5B5', textDecoration: 'none' }}>Terms and Conditions</Link>
               </div>
             )}
           </div>
@@ -190,7 +190,7 @@ export default function Footer() {
             <Link href="/" style={{ display: 'inline-block', marginBottom: 24 }}>
               <FooterLogo />
             </Link>
-            <p style={{ fontSize: 14, color: '#888', lineHeight: 1.9, marginBottom: 32 }}>{footerText}</p>
+            <p style={{ fontSize: 14, color: '#B5B5B5', lineHeight: 1.9, marginBottom: 32 }}>{footerText}</p>
             
             <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 18, textTransform: 'uppercase', color: '#FFF' }}>Connect With Us</h3>
             <div style={{ display: 'flex', gap: 12 }}>
@@ -204,14 +204,14 @@ export default function Footer() {
           {/* Customer Service */}
           <div>
             <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: 2, marginBottom: 22, textTransform: 'uppercase', color: '#FFF' }}>Customer Service</h3>
-            <p style={{ fontSize: 14, color: '#888', marginBottom: 4, lineHeight: 1.6 }}>(10 AM - 6 PM)</p>
-            <p style={{ fontSize: 14, color: '#888', marginBottom: 22, lineHeight: 1.6 }}>(Except Weekend/Govt. Holidays)</p>
+            <p style={{ fontSize: 14, color: '#B5B5B5', marginBottom: 4, lineHeight: 1.6 }}>(10 AM - 6 PM)</p>
+            <p style={{ fontSize: 14, color: '#B5B5B5', marginBottom: 22, lineHeight: 1.6 }}>(Except Weekend/Govt. Holidays)</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-              <Phone size={16} style={{ color: '#888' }} />
+              <Phone size={16} style={{ color: '#B5B5B5' }} />
               <a href={'tel:' + phone} style={{ fontSize: 14, color: '#FFF', textDecoration: 'none', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = '#B08B5C'} onMouseOut={(e) => e.currentTarget.style.color = '#FFF'}>{phone}</a>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <Mail size={16} style={{ color: '#888' }} />
+              <Mail size={16} style={{ color: '#B5B5B5' }} />
               <a href={'mailto:' + email} style={{ fontSize: 14, color: '#FFF', textDecoration: 'underline', transition: 'color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.color = '#B08B5C'} onMouseOut={(e) => e.currentTarget.style.color = '#FFF'}>{email}</a>
             </div>
           </div>
