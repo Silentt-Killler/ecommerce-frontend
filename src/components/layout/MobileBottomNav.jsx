@@ -7,7 +7,7 @@ import useCartStore from '@/store/cartStore';
 import MenuOverlay from './MenuOverlay';
 
 // ============================================================================
-// PREMIUM SVG ICONS - Optimized & Scalable
+// PREMIUM SVG ICONS - Professional Grade
 // ============================================================================
 
 const HomeIcon = ({ isActive }) => (
@@ -42,7 +42,7 @@ const MenuIcon = ({ isActive }) => (
   </svg>
 );
 
-const CartIcon = ({ isActive }) => (
+const BagIcon = ({ isActive }) => (
   <svg 
     width="24" 
     height="24" 
@@ -53,80 +53,82 @@ const CartIcon = ({ isActive }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
   >
-    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-    <line x1="3" y1="6" x2="21" y2="6" />
-    <path d="M16 10a4 4 0 01-8 0" />
+    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6zM3 6h18M16 10a4 4 0 01-8 0" />
+  </svg>
+);
+
+const UserIcon = ({ isActive }) => (
+  <svg 
+    width="24" 
+    height="24" 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke={isActive ? "#0C0C0C" : "#888"} 
+    strokeWidth={isActive ? "2" : "1.5"}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="8" r="4" />
+    <path d="M20 21a8 8 0 10-16 0" />
   </svg>
 );
 
 // ============================================================================
-// MOBILE BOTTOM NAVIGATION COMPONENT
+// MOBILE BOTTOM NAVIGATION - Professional Grade
 // ============================================================================
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const { getItemCount } = useCartStore();
+  const [activeTab, setActiveTab] = useState('home');
   const [mounted, setMounted] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
 
-  // Hydration fix - prevent SSR mismatch
+  // Hydration fix
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Auto-close menu on navigation
+  // Update active tab based on pathname
+  useEffect(() => {
+    if (pathname === '/') setActiveTab('home');
+    else if (pathname === '/cart') setActiveTab('cart');
+    else if (pathname?.startsWith('/account') || pathname === '/login') setActiveTab('profile');
+    else setActiveTab('');
+  }, [pathname]);
+
+  // Auto-close menu when navigating
   useEffect(() => {
     if (showMenu) {
       setShowMenu(false);
     }
   }, [pathname]);
 
-  // Hide on specific pages
+  // Hide on admin/checkout pages
   const isAdminPage = pathname?.startsWith('/admin');
   const isCheckoutPage = pathname === '/checkout';
-  
+
   if (isAdminPage || isCheckoutPage) return null;
 
-  // Safe cart count (prevents hydration issues)
+  // Safe cart count
   const cartCount = mounted ? getItemCount() : 0;
 
-  // Navigation items configuration
+  // Navigation configuration (4 items: Home, Menu, Cart, Profile)
   const navItems = [
-    { 
-      id: 'home',
-      icon: HomeIcon, 
-      href: '/',
-      ariaLabel: 'Home'
-    },
-    { 
-      id: 'menu',
-      icon: MenuIcon,
-      isButton: true,
-      ariaLabel: 'Menu',
-      onClick: () => setShowMenu(prev => !prev)
-    },
-    { 
-      id: 'cart',
-      icon: CartIcon,
-      href: '/cart',
-      badge: cartCount,
-      ariaLabel: `Shopping cart with ${cartCount} items`
-    }
+    { id: 'home', Icon: HomeIcon, href: '/', ariaLabel: 'Home' },
+    { id: 'menu', Icon: MenuIcon, isMenu: true, ariaLabel: 'Menu' },
+    { id: 'cart', Icon: BagIcon, href: '/cart', badge: cartCount, ariaLabel: 'Shopping cart' },
+    { id: 'profile', Icon: UserIcon, href: '/account', ariaLabel: 'Profile' },
   ];
 
   return (
     <>
-      {/* Spacer for fixed navbar - Mobile only */}
-      <div 
-        className="mobile-nav-spacer" 
-        style={{ 
-          display: 'block',
-          height: '70px' 
-        }} 
-      />
+      {/* Mobile-only spacer */}
+      <div className="block md:hidden h-[70px]" />
 
       {/* Bottom Navigation Bar */}
       <nav
+        className="md:hidden flex items-center justify-around"
         role="navigation"
         aria-label="Mobile bottom navigation"
         style={{
@@ -134,35 +136,30 @@ export default function MobileBottomNav() {
           bottom: 0,
           left: 0,
           right: 0,
+          width: '100%',
           height: '65px',
+          zIndex: 50,
           backgroundColor: 'rgba(255, 255, 255, 0.98)',
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           borderTop: '1px solid rgba(0, 0, 0, 0.06)',
-          display: 'flex',
-          justifyContent: 'space-around',
-          alignItems: 'center',
-          zIndex: 50,
           boxShadow: '0 -2px 12px rgba(0, 0, 0, 0.04)',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          WebkitTapHighlightColor: 'transparent'
         }}
       >
         {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.href || (item.id === 'menu' && showMenu);
+          const { Icon } = item;
+          const isActive = activeTab === item.id || (item.id === 'menu' && showMenu);
 
-          // Menu Button
-          if (item.isButton) {
+          // Menu Button (special handling)
+          if (item.isMenu) {
             return (
               <button
                 key={item.id}
-                onClick={item.onClick}
+                onClick={() => setShowMenu(prev => !prev)}
                 aria-label={item.ariaLabel}
                 aria-pressed={showMenu}
                 style={{
-                  background: 'none',
-                  border: 'none',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -170,6 +167,9 @@ export default function MobileBottomNav() {
                   gap: '6px',
                   flex: 1,
                   height: '100%',
+                  position: 'relative',
+                  background: 'none',
+                  border: 'none',
                   cursor: 'pointer',
                   WebkitTapHighlightColor: 'transparent',
                   transition: 'opacity 0.2s ease'
@@ -199,15 +199,15 @@ export default function MobileBottomNav() {
             );
           }
 
-          // Link Buttons (Home, Cart)
+          // Link Buttons (Home, Cart, Profile)
           return (
             <Link
               key={item.id}
               href={item.href}
+              onClick={() => setActiveTab(item.id)}
               aria-label={item.ariaLabel}
               aria-current={isActive ? 'page' : undefined}
               style={{
-                textDecoration: 'none',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -216,6 +216,7 @@ export default function MobileBottomNav() {
                 flex: 1,
                 height: '100%',
                 position: 'relative',
+                textDecoration: 'none',
                 WebkitTapHighlightColor: 'transparent',
                 transition: 'opacity 0.2s ease'
               }}
@@ -229,7 +230,7 @@ export default function MobileBottomNav() {
                 position: 'relative'
               }}>
                 <Icon isActive={isActive} />
-                
+
                 {/* Cart Badge */}
                 {item.badge > 0 && (
                   <span 
@@ -250,7 +251,7 @@ export default function MobileBottomNav() {
                       justifyContent: 'center',
                       border: '2px solid #FFFFFF',
                       boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                      animation: item.badge > 0 ? 'badgePulse 0.3s ease' : 'none'
+                      animation: 'badgePulse 0.3s ease'
                     }}
                   >
                     {item.badge > 99 ? '99+' : item.badge}
@@ -276,19 +277,8 @@ export default function MobileBottomNav() {
       {/* Menu Overlay */}
       <MenuOverlay isOpen={showMenu} onClose={() => setShowMenu(false)} />
 
-      {/* Global Styles */}
+      {/* Animations */}
       <style jsx global>{`
-        /* Hide mobile nav on desktop */
-        @media (min-width: 768px) {
-          .mobile-nav-spacer {
-            display: none !important;
-          }
-          nav[aria-label="Mobile bottom navigation"] {
-            display: none !important;
-          }
-        }
-
-        /* Badge pulse animation */
         @keyframes badgePulse {
           0%, 100% {
             transform: scale(1);
@@ -296,11 +286,6 @@ export default function MobileBottomNav() {
           50% {
             transform: scale(1.1);
           }
-        }
-
-        /* Smooth transitions */
-        * {
-          -webkit-tap-highlight-color: transparent;
         }
       `}</style>
     </>
